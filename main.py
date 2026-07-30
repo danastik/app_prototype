@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QVBoxLayout,
     QMessageBox,
+    QPlainTextEdit,
 )
 
 
@@ -18,7 +19,7 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("ZIP Prototype")
-        self.resize(500, 120)
+        self.resize(500, 400)
 
         self.label = QLabel("Paste the path to a ZIP file:")
         self.path_edit = QLineEdit()
@@ -27,10 +28,14 @@ class MainWindow(QWidget):
         self.open_button = QPushButton("Open")
         self.open_button.clicked.connect(self.open_zip)
 
+        self.contents = QPlainTextEdit()
+        self.contents.setReadOnly(True)
+
         layout = QVBoxLayout(self)
         layout.addWidget(self.label)
         layout.addWidget(self.path_edit)
         layout.addWidget(self.open_button)
+        layout.addWidget(self.contents)
 
     def open_zip(self):
         path = self.path_edit.text().strip()
@@ -45,28 +50,25 @@ class MainWindow(QWidget):
 
         try:
             with zipfile.ZipFile(path, "r") as archive:
-                files = archive.namelist()
+                files = []
+                for info in archive.infolist():
+                    try:
+                        name = info.filename.encode("cp437").decode("cp1251")
+                    except UnicodeError:
+                        name = info.filename
 
-                png_files = [
-                    file for file in files
-                    if file.lower().endswith(".png")
-                ]
+                    files.append(name)
 
-                if not png_files:
-                    QMessageBox.information(
-                        self,
-                        "Result",
-                        "No PNG files were found in the archive."
-                    )
+                self.contents.clear()
+
+                if not files:
+                    self.contents.appendPlainText("The archive is empty.")
                     return
 
-                first_png = png_files[0]
+                self.contents.appendPlainText("Archive contents:\n")
 
-                QMessageBox.information(
-                    self,
-                    "PNG Found",
-                    f"First PNG:\n{first_png}"
-                )
+                for file in files:
+                    self.contents.appendPlainText(file)
 
         except FileNotFoundError:
             QMessageBox.critical(
@@ -79,13 +81,13 @@ class MainWindow(QWidget):
             QMessageBox.critical(
                 self,
                 "Error",
-                "The file is not a valid ZIP archive."
+                "The selected file is not a valid ZIP archive."
             )
 
         except Exception as e:
             QMessageBox.critical(
                 self,
-                "Error",
+                "Unexpected Error",
                 str(e)
             )
 
