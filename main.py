@@ -12,8 +12,10 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QVBoxLayout,
+    QHBoxLayout,
     QMessageBox,
     QPlainTextEdit,
+    QFileDialog,
 )
 
 
@@ -26,22 +28,92 @@ class MainWindow(QWidget):
 
         self.load_settings()
 
-        self.label = QLabel("Paste the path to a ZIP file:")
+        self.label = QLabel("Open your yoji file:")
+
+
         self.path_edit = QLineEdit()
-        placeholder = r"C:\example\archive.zip" if not self.settings["last_path"] else self.settings["last_path"]
+        placeholder = "Paste file path here!" if not self.settings["last_path"] else self.settings["last_path"]
         self.path_edit.setPlaceholderText(placeholder)
 
-        self.open_button = QPushButton("Open")
-        self.open_button.clicked.connect(self.open_zip)
+        self.browse_button = QPushButton("Browse:")
+        self.browse_button.clicked.connect(self.browse_file)
+
+        self.row = QHBoxLayout()
+        self.row.addWidget(self.path_edit)
+        self.row.addWidget(self.browse_button)
+
+        self.call_button = QPushButton("Call")
+        self.call_button.clicked.connect(self.open_zip)
 
         self.contents = QPlainTextEdit()
         self.contents.setReadOnly(True)
 
+
+        self.setStyleSheet("""
+            QWidget {
+                font-family: "Rubik";
+                font-size: 10pt;
+                margin: 2px;
+            }
+
+            QPushButton {
+                padding: 6px;
+                border: 1px solid #0078D7;
+            }
+
+            QLineEdit {
+                padding: 4px;
+            }
+            """)
+
+        self.browse_button.setStyleSheet("""
+            QPushButton {
+                background-color: white;
+                color: black;
+                border-radius: 8px;
+            }
+
+            QPushButton:hover {
+                background-color: #0078D7;
+                color: white;
+            }
+            """)
+
+        self.call_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0078D7;
+                color: white;
+                max-with: 200px;
+                border-radius: 8px;
+                border: 0px;
+            }
+
+            QPushButton:hover {
+                background-color: #2893FF;
+            }
+
+            QPushButton:pressed {
+                background-color: #005A9E;
+            }
+            """)
+
+
         layout = QVBoxLayout(self)
         layout.addWidget(self.label)
-        layout.addWidget(self.path_edit)
-        layout.addWidget(self.open_button)
+        layout.addLayout(self.row)
+        layout.addWidget(self.call_button)
         layout.addWidget(self.contents)
+
+    def browse_file(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open ZIP Archive",
+            "",
+            "ZIP Files (*.zip);;All Files (*)"
+        )
+
+        if file_name:
+            self.path_edit.setText(file_name)
 
     def open_zip(self):
         path = self.path_edit.text().strip()
