@@ -1,5 +1,8 @@
 import sys
 
+import json
+import os
+
 import zipfile
 
 from PySide6.QtWidgets import (
@@ -21,9 +24,12 @@ class MainWindow(QWidget):
         self.setWindowTitle("ZIP Prototype")
         self.resize(500, 400)
 
+        self.load_settings()
+
         self.label = QLabel("Paste the path to a ZIP file:")
         self.path_edit = QLineEdit()
-        self.path_edit.setPlaceholderText(r"C:\example\archive.zip")
+        placeholder = r"C:\example\archive.zip" if not self.settings["last_path"] else self.settings["last_path"]
+        self.path_edit.setPlaceholderText(placeholder)
 
         self.open_button = QPushButton("Open")
         self.open_button.clicked.connect(self.open_zip)
@@ -39,6 +45,9 @@ class MainWindow(QWidget):
 
     def open_zip(self):
         path = self.path_edit.text().strip()
+
+        if not path and self.settings["last_path"]:
+            path = self.settings["last_path"]
 
         if not path:
             QMessageBox.warning(
@@ -92,6 +101,29 @@ class MainWindow(QWidget):
                 str(e)
             )
 
+        self.settings["last_path"] = path
+        self.save_settings()
+
+    def load_settings(self):
+        self.settings_file = "settings.json"
+
+        default_settings = {
+            "last_path": "",
+            "theme": "light",
+            "size_w": 500,
+            "size_h": 400,
+        }
+
+        if not os.path.exists(self.settings_file):
+            with open(self.settings_file, "w", encoding="utf-8") as f:
+                json.dump(default_settings, f, indent=4)
+
+        with open(self.settings_file, "r", encoding="utf-8") as f:
+            self.settings = json.load(f)
+
+    def save_settings(self):
+        with open(self.settings_file, "w", encoding="utf-8") as f:
+            json.dump(self.settings, f, indent=4)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
