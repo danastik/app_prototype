@@ -5,6 +5,8 @@ import os
 
 import zipfile
 
+from PySide6.QtCore import Qt
+
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -29,7 +31,7 @@ class MainWindow(QWidget):
         self.load_settings()
 
         self.label = QLabel("Open your yoji file:")
-
+        self.label.setAlignment(Qt.AlignCenter)
 
         self.path_edit = QLineEdit()
         placeholder = "Paste file path here!" if not self.settings["last_path"] else self.settings["last_path"]
