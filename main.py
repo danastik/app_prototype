@@ -52,8 +52,9 @@ class MainWindow(QWidget):
             with zipfile.ZipFile(path, "r") as archive:
                 files = []
                 for info in archive.infolist():
+                    # print(repr(info.filename.encode("cp437")))
                     try:
-                        name = info.filename.encode("cp437").decode("cp1251")
+                        name = info.filename.encode("cp437").decode("cp866")
                     except UnicodeError:
                         name = info.filename
 
