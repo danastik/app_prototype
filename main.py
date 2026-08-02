@@ -7,6 +7,8 @@ import zipfile
 
 from PySide6.QtCore import Qt
 
+from PySide6.QtGui import QIcon
+
 from PySide6.QtWidgets import (
     QApplication,
     QWidget,
@@ -201,6 +203,7 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon("icon.ico"))
 
     window = MainWindow()
     window.show()
