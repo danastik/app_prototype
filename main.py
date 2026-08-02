@@ -27,13 +27,13 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("ZIP Prototype")
+        self.setWindowTitle("Yoji")
         self.resize(500, 400)
 
         self.load_settings()
 
         self.label = QLabel("Open your yoji file:")
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.path_edit = QLineEdit()
         placeholder = "Paste file path here!" if not self.settings["last_path"] else self.settings["last_path"]
