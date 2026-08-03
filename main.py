@@ -223,6 +223,14 @@ class MainWindow(QWidget):
         
         self.archive = zipfile.ZipFile(path, "r")
 
+        if not self.archive:
+            QMessageBox.warning(
+                self,
+                "Cannot open ZIP",
+                "Cannot open ZIP file as archive."
+            )
+            return
+
         self.read_manifest()
 
         self.settings["last_path"] = path
@@ -258,7 +266,7 @@ class MainWindow(QWidget):
 
             self.info_widget.show()
 
-        except KeyError:
+        except Exception:
             self.manifest = None
             print("Manifest not found.")
             QMessageBox.warning(
