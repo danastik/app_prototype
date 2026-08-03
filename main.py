@@ -7,7 +7,7 @@ import zipfile
 
 from PySide6.QtCore import Qt
 
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -33,8 +33,28 @@ class MainWindow(QWidget):
 
         self.load_settings()
 
+        # --- loading fonts ---
+
+        QFontDatabase.addApplicationFont("fonts/Rubik-Regular.ttf")
+        QFontDatabase.addApplicationFont("fonts/Rubik-Italic.ttf")
+        QFontDatabase.addApplicationFont("fonts/Rubik-Bold.ttf")
+        QFontDatabase.addApplicationFont("fonts/Rubik-BoldItalic.ttf")
+
+        self.font_regular = QFont("Rubik", 10)
+
+        self.font_bold = QFont("Rubik", 10)
+        self.font_bold.setBold(True)
+
+        self.font_italic = QFont("Rubik", 10)
+        self.font_italic.setItalic(True)
+
+        self.font_bold_italic = QFont("Rubik", 10)
+        self.font_bold_italic.setBold(True)
+        self.font_bold_italic.setItalic(True)
+
+        # --- widgets ---
+
         self.label = QLabel("Open your yoji file:")
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.path_edit = QLineEdit()
         placeholder = "Paste file path here!" if not self.settings["last_path"] else self.settings["last_path"]
@@ -43,7 +63,8 @@ class MainWindow(QWidget):
         self.browse_button = QPushButton("Browse:")
         self.browse_button.clicked.connect(self.browse_file)
 
-        self.browse_layout = QHBoxLayout()
+        self.browse_widget = QWidget()
+        self.browse_layout = QHBoxLayout(self.browse_widget)
         self.browse_layout.addWidget(self.path_edit)
         self.browse_layout.addWidget(self.browse_button)
 
@@ -54,6 +75,8 @@ class MainWindow(QWidget):
         self.info_icon = QLabel()
         self.info_icon.setPixmap(QPixmap("icon.png"))
         info_layout.addWidget(self.info_icon)
+
+        info_layout.addSpacing(10)
 
         grid = QVBoxLayout()
 
@@ -70,12 +93,14 @@ class MainWindow(QWidget):
         self.info_tags = QLabel("nice cool round")
         grid.addWidget(self.info_tags)
 
+        grid.addStretch()
+
         self.info_widget.hide()
 
         self.call_button = QPushButton("Call")
         self.call_button.clicked.connect(self.open_zip)
 
-        grid.addWidget(self.call_button)
+        grid.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
         info_layout.addLayout(grid)
 
@@ -87,7 +112,7 @@ class MainWindow(QWidget):
             QWidget {
                 font-family: "Rubik";
                 font-size: 10pt;
-                margin: 2px;
+                margin: 0px;
             }
 
             QPushButton {
@@ -106,6 +131,35 @@ class MainWindow(QWidget):
                 max-height: 230px;
             }
             """)
+        
+        self.info_name.setStyleSheet("""
+            QLabel {
+                font-family: "Rubik";
+                font-weight: bold;
+                font-size: 20px;
+            }
+            """)
+
+        self.info_author.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                color: #595959;
+                margin-top: 0px;
+            }
+            """)
+        
+        self.info_description.setStyleSheet("""
+            QLabel {
+                margin-top: 10px;
+            }
+            """)
+        
+        self.info_tags.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                margin-top: 10px;
+            }
+            """)
 
         self.browse_button.setStyleSheet("""
             QPushButton {
@@ -122,10 +176,14 @@ class MainWindow(QWidget):
 
         self.call_button.setStyleSheet("""
             QPushButton {
+                font-family: "Rubik";
+                font-weight: bold;
                 background-color: #0078D7;
                 color: white;
                 border-radius: 8px;
                 border: 0px;
+                width: 80px;
+                max-width: 150px;
             }
 
             QPushButton:hover {
@@ -138,9 +196,10 @@ class MainWindow(QWidget):
             """)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.label)
-        layout.addLayout(self.browse_layout)
-        layout.addWidget(self.info_widget)
+        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.browse_widget, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(self.info_widget, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addStretch()
         # layout.addWidget(self.call_button)
         # layout.addWidget(self.contents)
 
