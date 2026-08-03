@@ -7,7 +7,7 @@ import zipfile
 
 from PySide6.QtCore import Qt
 
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QIcon, QPixmap
 
 from PySide6.QtWidgets import (
     QApplication,
@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QFileDialog,
+    QGridLayout,
 )
 
 
@@ -42,12 +43,42 @@ class MainWindow(QWidget):
         self.browse_button = QPushButton("Browse:")
         self.browse_button.clicked.connect(self.browse_file)
 
-        self.row = QHBoxLayout()
-        self.row.addWidget(self.path_edit)
-        self.row.addWidget(self.browse_button)
+        self.browse_layout = QHBoxLayout()
+        self.browse_layout.addWidget(self.path_edit)
+        self.browse_layout.addWidget(self.browse_button)
+
+        # info box
+        self.info_widget = QWidget()
+        info_layout = QHBoxLayout(self.info_widget)
+
+        self.info_icon = QLabel()
+        self.info_icon.setPixmap(QPixmap("icon.png"))
+        info_layout.addWidget(self.info_icon)
+
+        grid = QVBoxLayout()
+
+        self.info_name = QLabel("Name")
+        grid.addWidget(self.info_name)
+
+        self.info_author = QLabel("author")
+        grid.addWidget(self.info_author)
+
+        self.info_description = QLabel("description description description description description description description description descriptiondescription description description")
+        self.info_description.setWordWrap(True)
+        grid.addWidget(self.info_description)
+
+        self.info_tags = QLabel("nice cool round")
+        grid.addWidget(self.info_tags)
+
+        self.info_widget.hide()
 
         self.call_button = QPushButton("Call")
         self.call_button.clicked.connect(self.open_zip)
+
+        grid.addWidget(self.call_button)
+
+        info_layout.addLayout(grid)
+
 
         self.contents = QPlainTextEdit()
         self.contents.setReadOnly(True)
@@ -66,6 +97,13 @@ class MainWindow(QWidget):
 
             QLineEdit {
                 padding: 4px;
+            }
+            """)
+
+        self.info_icon.setStyleSheet("""
+            QLabel {
+                max-width: 230px;
+                max-height: 230px;
             }
             """)
 
@@ -101,13 +139,75 @@ class MainWindow(QWidget):
 
         layout = QVBoxLayout(self)
         layout.addWidget(self.label)
-        layout.addLayout(self.row)
-        layout.addWidget(self.call_button)
-        layout.addWidget(self.contents)
+        layout.addLayout(self.browse_layout)
+        layout.addWidget(self.info_widget)
+        # layout.addWidget(self.call_button)
+        # layout.addWidget(self.contents)
 
         self.files = []
         self.manifest = None
 
+        if self.settings["last_path"]:
+            try:
+                self.load_zip(self.settings["last_path"])
+            except Exception: pass
+
+
+    def load_zip(self, path):
+        if not path:
+            QMessageBox.warning(
+                self,
+                "Missing Path",
+                "Please enter a ZIP file path."
+            )
+            return
+        
+        self.archive = zipfile.ZipFile(path, "r")
+
+        self.read_manifest()
+
+        self.settings["last_path"] = path
+        self.save_settings()
+
+    def read_manifest(self):
+        archive = self.archive
+        try:
+            with archive.open("manifest.json") as f:
+                self.manifest = json.load(f)
+
+
+            print(self.manifest)
+            self.info_name.setText(str(self.manifest.get("name", "Unnamed")))
+            self.info_author.setText(f"by {self.manifest.get("author", "unknown")}")
+            self.info_description.setText(str(self.manifest.get("description", "")))
+            tag_list = self.manifest.get("tags", ["#untagged"])
+            tags = " ".join(f"#{tag}" for tag in tag_list)
+            self.info_tags.setText(tags)
+
+            thumbnail = self.manifest.get("thumbnail", "icon.png")
+            with archive.open(thumbnail) as f:
+                image_data = f.read()
+            pixmap = QPixmap()
+            pixmap.loadFromData(image_data)
+            self.info_icon.setPixmap(
+                pixmap.scaled(
+                    self.info_icon.size(),
+                    Qt.KeepAspectRatio, #type: ignore
+                    Qt.SmoothTransformation #type: ignore
+                )
+            )
+
+            self.info_widget.show()
+
+        except KeyError:
+            self.manifest = None
+            print("Manifest not found.")
+            QMessageBox.warning(
+                self,
+                "Missing manifest",
+                "Selected ZIP archive is missing a yoji manifest."
+            )
+            return
 
     def browse_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
@@ -120,48 +220,7 @@ class MainWindow(QWidget):
         if file_name:
             self.path_edit.setText(file_name)
             print("File selected")
-            self.get_archive(file_name)
-            self.read_manifest()
-            # self.open_zip()
-
-
-    def get_archive(self, file_name):
-        path = file_name
-
-        if not path and self.settings["last_path"]:
-            path = self.settings["last_path"]
-
-        if not path:
-            QMessageBox.warning(
-                self,
-                "Missing Path",
-                "Please enter a ZIP file path."
-            )
-            return
-        
-        self.archive = zipfile.ZipFile(path, "r")
-
-        self.settings["last_path"] = path
-        self.save_settings()
-
-
-    def read_manifest(self):
-        archive = self.archive
-        try:
-            with archive.open("manifest.json") as f:
-                self.manifest = json.load(f)
-
-            print(self.manifest)
-
-        except KeyError:
-            self.manifest = None
-            print("Manifest not found.")
-            QMessageBox.warning(
-                self,
-                "Missing manifest",
-                "Selected ZIP archive is missing a yoji manifest."
-            )
-            return
+            self.load_zip(file_name)
 
 
     def open_zip(self):
