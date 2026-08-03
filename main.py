@@ -52,7 +52,6 @@ class MainWindow(QWidget):
         self.contents = QPlainTextEdit()
         self.contents.setReadOnly(True)
 
-
         self.setStyleSheet("""
             QWidget {
                 font-family: "Rubik";
@@ -87,7 +86,6 @@ class MainWindow(QWidget):
             QPushButton {
                 background-color: #0078D7;
                 color: white;
-                max-with: 200px;
                 border-radius: 8px;
                 border: 0px;
             }
@@ -101,12 +99,15 @@ class MainWindow(QWidget):
             }
             """)
 
-
         layout = QVBoxLayout(self)
         layout.addWidget(self.label)
         layout.addLayout(self.row)
         layout.addWidget(self.call_button)
         layout.addWidget(self.contents)
+
+        self.files = []
+        self.manifest = None
+
 
     def browse_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
@@ -118,9 +119,14 @@ class MainWindow(QWidget):
 
         if file_name:
             self.path_edit.setText(file_name)
+            print("File selected")
+            self.get_archive(file_name)
+            self.read_manifest()
+            # self.open_zip()
 
-    def open_zip(self):
-        path = self.path_edit.text().strip()
+
+    def get_archive(self, file_name):
+        path = file_name
 
         if not path and self.settings["last_path"]:
             path = self.settings["last_path"]
@@ -132,29 +138,57 @@ class MainWindow(QWidget):
                 "Please enter a ZIP file path."
             )
             return
+        
+        self.archive = zipfile.ZipFile(path, "r")
+
+        self.settings["last_path"] = path
+        self.save_settings()
+
+
+    def read_manifest(self):
+        archive = self.archive
+        try:
+            with archive.open("manifest.json") as f:
+                self.manifest = json.load(f)
+
+            print(self.manifest)
+
+        except KeyError:
+            self.manifest = None
+            print("Manifest not found.")
+            QMessageBox.warning(
+                self,
+                "Missing manifest",
+                "Selected ZIP archive is missing a yoji manifest."
+            )
+            return
+
+
+    def open_zip(self):
+        archive = self.archive
 
         try:
-            with zipfile.ZipFile(path, "r") as archive:
-                files = []
-                for info in archive.infolist():
-                    # print(repr(info.filename.encode("cp437")))
-                    try:
-                        name = info.filename.encode("cp437").decode("cp866")
-                    except UnicodeError:
-                        name = info.filename
+            files = []
+            for info in archive.infolist():
+                # print(repr(info.filename.encode("cp437")))
+                try:
+                    name = info.filename.encode("cp437").decode("cp866")
+                except UnicodeError:
+                    name = info.filename
 
-                    files.append(name)
+                files.append(name)
 
-                self.contents.clear()
+            self.contents.clear()
 
-                if not files:
-                    self.contents.appendPlainText("The archive is empty.")
-                    return
+            if not files:
+                self.contents.appendPlainText("The archive is empty.")
+                return
 
-                self.contents.appendPlainText("Archive contents:\n")
+            self.contents.appendPlainText("Archive contents:\n")
 
-                for file in files:
-                    self.contents.appendPlainText(file)
+            for file in files:
+                self.contents.appendPlainText(file)
+                self.files.append(file)
 
         except FileNotFoundError:
             QMessageBox.critical(
@@ -176,9 +210,6 @@ class MainWindow(QWidget):
                 "Unexpected Error",
                 str(e)
             )
-
-        self.settings["last_path"] = path
-        self.save_settings()
 
     def load_settings(self):
         self.settings_file = "settings.json"
