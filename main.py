@@ -29,8 +29,8 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Yoji")
-        self.resize(500, 400)
 
+        self.resize(500, 400)
         self.load_settings()
 
         # --- loading fonts ---
@@ -39,6 +39,8 @@ class MainWindow(QWidget):
         QFontDatabase.addApplicationFont("fonts/Rubik-Italic.ttf")
         QFontDatabase.addApplicationFont("fonts/Rubik-Bold.ttf")
         QFontDatabase.addApplicationFont("fonts/Rubik-BoldItalic.ttf")
+
+        # self.font_regular = QFontDatabase.font("Rubik", "Italic", 20)
 
         self.font_regular = QFont("Rubik", 10)
 
@@ -55,6 +57,7 @@ class MainWindow(QWidget):
         # --- widgets ---
 
         self.label = QLabel("Open your yoji file:")
+        self.label.setFont(self.font_regular)
 
         self.path_edit = QLineEdit()
         placeholder = "Paste file path here!" if not self.settings["last_path"] else self.settings["last_path"]
@@ -86,7 +89,7 @@ class MainWindow(QWidget):
         self.info_author = QLabel("author")
         grid.addWidget(self.info_author)
 
-        self.info_description = QLabel("description description description description description description description description descriptiondescription description description")
+        self.info_description = QLabel("description")
         self.info_description.setWordWrap(True)
         grid.addWidget(self.info_description)
 
@@ -108,6 +111,9 @@ class MainWindow(QWidget):
         self.contents = QPlainTextEdit()
         self.contents.setReadOnly(True)
 
+
+        # --- stylesheets ---
+
         self.setStyleSheet("""
             QWidget {
                 font-family: "Rubik";
@@ -126,7 +132,7 @@ class MainWindow(QWidget):
             """)
 
         self.info_widget.setStyleSheet("""
-            QLabel {
+            QWidget {
                 margin-left: 1px;
             }
             """)
@@ -201,6 +207,8 @@ class MainWindow(QWidget):
             }
             """)
 
+        # --- main layout  ---
+
         layout = QVBoxLayout(self)
         layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(self.browse_widget, alignment=Qt.AlignmentFlag.AlignTop)
@@ -248,10 +256,9 @@ class MainWindow(QWidget):
             with archive.open("manifest.json") as f:
                 self.manifest = json.load(f)
 
-
             print(self.manifest)
             self.info_name.setText(str(self.manifest.get("name", "Unnamed")))
-            self.info_author.setText(f"by {self.manifest.get("author", "unknown")}")
+            self.info_author.setText(f"v{self.manifest.get("version", 1)} by {self.manifest.get("author", "unknown")}")
             self.info_description.setText(str(self.manifest.get("description", "")))
             tag_list = self.manifest.get("tags", ["#untagged"])
             tags = " ".join(f"#{tag}" for tag in tag_list)
@@ -378,6 +385,8 @@ class MainWindow(QWidget):
 
         with open(self.settings_file, "r", encoding="utf-8") as f:
             self.settings = json.load(f)
+
+        self.resize(self.settings["size_w"], self.settings["size_h"])
 
     def save_settings(self):
         with open(self.settings_file, "w", encoding="utf-8") as f:
