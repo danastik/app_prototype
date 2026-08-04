@@ -125,6 +125,12 @@ class MainWindow(QWidget):
             }
             """)
 
+        self.info_widget.setStyleSheet("""
+            QLabel {
+                margin-left: 1px;
+            }
+            """)
+
         self.info_icon.setStyleSheet("""
             QLabel {
                 max-width: 230px;
@@ -251,18 +257,37 @@ class MainWindow(QWidget):
             tags = " ".join(f"#{tag}" for tag in tag_list)
             self.info_tags.setText(tags)
 
+            print("manifest opened successfully")
+
             thumbnail = self.manifest.get("thumbnail", "icon.png")
-            with archive.open(thumbnail) as f:
-                image_data = f.read()
-            pixmap = QPixmap()
-            pixmap.loadFromData(image_data)
-            self.info_icon.setPixmap(
-                pixmap.scaled(
-                    self.info_icon.size(),
-                    Qt.KeepAspectRatio, #type: ignore
-                    Qt.SmoothTransformation #type: ignore
+
+            try:
+                with archive.open(thumbnail) as f:
+                    image_data = f.read()
+                    print("loading image")
+                pixmap = QPixmap()
+                pixmap.loadFromData(image_data)
+                self.info_icon.setPixmap(
+                    pixmap.scaled(
+                        self.info_icon.size(),
+                        Qt.KeepAspectRatio, #type: ignore
+                        Qt.SmoothTransformation #type: ignore
+                    )
                 )
-            )
+            except Exception: 
+                print("Thumbnail not found.")
+                image_files = [
+                    name for name in archive.namelist()
+                    if name.lower().endswith((".png", ".webp"))
+                ]
+                suggested = image_files[0]
+                text = f"Probably meant {suggested}" if suggested else ""
+                QMessageBox.warning(
+                    self,
+                    "Missing thumbnail",
+                    f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n" +
+                    text
+                )
 
             self.info_widget.show()
 
