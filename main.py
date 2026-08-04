@@ -5,7 +5,9 @@ import os
 
 import zipfile
 
-from PySide6.QtCore import Qt
+from pet import Pet
+
+from PySide6.QtCore import Qt, QTimer
 
 from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
 
@@ -93,7 +95,7 @@ class MainWindow(QWidget):
         self.info_widget.hide()
 
         self.call_button = QPushButton("Call")
-        self.call_button.clicked.connect(self.open_zip)
+        self.call_button.clicked.connect(self.call_pet)
 
         grid.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -207,8 +209,10 @@ class MainWindow(QWidget):
         layout.addWidget(self.info_widget, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addStretch()
 
+        self.pet_active = False
         self.files = []
         self.manifest = None
+        self.call_in_progress = False
 
         if self.settings["last_path"]:
             try:
@@ -381,6 +385,48 @@ class MainWindow(QWidget):
     def save_settings(self):
         with open(self.settings_file, "w", encoding="utf-8") as f:
             json.dump(self.settings, f, indent=4)
+
+    def call_pet(self):
+        print(self.call_in_progress)
+        if self.call_in_progress: return
+
+        if self.pet_active and self.pet is not None:
+            print("recalling pet")
+            self.pet.close()
+            self.pet.deleteLater()
+            self.pet = None
+            self.call_button.setEnabled(True)
+            self.pet_active = False
+            self.call_button.setText("Call")
+            return
+
+        self.call_in_progress = True
+        self.call_button.setText("Calling...")
+        self.call_button.setEnabled(False)
+        QApplication.processEvents()
+        print("Trying to call pet")
+
+        try:
+            self.pet = Pet()
+            self.pet.show()
+            self.pet_active = True
+            self.call_button.setText("Recall")
+            self.call_button.setEnabled(True)
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Error",
+                f"Could not call yoji.\n{e}"
+            )
+            self.call_button.setEnabled(True)
+            self.call_button.setText("Call")
+        finally:
+            print("finally")
+            QTimer.singleShot(500, self.finish_call)
+
+    def finish_call(self):
+        self.call_button.setEnabled(True)
+        self.call_in_progress = False
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
