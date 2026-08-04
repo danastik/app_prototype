@@ -40,24 +40,12 @@ class MainWindow(QWidget):
         QFontDatabase.addApplicationFont("fonts/Rubik-Bold.ttf")
         QFontDatabase.addApplicationFont("fonts/Rubik-BoldItalic.ttf")
 
-        # self.font_regular = QFontDatabase.font("Rubik", "Italic", 20)
-
-        self.font_regular = QFont("Rubik", 10)
-
-        self.font_bold = QFont("Rubik", 10)
-        self.font_bold.setBold(True)
-
-        self.font_italic = QFont("Rubik", 10)
-        self.font_italic.setItalic(True)
-
-        self.font_bold_italic = QFont("Rubik", 10)
-        self.font_bold_italic.setBold(True)
-        self.font_bold_italic.setItalic(True)
+        font = QFont("Rubik", 12)
+        app.setFont(font)
 
         # --- widgets ---
 
         self.label = QLabel("Open your yoji file:")
-        self.label.setFont(self.font_regular)
 
         self.path_edit = QLineEdit()
         placeholder = "Paste file path here!" if not self.settings["last_path"] else self.settings["last_path"]
@@ -84,16 +72,20 @@ class MainWindow(QWidget):
         grid = QVBoxLayout()
 
         self.info_name = QLabel("Name")
+        self.info_name.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         grid.addWidget(self.info_name)
 
         self.info_author = QLabel("author")
+        self.info_author.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         grid.addWidget(self.info_author)
 
         self.info_description = QLabel("description")
+        self.info_description.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.info_description.setWordWrap(True)
         grid.addWidget(self.info_description)
 
         self.info_tags = QLabel("nice cool round")
+        self.info_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         grid.addWidget(self.info_tags)
 
         grid.addStretch()
@@ -214,8 +206,6 @@ class MainWindow(QWidget):
         layout.addWidget(self.browse_widget, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addWidget(self.info_widget, alignment=Qt.AlignmentFlag.AlignTop)
         layout.addStretch()
-        # layout.addWidget(self.call_button)
-        # layout.addWidget(self.contents)
 
         self.files = []
         self.manifest = None
