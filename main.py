@@ -407,7 +407,7 @@ class MainWindow(QWidget):
         print("Trying to call pet")
 
         try:
-            self.pet = Pet()
+            self.pet = Pet(self.archive)
             self.pet.show()
             self.pet_active = True
             self.call_button.setText("Recall")

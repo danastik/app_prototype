@@ -10,11 +10,13 @@ from ctypes import POINTER, cast
 from ctypes.wintypes import MSG
 import win32con
 
+import json
+import zipfile
+
 from enum import Enum, auto
 
 from data.states import STATES, INITIAL_STATE
 from data.animations import ANIMATIONS
-from data.render_config import RENDER_CONFIG
 
 from engine.asset_loader import AssetLoader
 from engine.state_machine import StateMachine
@@ -30,14 +32,8 @@ from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 
 import cProfile
 
-
 from engine.variable_manager import VariableManager
 
-LOGIC_FPS = RENDER_CONFIG.get("pet_logic_FPS", 30) #fps of logic processes
-# DRAW_FPS = RENDER_CONFIG.get("pet_draw_FPS", 30) # not needed because it depends on the animation, might add later?
-
-PARTICLE_LOGIC_FPS = RENDER_CONFIG.get("particles_logic_FPS", 30)
-PARTICLE_DRAW_FPS = RENDER_CONFIG.get("particles_draw_FPS", 30)
 
 #region --- HELPERS ---
 # ANIMATION STUFF
@@ -55,8 +51,14 @@ def scan_animation_bounds(frames):
 #endregion
 
 class Pet(QWidget): # main logic
-    def __init__(self):
+    def __init__(self, archive: zipfile.ZipFile):
         super().__init__()
+
+        with archive.open("data/render_config.json") as f:
+            self.RENDER_CONFIG = json.load(f)
+            self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
+            self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
+            self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore # QT stuff idk idc
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -113,10 +115,10 @@ class Pet(QWidget): # main logic
         self.parent_window_hwnd = None
         self.parent_window_rect_last = None
 
-        self.stay_on_window_when_resize = RENDER_CONFIG.get("stay_on_window_when_resize", False) 
+        self.stay_on_window_when_resize = self.RENDER_CONFIG.get("stay_on_window_when_resize", False) 
 
         self.primary_screen = QApplication.primaryScreen()
-        init_pos = Vec2(RENDER_CONFIG.get("initial_position", (100, 0)))
+        init_pos = Vec2(self.RENDER_CONFIG.get("initial_position", (100, 0)))
         
         self.mover = Mover(self)
         self.primary_screen = QApplication.primaryScreen() # Screen detection
@@ -126,7 +128,7 @@ class Pet(QWidget): # main logic
 
         # print("ACNHOCRR", self.anchor)
 
-        cfg_facing = RENDER_CONFIG.get("default_facing")
+        cfg_facing = self.RENDER_CONFIG.get("default_facing")
         self.facing = Facing.__members__.get(cfg_facing, Facing.RIGHT) # type: ignore  # defining facing direction
 
         self.behaviour_resolver = BehaviourResolver(self)
@@ -152,7 +154,7 @@ class Pet(QWidget): # main logic
         self.drag_offset = Vec2(0,0)
         self.rotation_angle = 0
         
-        anim_name = RENDER_CONFIG.get("hitbox_from_animation")
+        anim_name = self.RENDER_CONFIG.get("hitbox_from_animation")
         if anim_name not in self.animations:
             cfg = STATES[initial_state]      # gets the config for the state from states.py
             anim_name = cfg.get("animation")
@@ -167,7 +169,7 @@ class Pet(QWidget): # main logic
         # Timer for updating logic
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_logic)
-        self.timer.start(1000 // LOGIC_FPS)
+        self.timer.start(1000 // self.LOGIC_FPS)
 
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
@@ -265,7 +267,7 @@ class Pet(QWidget): # main logic
 
         frames = self.animations[anim_name]["frames"]
         fps = cfg.get("fps", anim_cfg.get("fps", 6)) # safestate, will default to the latter
-        loop_option = RENDER_CONFIG.get("default_loop_option", False)
+        loop_option = self.RENDER_CONFIG.get("default_loop_option", False)
         loop = cfg.get("loop", anim_cfg.get("loop", loop_option)) # safestate, will default to the latter
         times_to_loop = cfg.get("times_to_loop", anim_cfg.get("times_to_loop", 1))
         holds = cfg.get("holds", anim_cfg.get("holds", {}))  # safestate, will default to empty directory
@@ -284,7 +286,7 @@ class Pet(QWidget): # main logic
 
 
     def update_logic(self):  # UPDATE LOGIC
-        dt = 1 / LOGIC_FPS
+        dt = 1 / self.LOGIC_FPS
 
         if self.start_debugging:
             self.profiler.disable()
@@ -390,14 +392,14 @@ class Pet(QWidget): # main logic
         self.particle_logic_acc += dt
         self.particle_draw_acc += dt
 
-        if self.particle_logic_acc >= 1 / PARTICLE_LOGIC_FPS:
-            self.particle_logic_acc -= 1 / PARTICLE_LOGIC_FPS
-            self.particle_engine.update_logic(1 / PARTICLE_LOGIC_FPS)
+        if self.particle_logic_acc >= 1 / self.PARTICLE_LOGIC_FPS:
+            self.particle_logic_acc -= 1 / self.PARTICLE_LOGIC_FPS
+            self.particle_engine.update_logic(1 / self.PARTICLE_LOGIC_FPS)
 
         t9 = time.perf_counter()
 
-        if self.particle_draw_acc >= 1 / PARTICLE_DRAW_FPS:
-            self.particle_draw_acc -= 1 / PARTICLE_DRAW_FPS
+        if self.particle_draw_acc >= 1 / self.PARTICLE_DRAW_FPS:
+            self.particle_draw_acc -= 1 / self.PARTICLE_DRAW_FPS
             self.particle_engine.draw()
 
         t10 = time.perf_counter()
@@ -488,7 +490,7 @@ class Pet(QWidget): # main logic
                 # print("if resize", end="")
                 self.mover.set_position(self.anchor.x, self.anchor.y)  # moving to the edge when resizing
 
-        # if RENDER_CONFIG "stay_on_window_when_resize" == False pet should just fall off
+        # if self.RENDER_CONFIG "stay_on_window_when_resize" == False pet should just fall off
         else:
             if not global_move_x and self.parent_surface_type in (SurfaceType.TOP, SurfaceType.BOTTOM): # its so much more nice to read, i hope its not too bad for performance
                 if self.anchor.x <= x1 - 2 or self.anchor.x >= x2 + 2:
@@ -544,7 +546,7 @@ class Pet(QWidget): # main logic
         self.setGeometry(new_x, new_y, new_w, new_h)
     
     def update_dpi_and_scale(self, h, initial_state):
-        percentage = RENDER_CONFIG["pet_size_on_screen"] / 100
+        percentage = self.RENDER_CONFIG["pet_size_on_screen"] / 100
         
         self.dpi_scale = self.devicePixelRatioF()
         first_frame = self.animations[STATES[initial_state]["animation"]]["frames"][0]
@@ -574,7 +576,7 @@ class Pet(QWidget): # main logic
             # print(self.hitbox_height)
             # print(self.hitbox_width)
 
-            self.drag_offset = Vec2(self.hitbox_width * RENDER_CONFIG["drag_offset_x"], self.hitbox_height * RENDER_CONFIG["drag_offset_y"])
+            self.drag_offset = Vec2(self.hitbox_width * self.RENDER_CONFIG["drag_offset_x"], self.hitbox_height * self.RENDER_CONFIG["drag_offset_y"])
             self.mover.drag_offset = self.drag_offset
 
     def mousePressEvent(self, event):
