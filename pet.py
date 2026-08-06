@@ -357,6 +357,8 @@ class Pet(QWidget): # main logic
 
             if surface_data:
                 # if not col_y: col_y = False
+                # print("checking parenting", col_y, "in", self.surfaces_to_parent_to)
+                # print("checking parenting is ", col_y in self.surfaces_to_parent_to)
                 if col_x in self.surfaces_to_parent_to or col_y in self.surfaces_to_parent_to:
                     self._set_parent_window(col_x, col_y, surface_data)
 
@@ -524,14 +526,14 @@ class Pet(QWidget): # main logic
         if col_x:  
             self.parent_surface_type = col_x
         else: self.parent_surface_type = col_y
-        # print("surface type:", self.parent_surface_type)
+        print("surface type:", self.parent_surface_type)
 
         if hwnd == "taskbar": return
         self.parent_window_hwnd = hwnd
         self.state_machine.pulse(Pulse.GAINED_PARENT)
         self.state_machine.raise_flag(Flag.PARENTED_TO_WINDOW)
         self.state_machine.remove_flag(Flag.NOT_PARENTED_TO_WINDOW)
-        # print("Parent window:", hwnd)
+        print("Parent window:", hwnd)
 
     def apply_window_position(self):
         self.move(

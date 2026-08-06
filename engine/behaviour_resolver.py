@@ -17,10 +17,10 @@ class BehaviourResolver:
 
         mover_settings = cfg.get("settings", {})
 
-        collision_cfg = set(cfg.get("collide_with_surfaces", set()))
+        collision_cfg = cfg.get("collide_with_surfaces")
         collision_settings = self._resolve_surfaceType(collision_cfg)
 
-        parenting_cfg = set(cfg.get("parent_to_surfaces", set()))
+        parenting_cfg = cfg.get("parent_to_surfaces")
         parenting_settings = self._resolve_surfaceType(parenting_cfg)
 
         target_cfg = cfg.get("target")
@@ -98,16 +98,22 @@ class BehaviourResolver:
         if not cfg: return surfaces
 
         cmd_cfg = str(cfg).lower() # converting to lowercase string for ease of comparing
+        # print("cmd_cfg", cmd_cfg)
 
-        if cmd_cfg in ["all"]:
-            surfaces = surfaces.union(SurfaceType.__members__)
-        elif cmd_cfg in ["x", "horizontal"]:
+        if cmd_cfg == "all":
+            surfaces = surfaces.union(SurfaceType.__members__.values())
+            print("surface types", [type(x) for x in surfaces])
+        elif cmd_cfg in {"x", "horizontal"}:
             surfaces = surfaces.union([SurfaceType.LEFT, SurfaceType.RIGHT])
-        elif cmd_cfg in ["y", "vertical"]:
+        elif cmd_cfg in {"y", "vertical"}:
             surfaces = surfaces.union([SurfaceType.TOP, SurfaceType.BOTTOM])
         else:
+            cfg = set(cfg) if isinstance(cfg, list) else {cfg}
             for surface in cfg:
-                surfaces.add(SurfaceType.__members__.get(surface))
+                # print(f"trying to get {surface} from {SurfaceType.__members__}")
+                # print(type(SurfaceType.__members__.get(str(surface).upper())))
+                surfaces.add(SurfaceType.__members__.get(str(surface).upper()))
 
-        # print(surfaces)
+        # print("surfaces", surfaces)
+        # print("surface types", [type(x) for x in surfaces])
         return surfaces
