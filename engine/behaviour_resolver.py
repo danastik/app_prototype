@@ -101,12 +101,12 @@ class BehaviourResolver:
         # print("cmd_cfg", cmd_cfg)
 
         if cmd_cfg == "all":
-            surfaces = surfaces.union(SurfaceType.__members__.values())
-            print("surface types", [type(x) for x in surfaces])
+            surfaces.update(SurfaceType.__members__.values())
+            # print("surface types", [type(x) for x in surfaces])
         elif cmd_cfg in {"x", "horizontal"}:
-            surfaces = surfaces.union([SurfaceType.LEFT, SurfaceType.RIGHT])
+            surfaces.update([SurfaceType.LEFT, SurfaceType.RIGHT])
         elif cmd_cfg in {"y", "vertical"}:
-            surfaces = surfaces.union([SurfaceType.TOP, SurfaceType.BOTTOM])
+            surfaces.update([SurfaceType.TOP, SurfaceType.BOTTOM])
         else:
             cfg = set(cfg) if isinstance(cfg, list) else {cfg}
             for surface in cfg:
