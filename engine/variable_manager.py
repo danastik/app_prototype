@@ -1,11 +1,9 @@
-from data.variables import VARIABLES
-
 class VariableManager:
-    def __init__(self):
+    def __init__(self, variables):
         self.values = {}
         self.rates = {}
 
-        config = VARIABLES
+        config = variables
 
         self.values["times_clicked_this_state"] = 0
 

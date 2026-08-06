@@ -15,9 +15,6 @@ import zipfile
 
 from enum import Enum, auto
 
-from data.states import STATES, INITIAL_STATE
-from data.animations import ANIMATIONS
-
 from engine.asset_loader import AssetLoader
 from engine.state_machine import StateMachine
 from engine.click_detector import ClickDetector
@@ -54,11 +51,17 @@ class Pet(QWidget): # main logic
     def __init__(self, archive: zipfile.ZipFile):
         super().__init__()
 
+        self.STATES = json.load(archive.open("data/states.json"))
+        self.ANIMATIONS = json.load(archive.open("data/animations.json"))
+
         with archive.open("data/render_config.json") as f:
             self.RENDER_CONFIG = json.load(f)
             self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
             self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
             self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
+
+        VARIABLES = json.load(archive.open("data/variables.json"))
+        BEHAVIOURS = json.load(archive.open("data/behaviours.json"))
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore # QT stuff idk idc
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -72,9 +75,9 @@ class Pet(QWidget): # main logic
         max_bounds_w = 0
         max_bounds_h = 0
 
-        for name in list(ANIMATIONS):
+        for name in list(self.ANIMATIONS):
             # print("loading", name, end="")
-            cfg = ANIMATIONS[name]
+            cfg = self.ANIMATIONS[name]
             folder = os.path.join(base, "assets", "animations", cfg["folder"])
 
             frames = []
@@ -98,7 +101,7 @@ class Pet(QWidget): # main logic
             }
             print(f"[ANIM LOAD] {name}: {len(frames)} frames")
     
-        self.variables = VariableManager()
+        self.variables = VariableManager(VARIABLES)
         self.animator = Animator(self)
         self.prev_index = None
 
@@ -131,14 +134,14 @@ class Pet(QWidget): # main logic
         cfg_facing = self.RENDER_CONFIG.get("default_facing")
         self.facing = Facing.__members__.get(cfg_facing, Facing.RIGHT) # type: ignore  # defining facing direction
 
-        self.behaviour_resolver = BehaviourResolver(self)
+        self.behaviour_resolver = BehaviourResolver(self, BEHAVIOURS)
 
         self.windowsOverlay = WindowsOverlay(self)
         self.particle_engine = ParticleOverlayWidget(pet=self)
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0
         
-        initial_state = INITIAL_STATE.get("default", next(iter(INITIAL_STATE))) #either get the "default" from the INITIAL STATE, or the first item in the STATES dictinary
+        initial_state = self.STATES.get("default", next(iter(self.STATES))) #either get the "default" from the INITIAL STATE, or the first item in the self.STATES dictinary
         
         h = self.primary_screen.availableGeometry().height()
         self.update_dpi_and_scale(h=h, initial_state=initial_state)
@@ -156,12 +159,12 @@ class Pet(QWidget): # main logic
         
         anim_name = self.RENDER_CONFIG.get("hitbox_from_animation")
         if anim_name not in self.animations:
-            cfg = STATES[initial_state]      # gets the config for the state from states.py
+            cfg = self.STATES[initial_state]      # gets the config for the state from states.py
             anim_name = cfg.get("animation")
         frame = self.animations[anim_name]["frames"][0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
-        self.state_machine = StateMachine(pet=self, configs=STATES, initial=initial_state) # set initial state
+        self.state_machine = StateMachine(pet=self, configs=self.STATES, initial=initial_state) # set initial state
         self.click_detector = ClickDetector(pet=self)
 
         print("----- LOADING SUCCESSFUL -----\n")
@@ -182,7 +185,7 @@ class Pet(QWidget): # main logic
         self.variables.set("times_clicked_this_state", 0)
         self.variables.set("time_spent_in_this_state", 0)
 
-        cfg = STATES[state]      # gets the config for the state from states.py
+        cfg = self.STATES[state]      # gets the config for the state from states.py
 
         next_behaviour = cfg.get("behaviour", "STATIONARY") # engage behaviours.py
         self.resolve_behavior(next_behaviour, cfg)
@@ -193,7 +196,7 @@ class Pet(QWidget): # main logic
 
        
     def on_state_exit(self, state): # called in state_machine when exiting a state
-        cfg = STATES[state]
+        cfg = self.STATES[state]
         # print("exiting state", state)
         # if state == "FALLING":
         #     self.emit_particles("dirt") 
@@ -260,10 +263,10 @@ class Pet(QWidget): # main logic
         self.particle_engine.start_emitting(name, False) 
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
-        if anim_name not in ANIMATIONS:
+        if anim_name not in self.ANIMATIONS:
             raise Exception("ANIMATION", anim_name, "NOT FOUND")  #no idea what this does will add user notification that error occured
 
-        anim_cfg = ANIMATIONS[anim_name]
+        anim_cfg = self.ANIMATIONS[anim_name]
 
         frames = self.animations[anim_name]["frames"]
         fps = cfg.get("fps", anim_cfg.get("fps", 6)) # safestate, will default to the latter
@@ -549,7 +552,7 @@ class Pet(QWidget): # main logic
         percentage = self.RENDER_CONFIG["pet_size_on_screen"] / 100
         
         self.dpi_scale = self.devicePixelRatioF()
-        first_frame = self.animations[STATES[initial_state]["animation"]]["frames"][0]
+        first_frame = self.animations[self.STATES[initial_state]["animation"]]["frames"][0]
         self.pixel_ratio = (h * percentage) / first_frame.height() / self.dpi_scale
         print("screen height", h)
         print("first frame h:", first_frame.height())

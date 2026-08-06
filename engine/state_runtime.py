@@ -16,8 +16,11 @@ class StateRuntime:
         self.all_forced_transitions = {}
 
         for state in self.all_configs:
-            force_transition = self.all_configs[state].get("force_transition")
-            if not force_transition: continue
+            try:
+                force_transition = self.all_configs[state].get("force_transition")
+                if not force_transition: continue
+            except Exception:
+                continue
 
             for t in force_transition:
                 conditions = t.get("when")

@@ -1,26 +1,26 @@
 import random
 from PySide6.QtWidgets import QApplication
-from engine.enums import MovementType, SurfaceType
-from data.behaviours import BEHAVIOURS
 
+from engine.enums import MovementType, SurfaceType
 
 class BehaviourResolver:
-    def __init__(self, pet):
+    def __init__(self, pet, behaviours):
         self.pet = pet
+        self.config = behaviours
 
     def resolve(self, behaviour_name):
-        cfg = BEHAVIOURS.get(behaviour_name)
+        cfg = self.config.get(behaviour_name)
         if not cfg:
-            raise ValueError(f"Unknown behaviour: {behaviour_name}, check data/behaviours.py")
+            raise ValueError(f"Unknown behaviour: {behaviour_name}, check data/behaviours.json")
 
         movement = MovementType[cfg.get("movement", "STATIONARY")] # defaults to STATIONARY movement type
 
         mover_settings = cfg.get("settings", {})
 
-        collision_cfg = cfg.get("collide_with_surfaces", set())
+        collision_cfg = set(cfg.get("collide_with_surfaces", set()))
         collision_settings = self._resolve_surfaceType(collision_cfg)
 
-        parenting_cfg = cfg.get("parent_to_surfaces", set())
+        parenting_cfg = set(cfg.get("parent_to_surfaces", set()))
         parenting_settings = self._resolve_surfaceType(parenting_cfg)
 
         target_cfg = cfg.get("target")
