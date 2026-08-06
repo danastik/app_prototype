@@ -17,9 +17,6 @@ from engine.particles.atlas_generator import AtlasGenerator
 
 from OpenGL.GL import * #type: ignore
 
-from data.render_config import RENDER_CONFIG
-from data.particles import PARTICLES, ASSETS
-
 from collections import defaultdict
 
 import numpy as np
@@ -49,7 +46,12 @@ def get_frame_index(anim, age):
 
 #widget drawing particles, fullscreen transparent to clicks
 class ParticleOverlayWidget(QOpenGLWidget):
-    def __init__(self, pet):
+    def __init__(self, pet, ASSETS, PARTICLES):
+
+        self.ASSETS = ASSETS
+        self.PARTICLES = PARTICLES
+        self.RENDER_CONFIG = pet.RENDER_CONFIG
+
         super().__init__()
 
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -69,8 +71,8 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.setGeometry(avail_geom)
 
         # transparency debugging, delete later
-        print("native:", self.testAttribute(Qt.WidgetAttribute.WA_NativeWindow))
-        print(hex(ctypes.windll.user32.GetWindowLongW(int(self.winId()), -20)))
+        # print("native:", self.testAttribute(Qt.WidgetAttribute.WA_NativeWindow))
+        # print(hex(ctypes.windll.user32.GetWindowLongW(int(self.winId()), -20)))
 
         # Make window fully windows click-through
         # hwnd = int(self.winId())
@@ -89,11 +91,10 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.window_width = self.width()
         self.window_height = self.height()
 
-
         self.pet = pet
         self.taskbar_top = self.pet.taskbar_top
         self.taskbar_ndc_y = 1.0 - ((self.taskbar_top / self.primary_screen.geometry().height()) * 2.0)
-        print("task y ndc" ,self.taskbar_ndc_y)
+        print("task y ndc", self.taskbar_ndc_y)
 
         self.debug_counter = 0 # for debugging
 
@@ -104,7 +105,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.emitters_by_type = defaultdict(int)
         self.particles_by_type = defaultdict(int)
 
-        self.MAX_PARTICLES = RENDER_CONFIG.get("max_particle_count", 1000)
+        self.MAX_PARTICLES = self.RENDER_CONFIG.get("max_particle_count", 1000)
         MAX_PARTICLES = self.MAX_PARTICLES
 
         self.count = np.uint32(0)  # active particle count
@@ -127,7 +128,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         self.type_id = np.zeros(MAX_PARTICLES, dtype=np.int16)
 
-        self.anim_lifetimes_by_id = np.zeros(len(PARTICLES), dtype=np.float32)
+        self.anim_lifetimes_by_id = np.zeros(len(self.PARTICLES), dtype=np.float32)
 
         self.offset_geometry()
         self.show()
@@ -146,8 +147,8 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         print("\n----- LOADING PARTICLES -----")
 
-        for name in list(PARTICLES):
-            cfg = PARTICLES[name]
+        for name in list(self.PARTICLES):
+            cfg = self.PARTICLES[name]
             asset = os.path.join(base, os.path.join("assets/particles", cfg["asset"]))
             # folder = os.path.join(base, cfg["asset"])
 
@@ -225,7 +226,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
             self.frame_lookup.append(particle_data["frames"])
 
         self.asset_ids = {} # assigning each name is ASSETS an id ("dirt": 0, "smoke": 1)
-        for i, name in enumerate(ASSETS.keys()):
+        for i, name in enumerate(self.ASSETS.keys()):
             self.asset_ids[name] = i
 
         self.asset_lookup = [] # id = which asset to use from the atlas
@@ -268,7 +269,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         :param name: name of the particle as stated in config particles.py
         :param constant: whether or not an emitter should have infinite duration (used for constant particles)
         """
-        cfg = PARTICLES.get(name)
+        cfg = self.PARTICLES.get(name)
 
         if not cfg:
             print("No particle named ", name, " found")

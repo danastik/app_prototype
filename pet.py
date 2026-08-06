@@ -63,6 +63,9 @@ class Pet(QWidget): # main logic
         VARIABLES = json.load(archive.open("data/variables.json"))
         BEHAVIOURS = json.load(archive.open("data/behaviours.json"))
 
+        ASSETS = json.load(archive.open("data/particles/assets.json"))
+        PARTICLES = json.load(archive.open("data/particles/particles.json"))
+
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore # QT stuff idk idc
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
@@ -137,7 +140,7 @@ class Pet(QWidget): # main logic
         self.behaviour_resolver = BehaviourResolver(self, BEHAVIOURS)
 
         self.windowsOverlay = WindowsOverlay(self)
-        self.particle_engine = ParticleOverlayWidget(pet=self)
+        self.particle_engine = ParticleOverlayWidget(pet=self, ASSETS=ASSETS, PARTICLES=PARTICLES)
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0
         
