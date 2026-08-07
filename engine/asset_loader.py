@@ -1,12 +1,14 @@
 import sys, os, random, time, math
 from PySide6.QtGui import QPainter, QPixmap, QPen, QColor
 
+import zipfile
+
 from OpenGL.GL import * #type: ignore
 
 class AssetLoader:
 
     @staticmethod
-    def load_QPixmap_frames(folder):  # function for loading frames, recieves a string path to a folder, returns a list of png files( converted to PixMap ) in name order
+    def load_QPixmap_frames(archive: zipfile.ZipFile, folder):  # function for loading frames, recieves a string path to a folder, returns a list of png files( converted to PixMap ) in name order
         """
         Returns a list of QPixmap files taken from .png files from the provided folder.
         
@@ -14,16 +16,19 @@ class AssetLoader:
         """
         frames = []
 
-        files = sorted(                # get the png files
-        f for f in os.listdir(folder)
-        if f.lower().endswith((".png", ".webp"))
+        files = sorted(
+            name for name in archive.namelist()
+            if name.startswith(folder + "/")
+            and name.lower().endswith((".png", ".webp"))
         )
 
-        for i, filename in enumerate(files):
-            pix = QPixmap(os.path.join(folder, filename))
+        for filename in files:
+            data = archive.read(filename)
+            pix = QPixmap()
+            # print("appending image file", filename)
 
-            if pix.isNull():
-                raise ValueError("Could not load Pixmap, for file", filename)
+            if not pix.loadFromData(data):
+                raise ValueError(f"Could not load {filename}")
 
             frames.append(pix)
 
@@ -31,7 +36,7 @@ class AssetLoader:
     
 
     @staticmethod
-    def load_openGL_texture(path):
+    def load_openGL_texture(archive: zipfile.ZipFile, path):
         """
         Returns a openGL texture file taken from a path.
         
@@ -40,11 +45,9 @@ class AssetLoader:
         from PIL import Image
         import os
 
-        # base_dir = os.path.dirname(os.path.abspath(__file__))
-        # full_path = os.path.join(base_dir, path)
-
-        img = Image.open(path).convert("RGBA")
-        img_data = img.tobytes("raw", "RGBA", 0, -1)
+        with archive.open(path) as f:
+            img = Image.open(f).convert("RGBA")
+            img_data = img.tobytes("raw", "RGBA", 0, -1)
 
         tex_id = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, tex_id)

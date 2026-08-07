@@ -73,7 +73,7 @@ class Pet(QWidget): # main logic
         print("----- LOADING ANIMATIONS -----")
         # get all animations in a dictionary
         self.animations = {}
-        base = os.path.dirname(os.path.abspath(__file__))
+        # base = os.path.dirname(os.path.abspath(__file__))
 
         max_bounds_w = 0
         max_bounds_h = 0
@@ -81,11 +81,11 @@ class Pet(QWidget): # main logic
         for name in list(self.ANIMATIONS):
             # print("loading", name, end="")
             cfg = self.ANIMATIONS[name]
-            folder = os.path.join(base, "assets", "animations", cfg["folder"])
+            folder = f"assets/animations/{cfg['folder']}"
 
             frames = []
 
-            frames = AssetLoader.load_QPixmap_frames(folder=folder)
+            frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=folder)
 
             if not frames:
                 raise RuntimeError(f"No frames found for animation '{name}'")
@@ -140,7 +140,7 @@ class Pet(QWidget): # main logic
         self.behaviour_resolver = BehaviourResolver(self, BEHAVIOURS)
 
         self.windowsOverlay = WindowsOverlay(self)
-        self.particle_engine = ParticleOverlayWidget(pet=self, ASSETS=ASSETS, PARTICLES=PARTICLES)
+        self.particle_engine = ParticleOverlayWidget(pet=self, ASSETS=ASSETS, PARTICLES=PARTICLES, archive=archive)
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0
         
@@ -529,14 +529,14 @@ class Pet(QWidget): # main logic
         if col_x:  
             self.parent_surface_type = col_x
         else: self.parent_surface_type = col_y
-        print("surface type:", self.parent_surface_type)
+        # print("surface type:", self.parent_surface_type)
 
         if hwnd == "taskbar": return
         self.parent_window_hwnd = hwnd
         self.state_machine.pulse(Pulse.GAINED_PARENT)
         self.state_machine.raise_flag(Flag.PARENTED_TO_WINDOW)
         self.state_machine.remove_flag(Flag.NOT_PARENTED_TO_WINDOW)
-        print("Parent window:", hwnd)
+        # print("Parent window:", hwnd)
 
     def apply_window_position(self):
         self.move(

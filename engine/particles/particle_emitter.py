@@ -108,7 +108,7 @@ class ParticleEmitter:
 
         self.start_vel_x = FloatProvider(self.cfg.get("start_vel", (0,0))[0])
         self.start_vel_y = FloatProvider(self.cfg.get("start_vel", (0,0))[1])
-        print("start_vel_y", self.start_vel_y.get())
+        # print("start_vel_y", self.start_vel_y.get())
 
         self.start_acc_x = FloatProvider(self.cfg.get("start_acceleration", (0,0))[0])
         self.start_acc_y = FloatProvider(self.cfg.get("start_acceleration", (0,0))[1])

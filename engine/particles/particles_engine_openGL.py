@@ -46,7 +46,7 @@ def get_frame_index(anim, age):
 
 #widget drawing particles, fullscreen transparent to clicks
 class ParticleOverlayWidget(QOpenGLWidget):
-    def __init__(self, pet, ASSETS, PARTICLES):
+    def __init__(self, pet, ASSETS, PARTICLES, archive):
 
         self.ASSETS = ASSETS
         self.PARTICLES = PARTICLES
@@ -198,7 +198,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         # getting texture atlas
         print("Getting atlas.png from the folder:", full_atlas_path)
 
-        self.atlas_texture = AssetLoader.load_openGL_texture(full_atlas_path)
+        self.atlas_texture = AssetLoader.load_openGL_texture(archive=archive, path=full_atlas_path)
 
         if self.atlas_texture: print("  Success!")
         else: raise RuntimeError(f"  No atlas.png found at '{full_atlas_path}'")

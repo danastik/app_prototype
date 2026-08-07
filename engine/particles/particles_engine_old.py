@@ -103,7 +103,7 @@ class ParticleOverlayWidget(QWidget):
 
             frames = []
 
-            frames = AssetLoader.load_QPixmap_frames(folder=folder)
+            frames = AssetLoader.load_QPixmap_frames(archive=pet.archive, folder=folder)
 
             if not frames:
                 raise RuntimeError(f"No frames found for animation '{name}'")
