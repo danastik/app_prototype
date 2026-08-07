@@ -196,11 +196,11 @@ class ParticleOverlayWidget(QOpenGLWidget):
         atlas_generator._generate_atlas()
 
         # loading atlas texure
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        atlas_path = "atlas\\atlas.png"
-        config_path = "atlas\\atlas.json"
-        full_atlas_path = os.path.join(base_dir, atlas_path)
-        full_config_path = os.path.join(base_dir, config_path)
+        base_dir = "generated/atlas"
+        atlas_path = "/atlas.png"
+        config_path = "/atlas.json"
+        full_atlas_path = base_dir + atlas_path
+        full_config_path = base_dir + config_path
 
         # getting texture atlas
         print("Getting atlas.png from the folder:", full_atlas_path)
@@ -213,7 +213,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         # getting json config
         print("Getting atlas.json from the folder:", full_config_path)
 
-        with open(full_config_path) as f:
+        with archive.open(full_config_path) as f:
             self.atlas_config = json.load(f)
 
         if self.atlas_config: print("  Success!")

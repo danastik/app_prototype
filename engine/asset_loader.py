@@ -40,7 +40,7 @@ class AssetLoader:
         """
         Returns a openGL texture file taken from a path.
         
-        :param folder: Path to the texture. (not from base)
+        :param folder: Path to the texture(inside archive)
         """
         from PIL import Image
         import os
