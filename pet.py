@@ -127,6 +127,7 @@ class Pet(QWidget): # main logic
         init_pos = Vec2(self.RENDER_CONFIG.get("initial_position", (100, 0)))
         
         self.mover = Mover(self)
+        self.mover.reset_settings(self.RENDER_CONFIG) # needs to be done immediately to apply settings
         self.primary_screen = QApplication.primaryScreen() # Screen detection
         self.taskbar_top = self.primary_screen.availableGeometry().bottom() # Taskbar position detection
         self.mover.set_position(init_pos.x, self.taskbar_top + init_pos.y + 1) # set initial position
@@ -242,7 +243,7 @@ class Pet(QWidget): # main logic
             gravity = movement_settings.get("gravity", self.mover.gravity)
             self.mover.set_settings(acceleration=acceleration, max_speed=max_speed, slow_radius=slow_radius, snap_distance=snap_distance, max_angle=max_angle, inertia=inertia, damping=damping, jump_velocity=jump_velocity,gravity=gravity)
         else:
-            self.mover.reset_settings()
+            self.mover.reset_settings(self.RENDER_CONFIG)
 
         if type == MovementType.STATIONARY: # hardcoded doing nothing for stationary
             return

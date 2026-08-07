@@ -8,6 +8,8 @@ import json
 
 from pathlib import Path
 
+import zipfile
+
 from engine.asset_loader import AssetLoader
 from engine.enums import EmitterShape
 from engine.vec2 import Vec2
@@ -46,8 +48,7 @@ def get_frame_index(anim, age):
 
 #widget drawing particles, fullscreen transparent to clicks
 class ParticleOverlayWidget(QOpenGLWidget):
-    def __init__(self, pet, ASSETS, PARTICLES, archive):
-
+    def __init__(self, pet, ASSETS, PARTICLES, archive: zipfile.ZipFile):
         self.ASSETS = ASSETS
         self.PARTICLES = PARTICLES
         self.RENDER_CONFIG = pet.RENDER_CONFIG
@@ -149,20 +150,26 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         for name in list(self.PARTICLES):
             cfg = self.PARTICLES[name]
-            asset = os.path.join(base, os.path.join("assets/particles", cfg["asset"]))
-            # folder = os.path.join(base, cfg["asset"])
+            asset = f"assets/particles/{cfg['asset']}"
+            frames = []
 
-            # asset = Path(asset)
-            frame_count = len(list(Path(asset).glob("*.png")))
+            files = sorted(
+                name for name in archive.namelist()
+                if name.startswith(asset + "/")
+                and name.lower().endswith((".png", ".webp"))
+            )
+            for filename in files:
+                frames.append(filename)
 
+            frame_count = len(list(frames))
             if not frame_count:
-                raise RuntimeError(f"No frames found for animation '{name}'")
+                raise RuntimeError(f"No frames found for particle '{name}'")
             
             #registring animations for reference by id
             anim_id = len(self.animations) # starts with 0 and goes up as we add animations
             self.anim_name_to_id[name] = anim_id
 
-            # precompute lifetime once
+            # precompute lifetime
             lifetime = (
                 frame_count / cfg["fps"]
                 if not cfg["loop"]
@@ -185,7 +192,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         # generating particle texture atlas
         print("Generating atlas:")
-        atlas_generator = AtlasGenerator()
+        atlas_generator = AtlasGenerator(ASSETS=ASSETS, archive=archive)
         atlas_generator._generate_atlas()
 
         # loading atlas texure

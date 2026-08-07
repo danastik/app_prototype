@@ -1,71 +1,72 @@
 from PIL import Image
 from pathlib import Path
 import json
+import zipfile
+from io import BytesIO
 
-from data.particles import ASSETS
+# PROJECT_ROOT = Path(__file__).resolve().parents[2]
+INPUT = "assets/particles"
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-INPUT = PROJECT_ROOT / "assets" / "particles"
+# OUT_DIR = Path(__file__).resolve().parent
+# OUT_DIR = OUT_DIR / "atlas" 
+# OUT_DIR.mkdir(exist_ok=True)
 
-OUT_DIR = Path(__file__).resolve().parent
-OUT_DIR = OUT_DIR / "atlas" 
-OUT_DIR.mkdir(exist_ok=True)
-
-rows = []
+OUT_DIR = "generated/atlas"
 
 class AtlasGenerator():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, ASSETS, archive):
+        self.ASSETS = ASSETS
+        self.archive = archive
         
     def _generate_atlas(self):
         """
         Generates a png texture atlas and a config file.
         """
-        atlas_file = OUT_DIR / "atlas.png"
-        config_file = OUT_DIR / "atlas.json"
+        atlas_file = OUT_DIR + "/atlas.png"
+        config_file = OUT_DIR + "/atlas.json"
+
+        files = self.archive.namelist()
 
         #check if source pngs have been modified and if not - return
-        if atlas_file.exists() and config_file.exists():
-            atlas_time = atlas_file.stat().st_mtime
+        # if atlas_file.exists() and config_file.exists():
+        #     atlas_time = atlas_file.stat().st_mtime
 
-            newest_source = max(
-                f.stat().st_mtime
-                for folder in INPUT.iterdir()
-                if folder.is_dir()
-                for f in folder.glob("*.png")
-            )
+        #     newest_source = max(
+        #         f.stat().st_mtime
+        #         for folder in INPUT.iterdir()
+        #         if folder.is_dir()
+        #         for f in folder.glob("*.png")
+        #     )
 
-            if atlas_time >= newest_source:
-                print("  Atlas up to date")
-                return
+        #     if atlas_time >= newest_source:
+        #         print("  Atlas up to date")
+        #         return
             
         print("  Generating...")
 
-        # Load assets
-        for asset_name, asset_path in ASSETS.items():
-            folder = INPUT / asset_path
+        # 1. Load assets
+        rows = []
+        for asset_name, asset_path in self.ASSETS.items():
+            folder = f"{INPUT}/{asset_path}"
             print("getting assets from", folder)
 
-            frames = sorted(folder.glob("*.png"))
-            imgs = [Image.open(f).convert("RGBA") for f in frames]
+            frames = sorted(
+                name for name in self.archive.namelist()
+                if name.startswith(folder + "/")
+                and name.lower().endswith((".png", ".webp"))
+            )
+
+            imgs = []
+
+            for filename in frames:
+                with self.archive.open(filename) as f:
+                    imgs.append(Image.open(f).convert("RGBA"))
 
             if not imgs:
                 continue
 
             rows.append((asset_name, frames, imgs))
-
-        # 1. Load all folders
-        # for folder in sorted(INPUT.iterdir()):
-        #     if not folder.is_dir():
-        #         continue
-
-        #     frames = sorted(folder.glob("*.png"))
-        #     imgs = [Image.open(f).convert("RGBA") for f in frames]
-
-        #     if not imgs:
-        #         continue
-
-        #     rows.append((folder.name, frames, imgs))
+        
 
         # 2. Compute atlas size
         atlas_w = max(sum(img.width for img in imgs) for _, _, imgs in rows)
@@ -99,7 +100,7 @@ class AtlasGenerator():
                 atlas.paste(img, (x, y))
 
                 meta["assets"][asset_name]["frames"].append({
-                    "file": f.name,
+                    "file": f.rsplit("/", 1)[-1],  # splits the file name "generate/.../filename.png by "/" and returns last segment which is name"
 
                     "w": img.width,
                     "h": img.height,
@@ -116,9 +117,22 @@ class AtlasGenerator():
             y += row_h
 
         # 4. Save outputs
-        atlas.save(OUT_DIR / "atlas.png")
 
-        with open(OUT_DIR / "atlas.json", "w") as f:
-            json.dump(meta, f, indent=4)
+        return # BECAUSE WE used "r" when getting archive and it doesnt allow us to write, and if we write it will just create new files without deleting old ones
+
+        # Save atlas.png
+        buffer = BytesIO()
+        atlas.save(buffer, format="PNG")
+
+        self.archive.writestr(
+            "generated/atlas/atlas.png",
+            buffer.getvalue()
+        )
+
+        # Save atlas.json
+        self.archive.writestr(
+            "generated/atlas/atlas.json",
+            json.dumps(meta, indent=4)
+        )
 
         print("Atlas generated.")

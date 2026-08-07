@@ -2,9 +2,6 @@ from engine.enums import Flag, Pulse, MovementType, Facing
 from engine.vec2 import Vec2
 import math
 
-
-from data.render_config import RENDER_CONFIG
-
 class Mover:
     def __init__(self, pet):
         self.pos = Vec2()
@@ -16,8 +13,6 @@ class Mover:
         self.movement_type = None
         self.active = False
 
-        self.reset_settings()
-
         self.drag_offset = Vec2()
 
         # drag specific
@@ -27,7 +22,7 @@ class Mover:
         # jump specific
         self.grounded_y = None
 
-    def reset_settings(self):
+    def reset_settings(self, RENDER_CONFIG):
         self.acceleration = RENDER_CONFIG.get("acceleration", 1200)
         self.max_speed = RENDER_CONFIG.get("max_speed", 700)
         self.slow_radius= RENDER_CONFIG.get("slow_radius", 120)
