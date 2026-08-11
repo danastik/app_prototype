@@ -7,6 +7,9 @@ import zipfile
 
 from pet import Pet
 
+from engine.exceptions import AtlasMissingError
+from engine.particles.atlas_generator import AtlasGenerator
+
 from PySide6.QtCore import Qt, QTimer
 
 from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
@@ -230,6 +233,7 @@ class MainWindow(QWidget):
             return
         
         self.archive = zipfile.ZipFile(path, "r")
+        self.archive_path = path
 
         if not self.archive:
             QMessageBox.warning(
@@ -385,6 +389,28 @@ class MainWindow(QWidget):
     def save_settings(self):
         with open(self.settings_file, "w", encoding="utf-8") as f:
             json.dump(self.settings, f, indent=4)
+    
+    def check_particle_atlas(self, PARTICLE_ASSETS) -> bool:
+        atlas_generator = AtlasGenerator(PARTICLE_ASSETS, self.archive)
+
+        if not atlas_generator.atlas_exists():
+            reply = QMessageBox.question(
+                self,
+                "Atlas missing",
+                "Atlas files are missing from generated/atlas. Would you like to generate them?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+
+            if reply == QMessageBox.StandardButton.Yes:
+                # regenerate/rebuild here
+                print("Regenerate atlas - yes")
+                new_archive = atlas_generator.generate_atlas(self.archive_path)
+                self.load_zip(self.archive_path)
+                self.call_pet()
+
+            else: print("Regenerate atlas - no")
+            return False
+        
+        else: return True
 
     def call_pet(self):
         print(self.call_in_progress)
@@ -407,6 +433,9 @@ class MainWindow(QWidget):
         print("Trying to call pet")
 
         try:
+            PARTICLE_ASSETS = json.load(self.archive.open("data/particles/assets.json"))
+            if not self.check_particle_atlas(PARTICLE_ASSETS):  return
+
             self.pet = Pet(self.archive)
             self.pet.show()
             self.pet_active = True
@@ -418,13 +447,12 @@ class MainWindow(QWidget):
                 "Error",
                 f"Could not call yoji.\n{e}"
             )
-            self.call_button.setEnabled(True)
-            self.call_button.setText("Call")
         finally:
             print("finally")
             QTimer.singleShot(500, self.finish_call)
 
     def finish_call(self):
+        self.call_button.setText("Call")
         self.call_button.setEnabled(True)
         self.call_in_progress = False
 

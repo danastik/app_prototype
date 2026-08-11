@@ -191,33 +191,30 @@ class ParticleOverlayWidget(QOpenGLWidget):
             print(f"[PARTICLES LOADED] {name}: {frame_count} frames, asset: {cfg["asset"]}")
 
         # generating particle texture atlas
-        print("Generating atlas:")
-        atlas_generator = AtlasGenerator(ASSETS=ASSETS, archive=archive)
-        atlas_generator._generate_atlas()
+        # print("Generating atlas:")
+        # atlas_generator = AtlasGenerator(ASSETS=ASSETS, archive=archive)
+        # atlas_generator.generate_atlas()
 
         # loading atlas texure
-        base_dir = "generated/atlas"
-        atlas_path = "/atlas.png"
-        config_path = "/atlas.json"
-        full_atlas_path = base_dir + atlas_path
-        full_config_path = base_dir + config_path
+        atlas_path = "generated/atlas/atlas.png"
+        config_path = "generated/atlas/atlas.json"
 
         # getting texture atlas
-        print("Getting atlas.png from the folder:", full_atlas_path)
+        print("Getting atlas.png from the folder:", atlas_path)
 
-        self.atlas_texture = AssetLoader.load_openGL_texture(archive=archive, path=full_atlas_path)
+        self.atlas_texture = AssetLoader.load_openGL_texture(archive=archive, path=atlas_path)
 
         if self.atlas_texture: print("  Success!")
-        else: raise RuntimeError(f"  No atlas.png found at '{full_atlas_path}'")
+        else: raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
 
         # getting json config
-        print("Getting atlas.json from the folder:", full_config_path)
+        print("Getting atlas.json from the folder:", config_path)
 
-        with archive.open(full_config_path) as f:
+        with archive.open(config_path) as f:
             self.atlas_config = json.load(f)
 
         if self.atlas_config: print("  Success!")
-        else: raise RuntimeError(f"No atlas.json found at '{full_config_path}'")
+        else: raise RuntimeError(f"No atlas.json found at '{config_path}'")
 
         # --- loading particle information into memory for fast access ---
         print("----- loading particles into memory -----")

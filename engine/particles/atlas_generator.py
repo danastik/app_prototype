@@ -3,30 +3,34 @@ from pathlib import Path
 import json
 import zipfile
 from io import BytesIO
+import os
 
-# PROJECT_ROOT = Path(__file__).resolve().parents[2]
+from engine.exceptions import AtlasMissingError
+
 INPUT = "assets/particles"
 
-# OUT_DIR = Path(__file__).resolve().parent
-# OUT_DIR = OUT_DIR / "atlas" 
-# OUT_DIR.mkdir(exist_ok=True)
-
-OUT_DIR = "generated/atlas"
+atlas_path = "generated/atlas/atlas.png"
+config_path = "generated/atlas/atlas.json"
 
 class AtlasGenerator():
     def __init__(self, ASSETS, archive):
         self.ASSETS = ASSETS
         self.archive = archive
-        
-    def _generate_atlas(self):
-        """
-        Generates a png texture atlas and a config file.
-        """
-        atlas_file = OUT_DIR + "/atlas.png"
-        config_file = OUT_DIR + "/atlas.json"
 
+
+    def atlas_exists(self) -> bool:
         files = self.archive.namelist()
 
+        required_files = [atlas_path, config_path]
+        atlas_exists = True
+
+        for filename in required_files:
+            if filename not in files:
+                print(f"Missing: {filename}")
+                atlas_exists = False
+
+        return atlas_exists
+    
         #check if source pngs have been modified and if not - return
         # if atlas_file.exists() and config_file.exists():
         #     atlas_time = atlas_file.stat().st_mtime
@@ -41,8 +45,12 @@ class AtlasGenerator():
         #     if atlas_time >= newest_source:
         #         print("  Atlas up to date")
         #         return
-            
-        print("  Generating...")
+        
+    def generate_atlas(self, archive_path):
+        """
+        Generates a png texture atlas and a config file.
+        """
+        print("  Generating atlas...")
 
         # 1. Load assets
         rows = []
@@ -118,21 +126,32 @@ class AtlasGenerator():
 
         # 4. Save outputs
 
-        return # BECAUSE WE used "r" when getting archive and it doesnt allow us to write, and if we write it will just create new files without deleting old ones
-
-        # Save atlas.png
         buffer = BytesIO()
         atlas.save(buffer, format="PNG")
+        atlas_data = buffer.getvalue()
 
-        self.archive.writestr(
-            "generated/atlas/atlas.png",
-            buffer.getvalue()
-        )
+        self.archive.close()
 
-        # Save atlas.json
-        self.archive.writestr(
-            "generated/atlas/atlas.json",
-            json.dumps(meta, indent=4)
-        )
+        with zipfile.ZipFile(archive_path, "r") as old_archive:
+            with zipfile.ZipFile(archive_path, "w") as new_archive:
+                for item in old_archive.infolist():
+                    if not item.filename.startswith("generated/atlas/"):
+                        new_archive.writestr(item, old_archive.read(item.filename))
+
+                new_archive.writestr(
+                    "generated/atlas/atlas.png",
+                    atlas_data
+                )
+
+                new_archive.writestr(
+                    "generated/atlas/atlas.json",
+                    json.dumps(meta, indent=4)
+                )
+
+        os.replace(archive_path + ".tmp", archive_path)
+
+        new_archive = zipfile.ZipFile(archive_path, "r")
 
         print("Atlas generated.")
+
+        return new_archive
