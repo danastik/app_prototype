@@ -50,6 +50,8 @@ class AtlasGenerator():
         """
         Generates a png texture atlas and a config file.
         """
+        self.archive = zipfile.ZipFile(archive_path, "r")
+
         print("  Generating atlas...")
 
         # 1. Load assets
@@ -125,15 +127,18 @@ class AtlasGenerator():
             y += row_h
 
         # 4. Save outputs
+        print("  Closing old archive")
+        self.archive.close()
 
         buffer = BytesIO()
         atlas.save(buffer, format="PNG")
         atlas_data = buffer.getvalue()
 
-        self.archive.close()
+        print("  Writing new archive")
+        temp_path = archive_path + ".tmp"
 
         with zipfile.ZipFile(archive_path, "r") as old_archive:
-            with zipfile.ZipFile(archive_path, "w") as new_archive:
+            with zipfile.ZipFile(temp_path, "w") as new_archive:
                 for item in old_archive.infolist():
                     if not item.filename.startswith("generated/atlas/"):
                         new_archive.writestr(item, old_archive.read(item.filename))
@@ -148,8 +153,10 @@ class AtlasGenerator():
                     json.dumps(meta, indent=4)
                 )
 
-        os.replace(archive_path + ".tmp", archive_path)
+        print("  Replacing files")
+        os.replace(temp_path, archive_path)
 
+        print("  Opening new archive")
         new_archive = zipfile.ZipFile(archive_path, "r")
 
         print("Atlas generated.")

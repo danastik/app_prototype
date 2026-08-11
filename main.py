@@ -403,14 +403,19 @@ class MainWindow(QWidget):
             if reply == QMessageBox.StandardButton.Yes:
                 # regenerate/rebuild here
                 print("Regenerate atlas - yes")
-                new_archive = atlas_generator.generate_atlas(self.archive_path)
+                print("closing old archive")
+                self.archive.close()
+                print("regenerating archive")
+                atlas_generator.generate_atlas(self.archive_path)
+                print("loading zip")
                 self.load_zip(self.archive_path)
-                self.call_pet()
+                return True
 
             else: print("Regenerate atlas - no")
             return False
         
-        else: return True
+        print("atlas exists its fine")
+        return True
 
     def call_pet(self):
         print(self.call_in_progress)
@@ -431,16 +436,15 @@ class MainWindow(QWidget):
         self.call_button.setEnabled(False)
         QApplication.processEvents()
         print("Trying to call pet")
-
+   
         try:
             PARTICLE_ASSETS = json.load(self.archive.open("data/particles/assets.json"))
             if not self.check_particle_atlas(PARTICLE_ASSETS):  return
-
+        
+            print("--- Calling pet.py ---")
             self.pet = Pet(self.archive)
             self.pet.show()
-            self.pet_active = True
-            self.call_button.setText("Recall")
-            self.call_button.setEnabled(True)
+
         except Exception as e:
             QMessageBox.warning(
                 self,
@@ -452,7 +456,8 @@ class MainWindow(QWidget):
             QTimer.singleShot(500, self.finish_call)
 
     def finish_call(self):
-        self.call_button.setText("Call")
+        self.pet_active = True
+        self.call_button.setText("Recall")
         self.call_button.setEnabled(True)
         self.call_in_progress = False
 
