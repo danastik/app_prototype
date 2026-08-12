@@ -24,7 +24,6 @@ from engine.enums import Flag, Pulse, MovementType, Facing, SurfaceType
 from engine.vec2 import Vec2
 from engine.behaviour_resolver import BehaviourResolver
 from engine.windows_detector import WindowsOverlay
-from engine.hotkey_manager import HotkeyManager
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.debug import Debug
 
@@ -118,9 +117,6 @@ class Pet(QWidget): # main logic
         self.variables = VariableManager(VARIABLES)
         self.animator = Animator(self)
         self.prev_index = None
-
-        self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
-        # self.hotkeys.messagag()
 
         self.profiler = cProfile.Profile()
         self.not_first_time_update: bool = False

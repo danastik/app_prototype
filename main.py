@@ -9,6 +9,7 @@ from pet import Pet
 
 from engine.exceptions import AtlasMissingError
 from engine.particles.atlas_generator import AtlasGenerator
+from engine.hotkey_manager import HotkeyManager
 from engine.debug import Debug
 
 from PySide6.QtCore import Qt, QTimer
@@ -224,6 +225,9 @@ class MainWindow(QWidget):
             try:
                 self.load_zip(self.settings["last_path"])
             except Exception: pass
+
+        
+        # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
 
 
     def load_zip(self, path):
