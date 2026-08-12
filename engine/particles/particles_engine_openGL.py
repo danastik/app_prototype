@@ -16,6 +16,7 @@ from engine.vec2 import Vec2
 
 from engine.particles.particle_emitter import ParticleEmitter
 from engine.particles.atlas_generator import AtlasGenerator
+from engine.debug import Debug
 
 from OpenGL.GL import * #type: ignore
 
@@ -147,6 +148,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
 
         print("\n----- LOADING PARTICLES -----")
+        Debug.log("---LOADING PARTICLES---")
 
         for name in list(self.PARTICLES):
             cfg = self.PARTICLES[name]
@@ -200,34 +202,42 @@ class ParticleOverlayWidget(QOpenGLWidget):
         config_path = "generated/atlas/atlas.json"
 
         # getting texture atlas
-        print("Getting atlas.png from the folder:", atlas_path)
+        print("Getting atlas.png from:", atlas_path)
+        Debug.log(f"Getting atlas.png from: {atlas_path}")
 
         self.atlas_texture = AssetLoader.load_openGL_texture(archive=archive, path=atlas_path)
 
-        if self.atlas_texture: print("  Success!")
+        if self.atlas_texture: 
+            print("--Success!")
+            Debug.log("--Success!")
         else: raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
 
         # getting json config
-        print("Getting atlas.json from the folder:", config_path)
+        print(f"Getting atlas.json from: {atlas_path}")
+        Debug.log(f"Getting atlas.json from: {atlas_path}")
 
         with archive.open(config_path) as f:
             self.atlas_config = json.load(f)
 
-        if self.atlas_config: print("  Success!")
+        if self.atlas_config: 
+            print("--Success!")
+            Debug.log("--Success!")
         else: raise RuntimeError(f"No atlas.json found at '{config_path}'")
 
         # --- loading particle information into memory for fast access ---
-        print("----- loading particles into memory -----")
+        print("---Loading particles into memory---")
+        Debug.log("---Loading particles into memory---")
 
         self.atlas_lookup = [] # id = full information from the atlas about a particle
         self.frame_lookup = [] # id = which asset lookup to look in
 
         for asset_name in self.atlas_config["assets"]:
-            print("heee", asset_name)
             particle_data = self.atlas_config["assets"][asset_name]
 
             self.atlas_lookup.append(particle_data)
             self.frame_lookup.append(particle_data["frames"])
+            print(f"Asset loaded: {asset_name}")
+            Debug.log(f"Asset loaded: {asset_name}")
 
         self.asset_ids = {} # assigning each name is ASSETS an id ("dirt": 0, "smoke": 1)
         for i, name in enumerate(self.ASSETS.keys()):
@@ -245,13 +255,20 @@ class ParticleOverlayWidget(QOpenGLWidget):
                 self.asset_ids[asset_name]
             )
 
-        print("----- PARTICLES LOADED -----\n")
         # print("atlas lookup", self.atlas_lookup)
         print("frame lookup", self.frame_lookup)
         print("assets ids", self.asset_ids)
         print("assets lookup", self.asset_lookup)
         print("aspect_ratio_by_id", self.aspect_ratio_by_id)
+        Debug.log("Debug information:\n")
+        Debug.log(f"atlas lookup: {self.atlas_lookup}")
+        Debug.log(f"frame lookup: {self.frame_lookup}")
+        Debug.log(f"assets ids: {self.asset_ids}")
+        Debug.log(f"assets lookup: {self.asset_lookup}")
+        Debug.log(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
 
+        print("---PARTICLES LOADED---\n")
+        Debug.log("---PARTICLES LOADED---\n")
 
     def update_dpi_and_scale(self, new_scale):
         self.scale = new_scale
@@ -276,8 +293,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         cfg = self.PARTICLES.get(name)
 
         if not cfg:
-            print("No particle named ", name, " found")
-            raise Exception("PARTICLE", name, "NOT FOUND")  #no idea what this does will add user notification that error occured
+            raise Exception("Particle", name, "not found")
 
 
         # print("ACNHOCRR FROM PARTICLEGL", self.pet.anchor)

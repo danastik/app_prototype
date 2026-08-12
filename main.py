@@ -9,6 +9,7 @@ from pet import Pet
 
 from engine.exceptions import AtlasMissingError
 from engine.particles.atlas_generator import AtlasGenerator
+from engine.debug import Debug
 
 from PySide6.QtCore import Qt, QTimer
 
@@ -406,8 +407,10 @@ class MainWindow(QWidget):
                 print("closing old archive")
                 self.archive.close()
                 print("regenerating archive")
+                Debug.log("Regenerating atlas: start")
                 atlas_generator.generate_atlas(self.archive_path)
                 print("loading zip")
+                Debug.log("--Loading ZIP archive")
                 self.load_zip(self.archive_path)
                 return True
 
@@ -415,6 +418,7 @@ class MainWindow(QWidget):
             return False
         
         print("atlas exists its fine")
+        Debug.log("Atlas found: success")
         return True
 
     def call_pet(self):
@@ -423,6 +427,7 @@ class MainWindow(QWidget):
 
         if self.pet_active and self.pet is not None:
             print("recalling pet")
+            Debug.log("\n---Recalling pet---\n")
             self.pet.close()
             self.pet.deleteLater()
             self.pet = None
@@ -436,12 +441,14 @@ class MainWindow(QWidget):
         self.call_button.setEnabled(False)
         QApplication.processEvents()
         print("Trying to call pet")
+        Debug.log("\n---Trying to call pet---\n")
    
         try:
             PARTICLE_ASSETS = json.load(self.archive.open("data/particles/assets.json"))
             if not self.check_particle_atlas(PARTICLE_ASSETS):  return
         
-            print("--- Calling pet.py ---")
+            print("---Calling pet.py---")
+            Debug.log("---Calling pet.py---")
             self.pet = Pet(self.archive)
             self.pet.show()
 

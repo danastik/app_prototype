@@ -26,6 +26,7 @@ from engine.behaviour_resolver import BehaviourResolver
 from engine.windows_detector import WindowsOverlay
 from engine.hotkey_manager import HotkeyManager
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
+from engine.debug import Debug
 
 import cProfile
 
@@ -50,6 +51,7 @@ def scan_animation_bounds(frames):
 class Pet(QWidget): # main logic
     def __init__(self, archive: zipfile.ZipFile):
         super().__init__()
+        Debug.log("---INITIALISATION START---")
 
         self.STATES = json.load(archive.open("data/states.json"))
         self.ANIMATIONS = json.load(archive.open("data/animations.json"))
@@ -66,11 +68,14 @@ class Pet(QWidget): # main logic
         ASSETS = json.load(archive.open("data/particles/assets.json"))
         PARTICLES = json.load(archive.open("data/particles/particles.json"))
 
+        Debug.log("all .json files loaded\n")
+
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore # QT stuff idk idc
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
-        print("----- LOADING ANIMATIONS -----")
+        print("--- LOADING ANIMATIONS ---")
+        Debug.log("---LOADING ANIMATIONS---")
         # get all animations in a dictionary
         self.animations = {}
         # base = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +84,6 @@ class Pet(QWidget): # main logic
         max_bounds_h = 0
 
         for name in list(self.ANIMATIONS):
-            # print("loading", name, end="")
             cfg = self.ANIMATIONS[name]
             folder = f"assets/animations/{cfg['folder']}"
 
@@ -102,7 +106,8 @@ class Pet(QWidget): # main logic
                 "bounds": (bounds_w, bounds_h),
                 "times_to_loop": cfg.get("times_to_loop", 1)
             }
-            print(f"[ANIM LOAD] {name}: {len(frames)} frames")
+            print(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
+            Debug.log(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
     
         self.variables = VariableManager(VARIABLES)
         self.animator = Animator(self)
@@ -171,7 +176,8 @@ class Pet(QWidget): # main logic
         self.state_machine = StateMachine(pet=self, configs=self.STATES, initial=initial_state) # set initial state
         self.click_detector = ClickDetector(pet=self)
 
-        print("----- LOADING SUCCESSFUL -----\n")
+        print("---LOADING SUCCESSFUL---\n")
+        Debug.log("---LOADING SUCCESSFUL---\n")
 
         # Timer for updating logic
         self.timer = QTimer()
@@ -181,6 +187,7 @@ class Pet(QWidget): # main logic
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)
+        Debug.log(f"On enter: {state}")
         self.current_state = state
         if self.parent_window_hwnd:
             # print(f"Position: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}")
@@ -571,6 +578,8 @@ class Pet(QWidget): # main logic
 
         print("screen dpi", self.dpi_scale)
         print("new scale", self.scale)
+
+        Debug.log(f"Updating dpi and scale:\nScreen height: {h}\n First frame height: {first_frame.height()}\nPixel ratio: {self.pixel_ratio}\nScreen DPI: {self.dpi_scale}\nNew scale: {self.scale}")
 
     def update_hitbox_size_and_drag_offset(self, frame):
             if not frame:
