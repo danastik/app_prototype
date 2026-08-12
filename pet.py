@@ -27,7 +27,7 @@ from engine.windows_detector import WindowsOverlay
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.debug import Debug
 
-import cProfile
+# import cProfile
 
 from engine.variable_manager import VariableManager
 
@@ -118,9 +118,9 @@ class Pet(QWidget): # main logic
         self.animator = Animator(self)
         self.prev_index = None
 
-        self.profiler = cProfile.Profile()
+        # self.profiler = cProfile.Profile()
         self.not_first_time_update: bool = False
-        self.start_debugging = False
+        # self.start_debugging = False
 
         self.hitbox_width = 0
         self.hitbox_height = 0
@@ -304,9 +304,9 @@ class Pet(QWidget): # main logic
     def update_logic(self):  # UPDATE LOGIC
         dt = 1 / self.LOGIC_FPS
 
-        if self.start_debugging:
-            self.profiler.disable()
-            self.profiler.enable()  # start profiling
+        # if self.start_debugging:
+        #     self.profiler.disable()
+        #     self.profiler.enable()  # start profiling
         
         # --- INPUT PHASE ---
         if self.mover.movement_type == MovementType.DRAG:
@@ -424,8 +424,8 @@ class Pet(QWidget): # main logic
         # print(f"Particle update: {t1-t0}\nParticles draw: {t2-t1}")
 
         # print(f"update windows frames takes {t3-t1}")
-        self.profiler.disable()  # stop profiling
-        self.profiler.dump_stats("test.prof")
+        # self.profiler.disable()  # stop profiling
+        # self.profiler.dump_stats("test.prof")
 
 
     def _clamp_position_to_screen(self):
@@ -621,12 +621,12 @@ class Pet(QWidget): # main logic
     def leaveEvent(self, event):
         self.mover.end_drag()  
 
-    def keyPressEvent(self, e): #doesnt work when app is in background
-        if e.key() == Qt.Key.Key_F4:
-            print(f"______________________________\n\n  PET REPORT\n\nPosition: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nCurrent behaviour: {self.behaviour_name}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}\n\n  ^^^.>.\n______________________________")
-        elif e.key() == Qt.Key.Key_L:
-            print("Start debugging")
-            self.start_debugging = True
+    # def keyPressEvent(self, e): #doesnt work when app is in background
+    #     if e.key() == Qt.Key.Key_F4:
+    #         print(f"______________________________\n\n  PET REPORT\n\nPosition: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nCurrent behaviour: {self.behaviour_name}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}\n\n  ^^^.>.\n______________________________")
+    #     elif e.key() == Qt.Key.Key_L:
+    #         print("Start debugging")
+    #         self.start_debugging = True
     
     # def moveEvent(self, e):
     #     print("Move:", self.pos())
