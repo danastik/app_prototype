@@ -54,7 +54,9 @@ class Pet(QWidget): # main logic
         Debug.log("---INITIALISATION START---")
 
         self.STATES = json.load(archive.open("data/states.json"))
+        Debug.log("states.json - found")
         self.ANIMATIONS = json.load(archive.open("data/animations.json"))
+        Debug.log("animations.json - found")
 
         with archive.open("data/render_config.json") as f:
             self.RENDER_CONFIG = json.load(f)
@@ -63,12 +65,16 @@ class Pet(QWidget): # main logic
             self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
 
         VARIABLES = json.load(archive.open("data/variables.json"))
+        Debug.log("variables.json - found")
         BEHAVIOURS = json.load(archive.open("data/behaviours.json"))
+        Debug.log("behaviours.json - found")
 
         ASSETS = json.load(archive.open("data/particles/assets.json"))
+        Debug.log("particles/assets.json - found")
         PARTICLES = json.load(archive.open("data/particles/particles.json"))
+        Debug.log("particles/particles.json - found")
 
-        Debug.log("all .json files loaded\n")
+        Debug.log("--All .json files loaded: success")
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore # QT stuff idk idc
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)

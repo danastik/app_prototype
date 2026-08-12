@@ -260,7 +260,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         print("assets ids", self.asset_ids)
         print("assets lookup", self.asset_lookup)
         print("aspect_ratio_by_id", self.aspect_ratio_by_id)
-        Debug.log("Debug information:\n")
+        Debug.log("Debug information:")
         Debug.log(f"atlas lookup: {self.atlas_lookup}")
         Debug.log(f"frame lookup: {self.frame_lookup}")
         Debug.log(f"assets ids: {self.asset_ids}")
@@ -268,7 +268,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         Debug.log(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
 
         print("---PARTICLES LOADED---\n")
-        Debug.log("---PARTICLES LOADED---\n")
+        Debug.log("---PARTICLES LOADED---")
 
     def update_dpi_and_scale(self, new_scale):
         self.scale = new_scale

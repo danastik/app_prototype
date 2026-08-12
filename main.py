@@ -39,6 +39,8 @@ class MainWindow(QWidget):
         self.resize(500, 400)
         self.load_settings()
 
+        Debug.log("---APP LAUNCHED---\n")
+
         # --- loading fonts ---
 
         QFontDatabase.addApplicationFont("fonts/Rubik-Regular.ttf")
@@ -427,7 +429,7 @@ class MainWindow(QWidget):
 
         if self.pet_active and self.pet is not None:
             print("recalling pet")
-            Debug.log("\n---Recalling pet---\n")
+            Debug.log("---Recalling pet---\n")
             self.pet.close()
             self.pet.deleteLater()
             self.pet = None
@@ -441,7 +443,7 @@ class MainWindow(QWidget):
         self.call_button.setEnabled(False)
         QApplication.processEvents()
         print("Trying to call pet")
-        Debug.log("\n---Trying to call pet---\n")
+        Debug.log("---Trying to call pet---\n")
    
         try:
             PARTICLE_ASSETS = json.load(self.archive.open("data/particles/assets.json"))
