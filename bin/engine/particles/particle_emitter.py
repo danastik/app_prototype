@@ -1,8 +1,4 @@
-import sys, os, random, time, math
-from PySide6.QtCore import Qt, QPointF
-
-from typing import cast
-from typing import Generic, TypeVar
+import random, math
 
 from engine.vec2 import Vec2
 

@@ -1,11 +1,9 @@
 from PIL import Image
-from pathlib import Path
 import json
 import zipfile
 from io import BytesIO
 import os
 
-from engine.exceptions import AtlasMissingError
 from engine.debug import Debug
 
 INPUT = "assets/particles"

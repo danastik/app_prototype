@@ -1,9 +1,7 @@
-import sys, os, random, time, math
-from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QPainter, QPixmap, QPen, QColor
-from PySide6.QtCore import Qt, QTimer, QPointF
+import time
+from PySide6.QtCore import QPointF
 
-from engine.enums import Flag, Pulse, MovementType, Facing
+from engine.enums import Flag, Pulse
 
 # helper function to detect clicks or holds on pet sprite
 class ClickDetector:

@@ -1,5 +1,4 @@
-
-from engine.enums import Flag, Pulse, MovementType, Facing
+from engine.enums import Flag, Pulse
 
 class Animator:  # contains different animation functions
     def __init__(self, pet):

@@ -4,8 +4,6 @@ import win32gui
 import win32api
 import win32con
 import win32process
-import win32event
-import win32gui_struct
 import ctypes
 import psutil
 from PySide6.QtCore import Qt, QTimer
@@ -13,7 +11,6 @@ from PySide6.QtGui import QPainter, QPen, QColor
 from PySide6.QtWidgets import QApplication, QWidget
 from ctypes import wintypes
 import win32con
-import pythoncom
 import time
 
 from engine.enums import SurfaceType

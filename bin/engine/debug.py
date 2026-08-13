@@ -2,7 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 class Debug:
-    base = Path(__file__).resolve().parents[1]
+    base = Path(__file__).resolve().parents[2]
     LOG_FOLDER = base / "logs"
 
     @staticmethod

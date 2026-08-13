@@ -1,15 +1,13 @@
 import sys
-
 import json
 import os
+from pathlib import Path
 
 import zipfile
 
 from pet import Pet
 
-from engine.exceptions import AtlasMissingError
 from engine.particles.atlas_generator import AtlasGenerator
-from engine.hotkey_manager import HotkeyManager
 from engine.debug import Debug
 
 from PySide6.QtCore import Qt, QTimer
@@ -30,6 +28,12 @@ from PySide6.QtWidgets import (
     QGridLayout,
 )
 
+root = Path(__file__).resolve().parents[1]
+
+icon_path = root / "resources" / "fonts" / "icon.ico"
+logo_path = root / "resources" / "icons" / "icon.png"
+font_path = root / "resources" / "fonts"
+settings_path = root / "settings.json"
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -42,12 +46,12 @@ class MainWindow(QWidget):
 
         Debug.log("---APP LAUNCHED---\n")
 
-        # --- loading fonts ---
 
-        QFontDatabase.addApplicationFont("fonts/Rubik-Regular.ttf")
-        QFontDatabase.addApplicationFont("fonts/Rubik-Italic.ttf")
-        QFontDatabase.addApplicationFont("fonts/Rubik-Bold.ttf")
-        QFontDatabase.addApplicationFont("fonts/Rubik-BoldItalic.ttf")
+        # --- loading fonts ---
+        QFontDatabase.addApplicationFont(str(font_path / "Rubik-Regular.ttf"))
+        QFontDatabase.addApplicationFont(str(font_path / "Rubik-Italic.ttf"))
+        QFontDatabase.addApplicationFont(str(font_path / "Rubik-Bold.ttf"))
+        QFontDatabase.addApplicationFont(str(font_path / "Rubik-BoldItalic.ttf"))
 
         font = QFont("Rubik", 12)
         app.setFont(font)
@@ -73,7 +77,7 @@ class MainWindow(QWidget):
         info_layout = QHBoxLayout(self.info_widget)
 
         self.info_icon = QLabel()
-        self.info_icon.setPixmap(QPixmap("icon.png"))
+        self.info_icon.setPixmap(QPixmap(str(logo_path)))
         info_layout.addWidget(self.info_icon)
 
         info_layout.addSpacing(10)
@@ -375,8 +379,7 @@ class MainWindow(QWidget):
             )
 
     def load_settings(self):
-        self.settings_file = "settings.json"
-
+        self.settings_file = settings_path
         default_settings = {
             "last_path": "",
             "theme": "light",
@@ -476,7 +479,7 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon("icon.ico"))
+    app.setWindowIcon(QIcon(str(icon_path)))
 
     window = MainWindow()
     window.show()

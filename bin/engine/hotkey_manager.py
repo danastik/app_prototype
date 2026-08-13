@@ -2,9 +2,7 @@ import win32gui
 import win32con
 from PySide6.QtCore import QTimer
 
-
 HOTKEY_ID = 1
-
 
 class HotkeyManager:
     def __init__(self, pet):

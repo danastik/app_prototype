@@ -1,5 +1,4 @@
-import sys, os, random, time, math
-from PySide6.QtGui import QPainter, QPixmap, QPen, QColor
+from PySide6.QtGui import QPixmap
 
 import zipfile
 

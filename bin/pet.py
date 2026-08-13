@@ -1,19 +1,11 @@
 # Main script with pet behavior: physics, drawing sprites, retrieving data
-import sys, os, random, time, math
+import time
 from PySide6.QtWidgets import QApplication, QWidget
-from PySide6.QtGui import QPainter, QPixmap, QPen, QColor
-from PySide6.QtCore import Qt, QTimer, QPointF
-
-import threading
-
-from ctypes import POINTER, cast
-from ctypes.wintypes import MSG
-import win32con
+from PySide6.QtGui import QPainter
+from PySide6.QtCore import Qt, QTimer
 
 import json
 import zipfile
-
-from enum import Enum, auto
 
 from engine.asset_loader import AssetLoader
 from engine.state_machine import StateMachine

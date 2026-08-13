@@ -1,21 +1,16 @@
-import sys, os, random, time, math
-from PySide6.QtCore import Qt, QPointF, QRect
-from PySide6.QtGui import QColor, QPainter, QPen, QFont
-from PySide6.QtWidgets import QWidget, QApplication, QLabel
+import os, time
+from PySide6.QtCore import Qt, QRect
+from PySide6.QtGui import QColor, QPainter, QFont
+from PySide6.QtWidgets import QApplication
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 import json
 
-from pathlib import Path
-
 import zipfile
 
 from engine.asset_loader import AssetLoader
-from engine.enums import EmitterShape
-from engine.vec2 import Vec2
 
 from engine.particles.particle_emitter import ParticleEmitter
-from engine.particles.atlas_generator import AtlasGenerator
 from engine.debug import Debug
 
 from OpenGL.GL import * #type: ignore
@@ -24,10 +19,6 @@ from collections import defaultdict
 
 import numpy as np
 from numba import njit
-
-import ctypes
-
-import cProfile
 
 
 def get_frame_index(anim, age):
