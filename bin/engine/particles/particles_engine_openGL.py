@@ -40,10 +40,10 @@ def get_frame_index(anim, age):
 
 #widget drawing particles, fullscreen transparent to clicks
 class ParticleOverlayWidget(QOpenGLWidget):
-    def __init__(self, pet, ASSETS, PARTICLES, archive: zipfile.ZipFile):
+    def __init__(self, pet, RENDER_CONFIG, ASSETS, PARTICLES, archive: zipfile.ZipFile):
         self.ASSETS = ASSETS
         self.PARTICLES = PARTICLES
-        self.RENDER_CONFIG = pet.RENDER_CONFIG
+        self.RENDER_CONFIG = RENDER_CONFIG
 
         super().__init__()
 
@@ -281,10 +281,13 @@ class ParticleOverlayWidget(QOpenGLWidget):
         :param name: name of the particle as stated in config particles.py
         :param constant: whether or not an emitter should have infinite duration (used for constant particles)
         """
+        if not self.RENDER_CONFIG.get("render_particles"):
+            return
         cfg = self.PARTICLES.get(name)
 
         if not cfg:
-            raise Exception("Particle", name, "not found")
+            Debug.warning(f"Particle {name} not found in particles.json")
+            raise Exception("Particle", name, "not found in particles.json")
 
 
         # print("ACNHOCRR FROM PARTICLEGL", self.pet.anchor)

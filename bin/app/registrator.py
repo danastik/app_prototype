@@ -18,7 +18,7 @@ def register_yoji_file_type(exe_path, icon_path):
 
     # YojiFile -> application details
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"Software\Classes\{file_type}") as key:
-        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "Yoji File")
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "Yoji File (.yoji)")
 
     # Icon
     with winreg.CreateKey(

@@ -41,6 +41,7 @@ settings_path = root / "settings.json"
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        Debug.log("\n---APP LAUNCHED---")
 
         self.setWindowTitle("Yoji")
         self.resize(500, 400)
@@ -59,7 +60,6 @@ class MainWindow(QWidget):
 
         self.load_settings()
 
-        Debug.log("---APP LAUNCHED---\n")
 
         # registering .yoji file format
         try:
@@ -250,7 +250,7 @@ class MainWindow(QWidget):
                 self.load_zip(self.settings["last_path"])
             except Exception: pass
 
-        
+        Debug.log("---APP LOADED SUCCESSFULLY---\n")
         # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
 
 
@@ -453,7 +453,7 @@ class MainWindow(QWidget):
             else: print("Regenerate atlas - no")
             return False
         
-        print("atlas exists its fine")
+        print("Atlas found: success")
         Debug.log("Atlas found: success")
         return True
 
@@ -476,15 +476,15 @@ class MainWindow(QWidget):
         self.call_button.setText("Calling...")
         self.call_button.setEnabled(False)
         QApplication.processEvents()
-        print("Trying to call pet")
-        Debug.log("---Trying to call pet---\n")
+        print(f"--Trying to call {self.archive_path}")
+        Debug.log(f"--Trying to call {self.archive_path}")
    
         try:
             PARTICLE_ASSETS = json.load(self.archive.open("data/particles/assets.json"))
             if not self.check_particle_atlas(PARTICLE_ASSETS):  return
         
-            print("---Calling pet.py---")
-            Debug.log("---Calling pet.py---")
+            print("--Calling pet.py")
+            Debug.log("--Calling pet.py")
             self.pet = Pet(self.archive)
             self.pet.show()
 

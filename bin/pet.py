@@ -141,7 +141,7 @@ class Pet(QWidget): # main logic
 
         self.windowsOverlay = WindowsOverlay(self)
 
-        self.particle_engine = ParticleOverlayWidget(pet=self, ASSETS=ASSETS, PARTICLES=PARTICLES, archive=archive)
+        self.particle_engine = ParticleOverlayWidget(pet=self, RENDER_CONFIG=self.RENDER_CONFIG ,ASSETS=ASSETS, PARTICLES=PARTICLES, archive=archive)
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0
         
@@ -172,17 +172,16 @@ class Pet(QWidget): # main logic
         self.click_detector = ClickDetector(pet=self)
 
         print("---LOADING SUCCESSFUL---\n")
-        Debug.log("---LOADING SUCCESSFUL---\n")
+        Debug.log("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
 
         # Timer for updating logic
         self.timer = QTimer()
-        self.timer.timeout.connect(self.update_logic)
+        self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)
-        Debug.log(f"On enter: {state}")
         self.current_state = state
         if self.parent_window_hwnd:
             # print(f"Position: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}")
@@ -193,7 +192,10 @@ class Pet(QWidget): # main logic
 
         cfg = self.STATES[state]      # gets the config for the state from states.py
 
-        next_behaviour = cfg.get("behaviour", "STATIONARY") # engage behaviours.py
+        next_behaviour = cfg.get("behaviour") # engage behaviours.py
+        if not next_behaviour:
+            next_behaviour = "STATIONARY"
+            Debug.warning(f"Behaviour {next_behaviour} not found in behaviours.json")
         self.resolve_behavior(next_behaviour, cfg)
 
         anim_name = cfg.get("animation")
@@ -209,6 +211,8 @@ class Pet(QWidget): # main logic
         pass
 
     def resolve_behavior(self, behaviour, cfg):
+
+
         # print(self.behaviour_name)
         self.behaviour_name = behaviour
         target_x, target_y, type, mover_settings, collision_settings, parenting_settings = self.behaviour_resolver.resolve(self.behaviour_name)
@@ -270,7 +274,8 @@ class Pet(QWidget): # main logic
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
-            raise Exception("ANIMATION", anim_name, "NOT FOUND")  #no idea what this does will add user notification that error occured
+            Debug.warning(f"Animation {anim_name} not found in animations.json")
+            raise Exception(f"Animation {anim_name} not found in animations.json")  #no idea what this does will add user notification that error occured
 
         anim_cfg = self.ANIMATIONS[anim_name]
 
