@@ -9,6 +9,7 @@ from pet import Pet
 
 from engine.particles.atlas_generator import AtlasGenerator
 from engine.debug import Debug
+from app.registrator import register_yoji_file_type
 
 from PySide6.QtCore import Qt, QTimer
 
@@ -30,7 +31,9 @@ from PySide6.QtWidgets import (
 
 root = Path(__file__).resolve().parents[1]
 
-icon_path = root / "resources" / "fonts" / "icon.ico"
+app_path = Path(__file__).resolve()
+
+icon_path = root / "resources" / "icons" / "icon.ico"
 logo_path = root / "resources" / "icons" / "icon.png"
 font_path = root / "resources" / "fonts"
 settings_path = root / "settings.json"
@@ -40,12 +43,29 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Yoji")
-
         self.resize(500, 400)
+
+        if len(sys.argv) > 1:
+            try:
+                input_file_path = str(Path(sys.argv[1]))
+                self.load_zip(input_file_path)
+            except Exception as e:
+                Debug.warning(f"Could not open a .yoji file.\n{e}")
+                QMessageBox.warning(
+                    self,
+                    "Could not open a .yoji file",
+                    f"{e}"
+                )
+
         self.load_settings()
 
         Debug.log("---APP LAUNCHED---\n")
 
+        # registering .yoji file format
+        try:
+            register_yoji_file_type(exe_path=app_path, icon_path=icon_path)
+        except Exception as e:
+            Debug.warning(f"Could not register .yoji file.\n{e}")
 
         # --- loading fonts ---
         QFontDatabase.addApplicationFont(str(font_path / "Rubik-Regular.ttf"))
@@ -236,10 +256,11 @@ class MainWindow(QWidget):
 
     def load_zip(self, path):
         if not path:
+            Debug.warning(f"Missing Path - archive file path was not valid")
             QMessageBox.warning(
                 self,
                 "Missing Path",
-                "Please enter a ZIP file path."
+                "Please enter a valid archive file path."
             )
             return
         
@@ -247,10 +268,11 @@ class MainWindow(QWidget):
         self.archive_path = path
 
         if not self.archive:
+            Debug.warning(f"Could not open {path} as archive.")
             QMessageBox.warning(
                 self,
-                "Cannot open ZIP",
-                "Cannot open ZIP file as archive."
+                "Cannot open file",
+                f"Cannot open {path} as archive."
             )
             return
 
@@ -298,6 +320,7 @@ class MainWindow(QWidget):
                 ]
                 suggested = image_files[0]
                 text = f"Probably meant {suggested}" if suggested else ""
+                Debug.warning(f"Missing thumbnail - You have specified thumbnail as {thumbnail}, but it is not present in archive.\n{text}")
                 QMessageBox.warning(
                     self,
                     "Missing thumbnail",
@@ -310,19 +333,20 @@ class MainWindow(QWidget):
         except Exception:
             self.manifest = None
             print("Manifest not found.")
+            Debug.warning(f"Missing manifest - Selected archive is missing a yoji manifest.")
             QMessageBox.warning(
                 self,
                 "Missing manifest",
-                "Selected ZIP archive is missing a yoji manifest."
+                "Selected archive is missing a yoji manifest."
             )
             return
 
     def browse_file(self):
         file_name, _ = QFileDialog.getOpenFileName(
             self,
-            "Open ZIP Archive",
+            "Open your Yoji",
             "",
-            "ZIP Files (*.zip);;All Files (*)"
+            "Yoji/ZIP Files (*.yoji *.zip);;All Files (*)"
         )
 
         if file_name:
@@ -358,6 +382,7 @@ class MainWindow(QWidget):
                 self.files.append(file)
 
         except FileNotFoundError:
+            Debug.error(f"The specified file does not exist.")
             QMessageBox.critical(
                 self,
                 "Error",
@@ -365,13 +390,15 @@ class MainWindow(QWidget):
             )
 
         except zipfile.BadZipFile:
+            Debug.error(f"Selected file is not a valid ZIP archive.")
             QMessageBox.critical(
                 self,
                 "Error",
-                "The selected file is not a valid ZIP archive."
+                "Selected file is not a valid ZIP archive."
             )
 
         except Exception as e:
+            Debug.error(f"Unexpected Error:\n{e}")
             QMessageBox.critical(
                 self,
                 "Unexpected Error",
@@ -462,6 +489,7 @@ class MainWindow(QWidget):
             self.pet.show()
 
         except Exception as e:
+            Debug.error(f"Could not call yoji.\n{e}")
             QMessageBox.warning(
                 self,
                 "Error",

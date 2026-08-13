@@ -1,0 +1,449 @@
+[12:22:09] ---APP LAUNCHED---
+
+[12:22:16] ---Trying to call pet---
+
+[12:22:16] Atlas found: success
+[12:22:16] ---Calling pet.py---
+[12:22:16] ---INITIALISATION START---
+[12:22:16] states.json - found
+[12:22:16] animations.json - found
+[12:22:16] variables.json - found
+[12:22:16] behaviours.json - found
+[12:22:16] particles/assets.json - found
+[12:22:16] particles/particles.json - found
+[12:22:16] --All .json files loaded: success
+[12:22:16] ---LOADING ANIMATIONS---
+[12:22:17] [ANIMATION LOADED] idle: 8 frames
+[12:22:17] [ANIMATION LOADED] blink: 4 frames
+[12:22:17] [ANIMATION LOADED] roll: 3 frames
+[12:22:17] [ANIMATION LOADED] look_around: 11 frames
+[12:22:17] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[12:22:17] [ANIMATION LOADED] grow: 6 frames
+[12:22:17] [ANIMATION LOADED] standing_up: 6 frames
+[12:22:17] [ANIMATION LOADED] trollface: 1 frames
+[12:22:17] [ANIMATION LOADED] dozing_off: 4 frames
+[12:22:17] [ANIMATION LOADED] dozed_off: 4 frames
+[12:22:17] [ANIMATION LOADED] waking_up: 7 frames
+[12:22:17] [ANIMATION LOADED] falling_asleep: 5 frames
+[12:22:17] [ANIMATION LOADED] sleeping: 4 frames
+[12:22:17] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[12:22:17] [ANIMATION LOADED] looking_for_something: 2 frames
+[12:22:17] [ANIMATION LOADED] magnifying_glass: 8 frames
+[12:22:22] ---LOADING PARTICLES---
+[12:22:22] Getting atlas.png from: generated/atlas/atlas.png
+[12:22:22] --Success!
+[12:22:22] Getting atlas.json from: generated/atlas/atlas.png
+[12:22:22] --Success!
+[12:22:22] ---Loading particles into memory---
+[12:22:22] Asset loaded: dirt
+[12:22:22] Asset loaded: sleep_zzz
+[12:22:22] Debug information:
+[12:22:22] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[12:22:22] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[12:22:22] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[12:22:22] assets lookup: [0, 1, 1, 1]
+[12:22:22] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[12:22:22] ---PARTICLES LOADED---
+[12:22:22] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[12:22:22] On enter: IDLE
+[12:22:22] ---LOADING SUCCESSFUL---
+
+[12:22:25] On enter: DRAGGING
+[12:22:26] On enter: FALLING
+[12:22:27] On enter: IDLE
+[12:22:27] On enter: DRAGGING
+[12:22:27] On enter: FALLING
+[12:22:28] On enter: IDLE
+[12:22:28] On enter: DRAGGING
+[12:22:28] On enter: FALLING
+[12:22:29] On enter: IDLE
+[12:22:30] On enter: DRAGGING
+[12:22:30] On enter: FALLING
+[12:22:31] On enter: IDLE
+[12:22:32] ---Recalling pet---
+
+[12:24:19] ---APP LAUNCHED---
+
+[12:24:22] ---Trying to call pet---
+
+[12:24:22] Atlas found: success
+[12:24:22] ---Calling pet.py---
+[12:24:22] ---INITIALISATION START---
+[12:24:22] states.json - found
+[12:24:22] animations.json - found
+[12:24:22] variables.json - found
+[12:24:22] behaviours.json - found
+[12:24:22] particles/assets.json - found
+[12:24:22] particles/particles.json - found
+[12:24:22] --All .json files loaded: success
+[12:24:22] ---LOADING ANIMATIONS---
+[12:24:22] [ANIMATION LOADED] idle: 8 frames
+[12:24:22] [ANIMATION LOADED] blink: 4 frames
+[12:24:22] [ANIMATION LOADED] roll: 3 frames
+[12:24:22] [ANIMATION LOADED] look_around: 11 frames
+[12:24:22] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[12:24:22] [ANIMATION LOADED] grow: 6 frames
+[12:24:22] [ANIMATION LOADED] standing_up: 6 frames
+[12:24:22] [ANIMATION LOADED] trollface: 1 frames
+[12:24:22] [ANIMATION LOADED] dozing_off: 4 frames
+[12:24:22] [ANIMATION LOADED] dozed_off: 4 frames
+[12:24:22] [ANIMATION LOADED] waking_up: 7 frames
+[12:24:23] [ANIMATION LOADED] falling_asleep: 5 frames
+[12:24:23] [ANIMATION LOADED] sleeping: 4 frames
+[12:24:23] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[12:24:23] [ANIMATION LOADED] looking_for_something: 2 frames
+[12:24:23] [ANIMATION LOADED] magnifying_glass: 8 frames
+[12:24:23] ---LOADING PARTICLES---
+[12:24:23] Getting atlas.png from: generated/atlas/atlas.png
+[12:24:23] --Success!
+[12:24:23] Getting atlas.json from: generated/atlas/atlas.png
+[12:24:23] --Success!
+[12:24:23] ---Loading particles into memory---
+[12:24:23] Asset loaded: dirt
+[12:24:23] Asset loaded: sleep_zzz
+[12:24:23] Debug information:
+[12:24:23] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[12:24:23] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[12:24:23] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[12:24:23] assets lookup: [0, 1, 1, 1]
+[12:24:23] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[12:24:23] ---PARTICLES LOADED---
+[12:24:23] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[12:24:23] On enter: IDLE
+[12:24:23] ---LOADING SUCCESSFUL---
+
+[12:24:25] On enter: DRAGGING
+[12:24:25] On enter: FALLING
+[12:24:26] On enter: IDLE
+[12:24:26] On enter: DRAGGING
+[12:24:27] On enter: FALLING
+[12:24:28] On enter: IDLE
+[12:24:28] On enter: DRAGGING
+[12:24:28] On enter: FALLING
+[12:24:29] On enter: IDLE
+[12:24:29] On enter: DRAGGING
+[12:24:29] On enter: FALLING
+[12:24:30] On enter: IDLE
+[12:24:30] On enter: DRAGGING
+[12:24:30] On enter: FALLING
+[12:24:31] On enter: IDLE
+[12:24:35] On enter: BLINK
+[12:24:35] On enter: IDLE
+[12:24:36] On enter: DRAGGING
+[12:24:36] On enter: FALLING
+[12:24:37] On enter: IDLE
+[12:24:37] On enter: DRAGGING
+[12:24:38] On enter: FALLING
+[12:24:39] On enter: IDLE
+[12:24:39] On enter: DRAGGING
+[12:24:40] On enter: FALLING
+[12:24:40] On enter: IDLE
+[12:24:41] On enter: DRAGGING
+[12:24:41] On enter: FALLING
+[12:24:42] On enter: IDLE
+[12:24:42] On enter: DRAGGING
+[12:24:43] On enter: FALLING
+[12:24:44] On enter: IDLE
+[12:24:44] On enter: DRAGGING
+[12:24:45] On enter: FALLING
+[12:24:46] On enter: IDLE
+[12:24:47] On enter: DRAGGING
+[12:24:47] On enter: FALLING
+[12:24:48] On enter: IDLE
+[12:24:49] On enter: DRAGGING
+[12:24:50] On enter: FALLING
+[12:24:50] On enter: IDLE
+[12:24:51] On enter: DRAGGING
+[12:24:52] On enter: FALLING
+[12:24:53] On enter: IDLE
+[12:24:53] On enter: DRAGGING
+[12:24:54] On enter: FALLING
+[12:24:55] On enter: IDLE
+[12:48:25] ---APP LAUNCHED---
+
+[12:48:32] ---Trying to call pet---
+
+[12:48:32] Atlas found: success
+[12:48:32] ---Calling pet.py---
+[12:48:32] ---INITIALISATION START---
+[12:48:32] states.json - found
+[12:48:32] animations.json - found
+[12:48:32] variables.json - found
+[12:48:32] behaviours.json - found
+[12:48:32] particles/assets.json - found
+[12:48:32] particles/particles.json - found
+[12:48:32] --All .json files loaded: success
+[12:48:32] ---LOADING ANIMATIONS---
+[12:48:32] [ANIMATION LOADED] idle: 8 frames
+[12:48:32] [ANIMATION LOADED] blink: 4 frames
+[12:48:32] [ANIMATION LOADED] roll: 3 frames
+[12:48:32] [ANIMATION LOADED] look_around: 11 frames
+[12:48:32] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[12:48:32] [ANIMATION LOADED] grow: 6 frames
+[12:48:32] [ANIMATION LOADED] standing_up: 6 frames
+[12:48:32] [ANIMATION LOADED] trollface: 1 frames
+[12:48:32] [ANIMATION LOADED] dozing_off: 4 frames
+[12:48:32] [ANIMATION LOADED] dozed_off: 4 frames
+[12:48:32] [ANIMATION LOADED] waking_up: 7 frames
+[12:48:32] [ANIMATION LOADED] falling_asleep: 5 frames
+[12:48:32] [ANIMATION LOADED] sleeping: 4 frames
+[12:48:32] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[12:48:32] [ANIMATION LOADED] looking_for_something: 2 frames
+[12:48:32] [ANIMATION LOADED] magnifying_glass: 8 frames
+[12:48:33] ---LOADING PARTICLES---
+[12:48:33] Getting atlas.png from: generated/atlas/atlas.png
+[12:48:33] --Success!
+[12:48:33] Getting atlas.json from: generated/atlas/atlas.png
+[12:48:33] --Success!
+[12:48:33] ---Loading particles into memory---
+[12:48:33] Asset loaded: dirt
+[12:48:33] Asset loaded: sleep_zzz
+[12:48:33] Debug information:
+[12:48:33] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[12:48:33] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[12:48:33] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[12:48:33] assets lookup: [0, 1, 1, 1]
+[12:48:33] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[12:48:33] ---PARTICLES LOADED---
+[12:48:33] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[12:48:33] On enter: IDLE
+[12:48:33] ---LOADING SUCCESSFUL---
+
+[12:48:36] On enter: DRAGGING
+[12:48:36] On enter: FALLING
+[12:48:38] On enter: IDLE
+[12:48:44] On enter: MAGNIFYING_GLASS
+[12:48:47] On enter: IDLE
+[12:48:48] On enter: DRAGGING
+[12:48:48] On enter: FALLING
+[12:48:49] On enter: IDLE
+[12:49:08] ---APP LAUNCHED---
+
+[12:49:17] ---Trying to call pet---
+
+[12:49:17] Atlas found: success
+[12:49:17] ---Calling pet.py---
+[12:49:17] ---INITIALISATION START---
+[12:49:17] states.json - found
+[12:49:17] animations.json - found
+[12:49:17] variables.json - found
+[12:49:17] behaviours.json - found
+[12:49:17] particles/assets.json - found
+[12:49:17] particles/particles.json - found
+[12:49:17] --All .json files loaded: success
+[12:49:17] ---LOADING ANIMATIONS---
+[12:49:17] [ANIMATION LOADED] idle: 8 frames
+[12:49:17] [ANIMATION LOADED] blink: 4 frames
+[12:49:17] [ANIMATION LOADED] roll: 3 frames
+[12:49:18] [ANIMATION LOADED] look_around: 11 frames
+[12:49:18] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[12:49:18] [ANIMATION LOADED] grow: 6 frames
+[12:49:18] [ANIMATION LOADED] standing_up: 6 frames
+[12:49:18] [ANIMATION LOADED] trollface: 1 frames
+[12:49:18] [ANIMATION LOADED] dozing_off: 4 frames
+[12:49:18] [ANIMATION LOADED] dozed_off: 4 frames
+[12:49:18] [ANIMATION LOADED] waking_up: 7 frames
+[12:49:18] [ANIMATION LOADED] falling_asleep: 5 frames
+[12:49:18] [ANIMATION LOADED] sleeping: 4 frames
+[12:49:18] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[12:49:18] [ANIMATION LOADED] looking_for_something: 2 frames
+[12:49:18] [ANIMATION LOADED] magnifying_glass: 8 frames
+[12:49:18] ---LOADING PARTICLES---
+[12:49:18] Getting atlas.png from: generated/atlas/atlas.png
+[12:49:18] --Success!
+[12:49:18] Getting atlas.json from: generated/atlas/atlas.png
+[12:49:18] --Success!
+[12:49:18] ---Loading particles into memory---
+[12:49:18] Asset loaded: dirt
+[12:49:18] Asset loaded: sleep_zzz
+[12:49:18] Debug information:
+[12:49:18] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[12:49:18] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[12:49:18] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[12:49:18] assets lookup: [0, 1, 1, 1]
+[12:49:18] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[12:49:18] ---PARTICLES LOADED---
+[12:49:18] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[12:49:18] On enter: IDLE
+[12:49:18] ---LOADING SUCCESSFUL---
+
+[12:49:19] On enter: DRAGGING
+[12:49:20] On enter: FALLING
+[12:49:20] On enter: IDLE
+[12:49:32] On enter: DRAGGING
+[12:49:33] On enter: FALLING
+[12:49:33] On enter: IDLE
+[12:49:34] On enter: DRAGGING
+[12:49:35] On enter: FALLING
+[12:49:35] On enter: IDLE
+[12:49:39] On enter: MAGNIFYING_GLASS
+[12:49:42] On enter: IDLE
+[12:49:44] On enter: MAGNIFYING_GLASS
+[12:49:47] On enter: IDLE
+[12:49:48] On enter: FALLING
+[12:49:49] On enter: IDLE
+[12:49:49] On enter: DRAGGING
+[12:49:50] On enter: FALLING
+[12:49:50] On enter: IDLE
+[12:49:52] On enter: LOOKING_AROUND
+[12:49:53] On enter: IDLE
+[12:49:55] On enter: MAGNIFYING_GLASS
+[12:49:58] On enter: IDLE
+[12:50:00] On enter: MAGNIFYING_GLASS
+[12:50:03] On enter: FALLING
+[12:50:04] On enter: IDLE
+[12:50:06] On enter: FALLING
+[12:50:07] On enter: IDLE
+[12:50:09] On enter: BLINK
+[12:50:09] On enter: IDLE
+[12:50:10] On enter: DRAGGING
+[12:50:10] On enter: FALLING
+[12:50:11] On enter: IDLE
+[12:50:15] On enter: MAGNIFYING_GLASS
+[12:50:18] On enter: IDLE
+[12:50:22] On enter: MAGNIFYING_GLASS
+[12:50:25] On enter: IDLE
+[12:50:29] On enter: MAGNIFYING_GLASS
+[12:50:32] On enter: IDLE
+[12:50:34] On enter: MAGNIFYING_GLASS
+[13:40:34] ---APP LAUNCHED---
+
+[13:51:29] ---APP LAUNCHED---
+
+[13:51:39] ---Trying to call pet---
+
+[13:51:39] Atlas found: success
+[13:51:39] ---Calling pet.py---
+[13:51:39] ---INITIALISATION START---
+[13:51:39] states.json - found
+[13:51:39] animations.json - found
+[13:51:39] variables.json - found
+[13:51:39] behaviours.json - found
+[13:51:39] particles/assets.json - found
+[13:51:39] particles/particles.json - found
+[13:51:39] --All .json files loaded: success
+[13:51:39] ---LOADING ANIMATIONS---
+[13:51:39] [ANIMATION LOADED] idle: 8 frames
+[13:51:39] [ANIMATION LOADED] blink: 4 frames
+[13:51:39] [ANIMATION LOADED] roll: 3 frames
+[13:51:39] [ANIMATION LOADED] look_around: 11 frames
+[13:51:39] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[13:51:39] [ANIMATION LOADED] grow: 6 frames
+[13:51:39] [ANIMATION LOADED] standing_up: 6 frames
+[13:51:39] [ANIMATION LOADED] trollface: 1 frames
+[13:51:39] [ANIMATION LOADED] dozing_off: 4 frames
+[13:51:39] [ANIMATION LOADED] dozed_off: 4 frames
+[13:51:39] [ANIMATION LOADED] waking_up: 7 frames
+[13:51:39] [ANIMATION LOADED] falling_asleep: 5 frames
+[13:51:39] [ANIMATION LOADED] sleeping: 4 frames
+[13:51:39] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[13:51:39] [ANIMATION LOADED] looking_for_something: 2 frames
+[13:51:39] [ANIMATION LOADED] magnifying_glass: 8 frames
+[13:51:40] ---LOADING PARTICLES---
+[13:51:40] Getting atlas.png from: generated/atlas/atlas.png
+[13:51:40] --Success!
+[13:51:40] Getting atlas.json from: generated/atlas/atlas.png
+[13:51:40] --Success!
+[13:51:40] ---Loading particles into memory---
+[13:51:40] Asset loaded: dirt
+[13:51:40] Asset loaded: sleep_zzz
+[13:51:40] Debug information:
+[13:51:40] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[13:51:40] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[13:51:40] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[13:51:40] assets lookup: [0, 1, 1, 1]
+[13:51:40] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[13:51:40] ---PARTICLES LOADED---
+[13:51:40] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[13:51:40] On enter: IDLE
+[13:51:40] ---LOADING SUCCESSFUL---
+
+[13:51:41] On enter: DRAGGING
+[13:51:41] On enter: FALLING
+[13:51:42] On enter: IDLE
+[13:51:43] On enter: DRAGGING
+[13:51:43] On enter: FALLING
+[13:51:44] On enter: IDLE
+[13:51:47] On enter: DRAGGING
+[13:51:47] On enter: FALLING
+[13:51:49] On enter: IDLE
+[13:51:49] On enter: DRAGGING
+[13:51:49] On enter: FALLING
+[13:51:51] On enter: IDLE
+[13:51:56] On enter: DRAGGING
+[13:51:56] On enter: FALLING
+[13:51:57] On enter: IDLE
+[13:52:00] On enter: DRAGGING
+[13:52:00] On enter: FALLING
+[13:52:02] On enter: IDLE
+[13:52:02] On enter: DRAGGING
+[13:52:02] On enter: FALLING
+[13:52:03] On enter: IDLE
+[13:52:05] On enter: DRAGGING
+[13:52:05] On enter: FALLING
+[13:52:06] On enter: IDLE
+[13:52:07] On enter: DRAGGING
+[13:52:08] On enter: FALLING
+[13:52:09] On enter: IDLE
+[13:52:10] On enter: DRAGGING
+[13:52:10] On enter: FALLING
+[13:52:11] On enter: IDLE
+[13:52:12] On enter: DRAGGING
+[13:52:12] On enter: FALLING
+[13:52:13] On enter: IDLE
+[13:52:13] On enter: DRAGGING
+[13:52:14] On enter: FALLING
+[13:52:16] On enter: IDLE
+[13:52:17] On enter: DRAGGING
+[13:52:18] On enter: FALLING
+[13:52:19] On enter: IDLE
+[13:52:26] On enter: BLINK
+[13:52:27] On enter: IDLE
+[13:52:43] On enter: BLINK
+[13:52:43] On enter: DOZING_OFF
+[13:52:44] On enter: DOZED_OFF
+[13:52:59] On enter: SLEEPING
+[13:53:26] On enter: FALLING
+[13:53:26] On enter: FALLING
+[13:53:28] On enter: IDLE
+[13:53:34] On enter: MAGNIFYING_GLASS
+[13:53:37] On enter: IDLE
+[13:53:42] On enter: MAGNIFYING_GLASS
+[13:53:45] On enter: IDLE
+[13:53:46] On enter: BLINK
+[13:53:46] On enter: IDLE
+[13:53:48] On enter: BLINK
+[13:53:48] On enter: DOZING_OFF
+[13:53:50] On enter: SLEEPING
+[13:54:09] On enter: DRAGGING
+[13:54:10] On enter: FALLING
+[13:54:11] On enter: IDLE
+[13:54:12] On enter: BLINK
+[13:54:12] On enter: DOZING_OFF
+[13:54:14] On enter: DOZED_OFF
+[13:54:15] On enter: SLEEPING

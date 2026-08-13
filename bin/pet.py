@@ -140,6 +140,7 @@ class Pet(QWidget): # main logic
         self.behaviour_resolver = BehaviourResolver(self, BEHAVIOURS)
 
         self.windowsOverlay = WindowsOverlay(self)
+
         self.particle_engine = ParticleOverlayWidget(pet=self, ASSETS=ASSETS, PARTICLES=PARTICLES, archive=archive)
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0

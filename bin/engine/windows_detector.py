@@ -625,8 +625,9 @@ class WindowsOverlay(QWidget):
         tid, pid = win32process.GetWindowThreadProcessId(focused_hwnd)
         # print(f"hwnd={focused_hwnd}, tid={tid}, pid={pid}")
         if pid >= 0:
-            self.focused_app.add(psutil.Process(pid).name())
-        else: print("Meh error: pid is a negative number dunno why sometimes")
+            try:
+                self.focused_app.add(psutil.Process(pid).name())
+            except Exception: pass
 
         self.update_apps()
 
@@ -702,6 +703,7 @@ class WindowsOverlay(QWidget):
                 print(f"  {i}: hwnd={hwnd} title={repr(title)} rect={rect} segs_top={len(seg['top']) if seg else 0}")
 
         # trigger repaint
+        return   # 
         self.update()
 
 
@@ -907,6 +909,7 @@ class WindowsOverlay(QWidget):
     
 
     def paintEvent(self, event):
+        return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing) # type: ignore
 
