@@ -192,10 +192,7 @@ class Pet(QWidget): # main logic
 
         cfg = self.STATES[state]      # gets the config for the state from states.py
 
-        next_behaviour = cfg.get("behaviour") # engage behaviours.py
-        if not next_behaviour:
-            next_behaviour = "STATIONARY"
-            Debug.warning(f"Behaviour {next_behaviour} not found in behaviours.json")
+        next_behaviour = cfg.get("behaviour", "STATIONARY") # engage behaviours.py
         self.resolve_behavior(next_behaviour, cfg)
 
         anim_name = cfg.get("animation")

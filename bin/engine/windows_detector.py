@@ -44,6 +44,9 @@ WinEventProcType = ctypes.WINFUNCTYPE(
 
 def win_event_callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime):
     global needs_window_list_update
+
+    # if event == win32con.EVENT_OBJECT_LOCATIONCHANGE:
+    #     print("LOCATIONCHANGE:", hwnd, idObject, idChild)
     # Only top-level windows
     if idObject != win32con.OBJID_WINDOW or windows_detector == None:
         return
@@ -617,6 +620,7 @@ class WindowsOverlay(QWidget):
         self.windows, self.visible_apps, self.maximised_apps, self.fullscreen_apps = get_windows_in_zorder(excluded_hwnd=excluded)
 
         # print("update_window_list VISIBLE", self.visible_apps)
+        # print("update_window_list VISIBLE", self.visible_apps)
 
         focused_hwnd = win32gui.GetForegroundWindow()
         self.focused_app_title = win32gui.GetWindowText(focused_hwnd)
@@ -627,9 +631,9 @@ class WindowsOverlay(QWidget):
         if pid >= 0:
             try:
                 self.focused_app.add(psutil.Process(pid).name())
-                print("update_window_list FOCUSED", self.focused_app)
-                print("update_window_list FOCUSED HWND", focused_hwnd)
-                print("update_window_list BOUNDS", get_extended_frame_bounds(focused_hwnd))
+                # print("update_window_list FOCUSED", self.focused_app)
+                # print("update_window_list FOCUSED HWND", focused_hwnd)
+                # print("update_window_list BOUNDS", get_extended_frame_bounds(focused_hwnd))
                 
             except Exception: pass
 
