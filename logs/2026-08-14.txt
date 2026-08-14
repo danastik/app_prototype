@@ -758,3 +758,115 @@ Enjoy your yoji <3
 
 [13:03:55] ---Recalling pet---
 
+[13:15:49] 
+---APP LAUNCHED---
+[13:15:49] ---APP LOADED SUCCESSFULLY---
+
+[13:15:54] --Trying to call D:/работа/projects/app_prototype/library/yojik.zip
+[13:15:54] Atlas found: success
+[13:15:54] --Calling pet.py
+[13:15:54] ---INITIALISATION START---
+[13:15:54] states.json - found
+[13:15:54] animations.json - found
+[13:15:54] variables.json - found
+[13:15:54] behaviours.json - found
+[13:15:54] particles/assets.json - found
+[13:15:54] particles/particles.json - found
+[13:15:54] --All .json files loaded: success
+[13:15:54] ---LOADING ANIMATIONS---
+[13:15:54] [ANIMATION LOADED] idle: 8 frames
+[13:15:54] [ANIMATION LOADED] blink: 4 frames
+[13:15:54] [ANIMATION LOADED] roll: 3 frames
+[13:15:54] [ANIMATION LOADED] look_around: 11 frames
+[13:15:54] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[13:15:54] [ANIMATION LOADED] grow: 6 frames
+[13:15:54] [ANIMATION LOADED] standing_up: 6 frames
+[13:15:54] [ANIMATION LOADED] trollface: 1 frames
+[13:15:54] [ANIMATION LOADED] dozing_off: 4 frames
+[13:15:54] [ANIMATION LOADED] dozed_off: 4 frames
+[13:15:54] [ANIMATION LOADED] waking_up: 7 frames
+[13:15:54] [ANIMATION LOADED] falling_asleep: 5 frames
+[13:15:54] [ANIMATION LOADED] sleeping: 4 frames
+[13:15:54] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[13:15:54] [ANIMATION LOADED] looking_for_something: 2 frames
+[13:15:54] [ANIMATION LOADED] magnifying_glass: 8 frames
+[13:15:55] ---LOADING PARTICLES---
+[13:15:55] Getting atlas.png from: generated/atlas/atlas.png
+[13:15:55] --Success!
+[13:15:55] Getting atlas.json from: generated/atlas/atlas.png
+[13:15:55] --Success!
+[13:15:55] ---Loading particles into memory---
+[13:15:55] Asset loaded: dirt
+[13:15:55] Asset loaded: sleep_zzz
+[13:15:55] Debug information:
+[13:15:55] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[13:15:55] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[13:15:55] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[13:15:55] assets lookup: [0, 1, 1, 1]
+[13:15:55] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[13:15:55] ---PARTICLES LOADED---
+[13:15:55] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[13:15:55] ---LOADING SUCCESSFUL---
+Enjoy your yoji <3
+
+[13:37:25] 
+---APP LAUNCHED---
+[13:37:25] ---APP LOADED SUCCESSFULLY---
+
+[13:37:26] --Trying to call D:/работа/projects/app_prototype/library/yojik.zip
+[13:37:26] Atlas found: success
+[13:37:26] --Calling pet.py
+[13:37:26] ---INITIALISATION START---
+[13:37:26] states.json - found
+[13:37:26] animations.json - found
+[13:37:26] variables.json - found
+[13:37:26] behaviours.json - found
+[13:37:26] particles/assets.json - found
+[13:37:26] particles/particles.json - found
+[13:37:26] --All .json files loaded: success
+[13:37:26] ---LOADING ANIMATIONS---
+[13:37:26] [ANIMATION LOADED] idle: 8 frames
+[13:37:26] [ANIMATION LOADED] blink: 4 frames
+[13:37:26] [ANIMATION LOADED] roll: 3 frames
+[13:37:26] [ANIMATION LOADED] look_around: 11 frames
+[13:37:26] [ANIMATION LOADED] held_by_the_nose: 4 frames
+[13:37:26] [ANIMATION LOADED] grow: 6 frames
+[13:37:26] [ANIMATION LOADED] standing_up: 6 frames
+[13:37:26] [ANIMATION LOADED] trollface: 1 frames
+[13:37:26] [ANIMATION LOADED] dozing_off: 4 frames
+[13:37:26] [ANIMATION LOADED] dozed_off: 4 frames
+[13:37:26] [ANIMATION LOADED] waking_up: 7 frames
+[13:37:26] [ANIMATION LOADED] falling_asleep: 5 frames
+[13:37:26] [ANIMATION LOADED] sleeping: 4 frames
+[13:37:26] [ANIMATION LOADED] waking_up_after_sleep: 12 frames
+[13:37:26] [ANIMATION LOADED] looking_for_something: 2 frames
+[13:37:26] [ANIMATION LOADED] magnifying_glass: 8 frames
+[13:37:27] ---LOADING PARTICLES---
+[13:37:27] Getting atlas.png from: generated/atlas/atlas.png
+[13:37:27] --Success!
+[13:37:27] Getting atlas.json from: generated/atlas/atlas.png
+[13:37:27] --Success!
+[13:37:27] ---Loading particles into memory---
+[13:37:27] Asset loaded: dirt
+[13:37:27] Asset loaded: sleep_zzz
+[13:37:27] Debug information:
+[13:37:27] atlas lookup: [{'y': 0, 'height': 62, 'frame_count': 3, 'aspect_ratio': 0.9193548387096774, 'frames': [{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}]}, {'y': 62, 'height': 166, 'frame_count': 4, 'aspect_ratio': 0.9397590361445783, 'frames': [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]}]
+[13:37:27] frame lookup: [[{'file': 'dirt1.png', 'w': 57, 'h': 62, 'u0': 0.0, 'u1': 0.09134615384615384, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt2.png', 'w': 57, 'h': 62, 'u0': 0.09134615384615384, 'u1': 0.18269230769230768, 'v0': 0.7280701754385965, 'v1': 1.0}, {'file': 'dirt3.png', 'w': 57, 'h': 62, 'u0': 0.18269230769230768, 'u1': 0.27403846153846156, 'v0': 0.7280701754385965, 'v1': 1.0}], [{'file': 'z1.png', 'w': 156, 'h': 166, 'u0': 0.0, 'u1': 0.25, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z2.png', 'w': 156, 'h': 166, 'u0': 0.25, 'u1': 0.5, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z3.png', 'w': 156, 'h': 166, 'u0': 0.5, 'u1': 0.75, 'v0': 0.0, 'v1': 0.7280701754385965}, {'file': 'z4.png', 'w': 156, 'h': 166, 'u0': 0.75, 'u1': 1.0, 'v0': 0.0, 'v1': 0.7280701754385965}]]
+[13:37:27] assets ids: {'dirt': 0, 'sleep_zzz': 1}
+[13:37:27] assets lookup: [0, 1, 1, 1]
+[13:37:27] aspect_ratio_by_id: [0.9193548387096774, 0.9397590361445783, 0.9397590361445783, 0.9397590361445783]
+[13:37:27] ---PARTICLES LOADED---
+[13:37:27] Updating dpi and scale:
+Screen height: 1040
+ First frame height: 334
+Pixel ratio: 0.26467065868263473
+Screen DPI: 1.0
+New scale: 0.26467065868263473
+[13:37:27] ---LOADING SUCCESSFUL---
+Enjoy your yoji <3
+

@@ -14,6 +14,7 @@ import win32con
 import time
 
 from engine.enums import SurfaceType
+from engine.debug import Debug
 
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
 DWMWA_CLOAKED = 14
@@ -100,7 +101,7 @@ def install_hooks():
             0,
             WinEventProc,
             0, 0,
-            win32con.WINEVENT_OUTOFCONTEXT | win32con.WINEVENT_SKIPOWNPROCESS
+            win32con.WINEVENT_OUTOFCONTEXT #| win32con.WINEVENT_SKIPOWNPROCESS
         )
         hooks.append(hook)
 
@@ -559,8 +560,10 @@ class WindowsOverlay(QWidget):
         self.pet = pet
 
         self.pet_parent_window_rect = None
-
-        install_hooks()
+        try:
+            install_hooks()
+        except Exception as e:
+            Debug.error(f"Windows hooks could not be installed.\n{e}")
 
         self.update_hitbox(pet.hitbox_width, pet.hitbox_height)
 

@@ -541,7 +541,7 @@ class Pet(QWidget): # main logic
         self.state_machine.pulse(Pulse.GAINED_PARENT)
         self.state_machine.raise_flag(Flag.PARENTED_TO_WINDOW)
         self.state_machine.remove_flag(Flag.NOT_PARENTED_TO_WINDOW)
-        # print("Parent window:", hwnd)
+        print("Parent window:", hwnd)
 
     def apply_window_position(self):
         self.move(
