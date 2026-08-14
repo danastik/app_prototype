@@ -1,0 +1,79 @@
+QWidget {
+    font-family: "Rubik";
+    font-size: 10pt;
+    margin: 0px;
+}
+
+QPushButton {
+    padding: 6px;
+    border: 1px solid #0078D7;
+}
+
+QLineEdit {
+    padding: 4px;
+}
+
+#info_widget {
+    margin-left: 1px;
+}
+
+QLabel#info_thumbnail {
+    max-width: 230px;
+    max-height: 230px;
+}
+
+#info_name {
+    font-family: "Rubik";
+    font-weight: bold;
+    font-size: 22px;
+}
+
+
+#info_author {
+    font-size: 12px;
+    color: #595959;
+    margin-top: 0px;
+}
+
+
+#info_description {
+    margin-top: 10px;
+}
+
+
+#info_tags {
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+
+#browse_button {
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+}
+
+#browse_button:hover {
+    background-color: #0078D7;
+    color: white;
+}
+
+
+#call_button {
+    font-family: "Rubik";
+    font-weight: bold;
+    background-color: #0078D7;
+    color: white;
+    border-radius: 8px;
+    border: 0px;
+    width: 80px;
+    max-width: 150px;
+}
+
+#call_button:hover {
+    background-color: #2893FF;
+}
+
+#call_button:pressed {
+    background-color: #005A9E;
+}

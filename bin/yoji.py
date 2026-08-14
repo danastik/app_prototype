@@ -31,12 +31,13 @@ from PySide6.QtWidgets import (
 
 root = Path(__file__).resolve().parents[1]
 
-app_path = Path(__file__).resolve()
-
 icon_path = root / "resources" / "icons" / "icon.ico"
 logo_path = root / "resources" / "icons" / "icon.png"
 font_path = root / "resources" / "fonts"
+qss_path = root / "resources" / "styles" / "main_widget.qss"
 settings_path = root / "settings.json"
+
+app_path = Path(__file__).resolve()
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -101,9 +102,9 @@ class MainWindow(QWidget):
         self.info_widget = QWidget()
         info_layout = QHBoxLayout(self.info_widget)
 
-        self.info_icon = QLabel()
-        self.info_icon.setPixmap(QPixmap(str(logo_path)))
-        info_layout.addWidget(self.info_icon)
+        self.info_thumbnail = QLabel()
+        self.info_thumbnail.setPixmap(QPixmap(str(logo_path)))
+        info_layout.addWidget(self.info_thumbnail)
 
         info_layout.addSpacing(10)
 
@@ -142,99 +143,26 @@ class MainWindow(QWidget):
         self.contents.setReadOnly(True)
 
 
+        #set object names for easy acess in qss
+        self.info_widget.setObjectName("info_widget")
+        self.info_thumbnail.setObjectName("info_thumbnail")
+        self.info_name.setObjectName("info_name")
+        self.info_author.setObjectName("info_author")
+        self.info_description.setObjectName("info_description")
+        self.info_tags.setObjectName("info_tags")
+        self.browse_button.setObjectName("browse_button")
+        self.call_button.setObjectName("call_button")
+
         # --- stylesheets ---
+        with open(qss_path, "r", encoding="utf-8") as f:
+            self.setStyleSheet(f.read())
 
-        self.setStyleSheet("""
-            QWidget {
-                font-family: "Rubik";
-                font-size: 10pt;
-                margin: 0px;
-            }
-
-            QPushButton {
-                padding: 6px;
-                border: 1px solid #0078D7;
-            }
-
-            QLineEdit {
-                padding: 4px;
-            }
-            """)
-
-        self.info_widget.setStyleSheet("""
-            QWidget {
-                margin-left: 1px;
-            }
-            """)
-
-        self.info_icon.setStyleSheet("""
-            QLabel {
-                max-width: 230px;
-                max-height: 230px;
-            }
-            """)
-        
-        self.info_name.setStyleSheet("""
-            QLabel {
-                font-family: "Rubik";
-                font-weight: bold;
-                font-size: 20px;
-            }
-            """)
-
-        self.info_author.setStyleSheet("""
-            QLabel {
-                font-size: 12px;
-                color: #595959;
-                margin-top: 0px;
-            }
-            """)
-        
-        self.info_description.setStyleSheet("""
-            QLabel {
-                margin-top: 10px;
-            }
-            """)
-        
-        self.info_tags.setStyleSheet("""
-            QLabel {
-                font-size: 12px;
-                margin-top: 10px;
-            }
-            """)
-
-        self.browse_button.setStyleSheet("""
-            QPushButton {
-                background-color: white;
-                color: black;
-                border-radius: 8px;
-            }
-
-            QPushButton:hover {
-                background-color: #0078D7;
-                color: white;
-            }
-            """)
-
-        self.call_button.setStyleSheet("""
-            QPushButton {
-                font-family: "Rubik";
-                font-weight: bold;
-                background-color: #0078D7;
-                color: white;
-                border-radius: 8px;
-                border: 0px;
-                width: 80px;
-                max-width: 150px;
-            }
-
-            QPushButton:hover {
-                background-color: #2893FF;
-            }
-
-            QPushButton:pressed {
-                background-color: #005A9E;
-            }
+        # it doesnt work when applied through qss for some reason
+        self.info_thumbnail.setStyleSheet("""
+                QLabel {
+                    max-width: 230px;
+                    max-height: 230px;
+                }
             """)
 
         # --- main layout  ---
@@ -310,9 +238,9 @@ class MainWindow(QWidget):
                     print("loading image")
                 pixmap = QPixmap()
                 pixmap.loadFromData(image_data)
-                self.info_icon.setPixmap(
+                self.info_thumbnail.setPixmap(
                     pixmap.scaled(
-                        self.info_icon.size(),
+                        self.info_thumbnail.size(),
                         Qt.KeepAspectRatio, #type: ignore
                         Qt.SmoothTransformation #type: ignore
                     )
