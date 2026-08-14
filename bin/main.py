@@ -122,7 +122,7 @@ class MainWindow(QWidget):
         self.info_description.setWordWrap(True)
         grid.addWidget(self.info_description)
 
-        self.info_tags = QLabel("nice cool round")
+        self.info_tags = QLabel("#yoji #pet #forever")
         self.info_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         grid.addWidget(self.info_tags)
 
