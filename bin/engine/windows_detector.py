@@ -627,6 +627,10 @@ class WindowsOverlay(QWidget):
         if pid >= 0:
             try:
                 self.focused_app.add(psutil.Process(pid).name())
+                print("update_window_list FOCUSED", self.focused_app)
+                print("update_window_list FOCUSED HWND", focused_hwnd)
+                print("update_window_list BOUNDS", get_extended_frame_bounds(focused_hwnd))
+                
             except Exception: pass
 
         self.update_apps()
@@ -703,7 +707,7 @@ class WindowsOverlay(QWidget):
                 print(f"  {i}: hwnd={hwnd} title={repr(title)} rect={rect} segs_top={len(seg['top']) if seg else 0}")
 
         # trigger repaint
-        return   # 
+        # return   # 
         self.update()
 
 
@@ -909,7 +913,7 @@ class WindowsOverlay(QWidget):
     
 
     def paintEvent(self, event):
-        return
+        # return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing) # type: ignore
 

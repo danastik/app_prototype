@@ -68,13 +68,18 @@ class MainWindow(QWidget):
             Debug.warning(f"Could not register .yoji file.\n{e}")
 
         # --- loading fonts ---
-        QFontDatabase.addApplicationFont(str(font_path / "Rubik-Regular.ttf"))
-        QFontDatabase.addApplicationFont(str(font_path / "Rubik-Italic.ttf"))
-        QFontDatabase.addApplicationFont(str(font_path / "Rubik-Bold.ttf"))
-        QFontDatabase.addApplicationFont(str(font_path / "Rubik-BoldItalic.ttf"))
+        try:
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Regular.ttf"))
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Italic.ttf"))
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Bold.ttf"))
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-BoldItalic.ttf"))
 
-        font = QFont("Rubik", 12)
-        app.setFont(font)
+            font = QFont("Rubik", 12)
+            app.setFont(font)
+        except Exception:
+            Debug.error(f"Could not find font 'Rubik' in {font_path}")
+            font = QFont("Arial", 12)
+            app.setFont(font)
 
         # --- widgets ---
 
@@ -458,7 +463,8 @@ class MainWindow(QWidget):
         return True
 
     def call_pet(self):
-        print(self.call_in_progress)
+        print("windows id", window.winId())
+
         if self.call_in_progress: return
 
         if self.pet_active and self.pet is not None:
@@ -485,7 +491,7 @@ class MainWindow(QWidget):
         
             print("--Calling pet.py")
             Debug.log("--Calling pet.py")
-            self.pet = Pet(self.archive)
+            self.pet = Pet(self.archive, main_hwnd=int(window.winId()))
             self.pet.show()
 
         except Exception as e:

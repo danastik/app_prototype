@@ -40,7 +40,7 @@ def scan_animation_bounds(frames):
 #endregion
 
 class Pet(QWidget): # main logic
-    def __init__(self, archive: zipfile.ZipFile):
+    def __init__(self, archive: zipfile.ZipFile, main_hwnd):
         super().__init__()
         Debug.log("---INITIALISATION START---")
 
