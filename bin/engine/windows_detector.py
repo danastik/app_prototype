@@ -424,7 +424,8 @@ def compute_visible_segments(windows, rects):
         cuts_right = []
 
         # windows above this one
-        for above in windows_bottom_first[idx + 1:]:
+        for j in range(idx + 1, len(windows_bottom_first)):
+            above = windows_bottom_first[j]
             ar = rects.get(above)
             if not ar:
                 continue
@@ -461,6 +462,81 @@ def compute_visible_segments(windows, rects):
         }
 
     return segs
+
+# -----------------------
+# Geometry helpers
+# -----------------------
+def intersect_rect(a, b):
+    ax1, ay1, ax2, ay2 = a
+    bx1, by1, bx2, by2 = b
+    if ax2 <= bx1: return None  # left case
+    if ax1 >= bx2: return None  # right case
+    if ay1 >= by2: return None  # top case
+    if ay2 <= by1: return None  # bottom case
+    cx1 = max(ax1, bx1)
+    cy1 = max(ay1, by1)
+    cx2 = min(ax2, bx2)
+    cy2 = min(ay2, by2)
+    return (cx1, cy1, cx2, cy2)
+
+def subtract_segment(seg, cut):
+    s1, s2 = seg
+    c1, c2 = cut
+    if c2 <= s1 or c1 >= s2:
+        return [seg]
+    pieces = []
+    if c1 > s1:
+        pieces.append((s1, c1))
+    if c2 < s2:
+        pieces.append((c2, s2))
+    return pieces
+
+def subtract_many(seg, cuts):
+    if not cuts:
+        return [seg]
+
+    s1, s2 = seg
+
+    # Keep only cuts that actually overlap the segment
+    cuts = [(max(c1, s1), min(c2, s2))
+            for c1, c2 in cuts
+            if c2 > s1 and c1 < s2]
+
+    if not cuts:
+        return [seg]
+
+    cuts.sort()
+
+    result = []
+    current = s1
+
+    for c1, c2 in cuts:
+        if c1 > current:
+            result.append((current, c1))
+
+        if c2 > current:
+            current = c2
+
+        if current >= s2:
+            return result
+
+    if current < s2:
+        result.append((current, s2))
+
+    return result
+
+# # old version
+# def subtract_many(seg, cuts):
+#     visible = [seg]
+#     for cut in cuts:
+#         new_list = []
+#         for v in visible:
+#             new_list.extend(subtract_segment(v, cut))
+#         visible = new_list
+#     return visible
+
+def ranges_overlap(a1, a2, b1, b2):
+    return a1 <= b2 and b1 <= a2
 
 def update_active_apps():
     try:
@@ -508,45 +584,6 @@ def get_window_dpi_scale(hwnd):
     except Exception:
         pass
     return 1.0
-
-
-# -----------------------
-# Geometry helpers
-# -----------------------
-def intersect_rect(a, b):
-    ax1, ay1, ax2, ay2 = a
-    bx1, by1, bx2, by2 = b
-    cx1 = max(ax1, bx1)
-    cy1 = max(ay1, by1)
-    cx2 = min(ax2, bx2)
-    cy2 = min(ay2, by2)
-    if cx2 <= cx1 or cy2 <= cy1:
-        return None
-    return (cx1, cy1, cx2, cy2)
-
-def subtract_segment(seg, cut):
-    s1, s2 = seg
-    c1, c2 = cut
-    if c2 <= s1 or c1 >= s2:
-        return [seg]
-    pieces = []
-    if c1 > s1:
-        pieces.append((s1, c1))
-    if c2 < s2:
-        pieces.append((c2, s2))
-    return pieces
-
-def subtract_many(seg, cuts):
-    visible = [seg]
-    for cut in cuts:
-        new_list = []
-        for v in visible:
-            new_list.extend(subtract_segment(v, cut))
-        visible = new_list
-    return visible
-
-def ranges_overlap(a1, a2, b1, b2):
-    return a1 <= b2 and b1 <= a2
 
 
 
