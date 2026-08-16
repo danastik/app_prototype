@@ -725,16 +725,17 @@ class WindowsOverlay(QWidget):
                 pass
     
         t2 = time.perf_counter()
-        # print(f"Time for getting rects: {t2 - t1}")
+        print(f"Time for getting rects: {t2 - t1}")
 
         # recompute clipped border segments in physical pixels
         segs = compute_visible_segments(self.windows, rects)
-        # print(f"Time for computing visible segments: {t3 - t2}")
+        
+        t3 = time.perf_counter()
+        print(f"Time for computing visible segments: {t3 - t2}")
 
         self.segments = segs
 
         self.rebuild_surfaces(segs)
-        t3 = time.perf_counter()
 
         # if parent_hwnd:
         #     if not is_window_real(parent_hwnd) or parent_hwnd not in self.windows:
