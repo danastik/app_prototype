@@ -1,5 +1,6 @@
 # Main script with pet behavior: physics, drawing sprites, retrieving data
 import time
+from typing import Any
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QPainter
 from PySide6.QtCore import Qt, QTimer
@@ -48,9 +49,13 @@ class Pet(QWidget): # main logic
             self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
             self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
 
-        self.STATES = json.load(archive.open("data/states.json"))
+        self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
+
+        STATES = json.load(archive.open("data/states.json"))
+        self.STATES = self._convert_string_indexes_to_int(STATES)
         Debug.log("states.json - found")
-        self.ANIMATIONS = json.load(archive.open("data/animations.json"))
+        ANIMATIONS = json.load(archive.open("data/animations.json"))
+        self.ANIMATIONS = self._convert_string_indexes_to_int(ANIMATIONS)
         Debug.log("animations.json - found")
         VARIABLES = json.load(archive.open("data/variables.json"))
         Debug.log("variables.json - found")
@@ -168,6 +173,25 @@ class Pet(QWidget): # main logic
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
+    def _convert_string_indexes_to_int(self, obj: dict) -> dict:
+        return self._convert_recursive(obj)
+
+    def _convert_recursive(self, obj: Any) -> Any:
+        if isinstance(obj, dict):
+            result = {}
+
+            for key, value in obj.items():
+                if key in self.dicts_with_ints_as_keys and isinstance(value, dict):
+                    value = {int(k): v for k, v in value.items()}
+
+                result[key] = self._convert_recursive(value)
+
+            return result
+
+        if isinstance(obj, list):
+            return [self._convert_recursive(item) for item in obj]
+
+        return obj
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)
