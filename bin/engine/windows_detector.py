@@ -693,7 +693,7 @@ class WindowsOverlay(QWidget):
 
     def update_apps(self):
         app_state = (self.active_apps, self.visible_apps, self.maximised_apps, self.fullscreen_apps, self.focused_app_title, self.focused_app)
-        self.pet._update_apps(app_state)
+        self.pet.update_apps(app_state)
 
     def update_frame(self):
         # update rects for current cached windows

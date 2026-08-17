@@ -11,7 +11,7 @@ class Animator:  # contains different animation functions
 
         self.pet = pet
 
-    def set(self, frames, fps, loop, times_to_loop, holds=None):
+    def set_animation(self, frames, fps, loop, times_to_loop, holds):
         """
         Sets the animation up
         
@@ -25,12 +25,11 @@ class Animator:  # contains different animation functions
         self.times_to_loop = times_to_loop
         self.index = 0
         self.timer = 0
-        self.holds = holds or {}
+        self.holds = holds
         self.ticks_left = self.hold_for(0)
         self.done = False
 
-        # print("animator set", end= " ")
-        # print("self.done is", self.done)
+        # print("animator set")
         
     def update(self, dt): #iterates over the list of frames with the speed of fps, loops if loop==True
         # print("update", self.done)
@@ -69,7 +68,7 @@ class Animator:  # contains different animation functions
     def hold_for(self, index):
         return self.holds.get(index + 1, 1)
 
-    def frame(self):
+    def get_frame(self):
         """
         Returns a single frame which should be displayed at the moment
         """
