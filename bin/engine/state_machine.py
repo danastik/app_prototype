@@ -1,8 +1,5 @@
-#engine/state_machine.py
-
 from engine.state_runtime import StateRuntime
 from engine.enums import Flag, Pulse
-
 
 class StateMachine:
     def __init__(self, pet, configs, initial):
@@ -29,16 +26,11 @@ class StateMachine:
 
     def pulse(self, pulse: Pulse):
         self.state.pulse(pulse)
-
-        # if self.in_transition and pulse == Pulse.ANIMATION_END:  # logic for ending transition animation
-        #     # print("changing after animation finished")
-        #     self.apply_pending_changes()
         
     def update_apps(self, app_state):
         self.state.update_apps(app_state)
 
-    def update(self, dt):    # state logic runs here
-        # HANDLING EVENTS
+    def update(self, dt):
         result = self.state.handle_global_events()
         # print("state_machine update", result)
 
