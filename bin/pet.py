@@ -36,6 +36,30 @@ def scan_animation_bounds(frames):
 
     return max_w, max_h
 
+def _convert_string_indexes_to_int(obj: dict, dict_names: list[str]) -> dict:
+    """
+    Takes in a dictionary object and recursively goes throught it, remapping dictionary keys from str to int ('2' to 2).
+    Dict_names is the names of dictionaries.
+    """ 
+    return _convert_recursive(obj, dict_names)
+
+def _convert_recursive(obj: Any, dict_names: list[str]) -> Any:
+    if isinstance(obj, dict):
+        result = {}
+
+        for key, value in obj.items():
+            if key in dict_names and isinstance(value, dict):
+                value = {int(k): v for k, v in value.items()}
+
+            result[key] = _convert_recursive(value, dict_names)
+
+        return result
+
+    if isinstance(obj, list):
+        return [_convert_recursive(item, dict_names) for item in obj]
+
+    return obj
+
 #endregion
 
 class Pet(QWidget): # main logic
@@ -52,10 +76,10 @@ class Pet(QWidget): # main logic
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
 
         STATES = json.load(archive.open("data/states.json"))
-        self.STATES = self._convert_string_indexes_to_int(STATES)
+        self.STATES = _convert_string_indexes_to_int(STATES, self.dicts_with_ints_as_keys)
         Debug.log("states.json - found")
         ANIMATIONS = json.load(archive.open("data/animations.json"))
-        self.ANIMATIONS = self._convert_string_indexes_to_int(ANIMATIONS)
+        self.ANIMATIONS = _convert_string_indexes_to_int(ANIMATIONS, self.dicts_with_ints_as_keys)
         Debug.log("animations.json - found")
         VARIABLES = json.load(archive.open("data/variables.json"))
         Debug.log("variables.json - found")
@@ -173,25 +197,6 @@ class Pet(QWidget): # main logic
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
-    def _convert_string_indexes_to_int(self, obj: dict) -> dict:
-        return self._convert_recursive(obj)
-
-    def _convert_recursive(self, obj: Any) -> Any:
-        if isinstance(obj, dict):
-            result = {}
-
-            for key, value in obj.items():
-                if key in self.dicts_with_ints_as_keys and isinstance(value, dict):
-                    value = {int(k): v for k, v in value.items()}
-
-                result[key] = self._convert_recursive(value)
-
-            return result
-
-        if isinstance(obj, list):
-            return [self._convert_recursive(item) for item in obj]
-
-        return obj
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)

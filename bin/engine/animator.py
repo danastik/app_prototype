@@ -27,7 +27,7 @@ class Animator:  # contains different animation functions
         self.timer = 0
         self.holds: dict = holds
         # self.holds = {int(k): v for k, v in holds.items()} # converting from string to int
-        print(self.holds)
+        # print(self.holds)
         self.ticks_left = self.hold_for(0)
         self.done = False
 
