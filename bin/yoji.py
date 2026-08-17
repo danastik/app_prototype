@@ -2,19 +2,15 @@ import sys
 import json
 import os
 from pathlib import Path
-
 import zipfile
 
 from pet import Pet
-
 from engine.particles.atlas_generator import AtlasGenerator
 from engine.debug import Debug
 from app.registrator import register_yoji_file_type
-
 from engine.windows_detector import schedule_update as windows_detector_schedule_update
 
-from PySide6.QtCore import Qt, QTimer
-
+from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
 
 from PySide6.QtWidgets import (
@@ -45,10 +41,12 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         Debug.log("\n---APP LAUNCHED---")
+        self.pet_active = False
+        self.files = []
+        self.manifest = None
+        self.call_in_progress = False
 
-        self.setWindowTitle("Yoji")
-        self.resize(500, 400)
-
+        # opening the app when opening a .yoji file 
         if len(sys.argv) > 1:
             try:
                 input_file_path = str(Path(sys.argv[1]))
@@ -61,31 +59,13 @@ class MainWindow(QWidget):
                     f"{e}"
                 )
 
-        self.load_settings()
+        self._load_settings()
 
+        self.register_yoji_format()
 
-        # registering .yoji file format
-        try:
-            register_yoji_file_type(exe_path=app_path, icon_path=icon_path)
-        except Exception as e:
-            Debug.warning(f"Could not register .yoji file.\n{e}")
-
-        # --- loading fonts ---
-        try:
-            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Regular.ttf"))
-            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Italic.ttf"))
-            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Bold.ttf"))
-            QFontDatabase.addApplicationFont(str(font_path / "Rubik-BoldItalic.ttf"))
-
-            font = QFont("Rubik", 12)
-            app.setFont(font)
-        except Exception:
-            Debug.error(f"Could not find font 'Rubik' in {font_path}")
-            font = QFont("Arial", 12)
-            app.setFont(font)
+        self.load_fonts()
 
         # --- widgets ---
-
         self.label = QLabel("Open your yoji file:")
 
         self.path_edit = QLineEdit()
@@ -101,6 +81,66 @@ class MainWindow(QWidget):
         self.browse_layout.addWidget(self.browse_button)
 
         # info box
+        self.make_info_widget()
+
+        self.contents = QPlainTextEdit()
+        self.contents.setReadOnly(True)
+
+        self.set_qss_object_names()
+
+        # --- stylesheets ---
+        with open(qss_path, "r", encoding="utf-8") as f:
+            self.setStyleSheet(f.read())
+
+        # it doesnt work when applied through qss for some reason
+        self.info_thumbnail.setStyleSheet("""
+                QLabel {
+                    max-width: 230px;
+                    max-height: 230px;
+                }
+            """)
+
+        # --- main layout  ---
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.browse_widget, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(self.info_widget, alignment=Qt.AlignmentFlag.AlignTop)
+        layout.addStretch()
+
+        if self.settings["last_path"]:
+            try:
+                self.load_zip(self.settings["last_path"])
+            except Exception: pass
+
+        self.setWindowTitle("Yoji")
+        self.resize(500, 400)
+
+        Debug.log("---APP LOADED SUCCESSFULLY---\n")
+        # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
+
+    def register_yoji_format(self):
+        """Registering the .yoji file format"""
+        try:
+            register_yoji_file_type(exe_path=app_path, icon_path=icon_path)
+        except Exception as e:
+            Debug.warning(f"Could not register .yoji file.\n{e}")
+
+    def load_fonts(self):
+        try:
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Regular.ttf"))
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Italic.ttf"))
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-Bold.ttf"))
+            QFontDatabase.addApplicationFont(str(font_path / "Rubik-BoldItalic.ttf"))
+
+            font = QFont("Rubik", 12)
+            app.setFont(font)
+        except Exception:
+            Debug.error(f"Could not find font 'Rubik' in {font_path}")
+            font = QFont("Arial", 12)
+            app.setFont(font)
+
+    def make_info_widget(self):
         self.info_widget = QWidget()
         info_layout = QHBoxLayout(self.info_widget)
 
@@ -125,7 +165,7 @@ class MainWindow(QWidget):
         self.info_description.setWordWrap(True)
         grid.addWidget(self.info_description)
 
-        self.info_tags = QLabel("#yoji #pet #forever")
+        self.info_tags = QLabel("#yoji #pet #cute")
         self.info_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         grid.addWidget(self.info_tags)
 
@@ -134,18 +174,14 @@ class MainWindow(QWidget):
         self.info_widget.hide()
 
         self.call_button = QPushButton("Call")
-        self.call_button.clicked.connect(self.call_pet)
+        self.call_button.clicked.connect(self.call_button_clicked)
 
         grid.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
         info_layout.addLayout(grid)
 
-
-        self.contents = QPlainTextEdit()
-        self.contents.setReadOnly(True)
-
-
-        #set object names for easy acess in qss
+    #set object names for easy acess in qss
+    def set_qss_object_names(self):
         self.info_widget.setObjectName("info_widget")
         self.info_thumbnail.setObjectName("info_thumbnail")
         self.info_name.setObjectName("info_name")
@@ -155,46 +191,37 @@ class MainWindow(QWidget):
         self.browse_button.setObjectName("browse_button")
         self.call_button.setObjectName("call_button")
 
-        # --- stylesheets ---
-        with open(qss_path, "r", encoding="utf-8") as f:
-            self.setStyleSheet(f.read())
 
-        # it doesnt work when applied through qss for some reason
-        self.info_thumbnail.setStyleSheet("""
-                QLabel {
-                    max-width: 230px;
-                    max-height: 230px;
-                }
-            """)
-
-        # --- main layout  ---
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.label, alignment=Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignHCenter)
-        layout.addWidget(self.browse_widget, alignment=Qt.AlignmentFlag.AlignTop)
-        layout.addWidget(self.info_widget, alignment=Qt.AlignmentFlag.AlignTop)
-        layout.addStretch()
-
-        self.pet_active = False
-        self.files = []
-        self.manifest = None
-        self.call_in_progress = False
-
-        if self.settings["last_path"]:
-            try:
-                self.load_zip(self.settings["last_path"])
-            except Exception: pass
-
-        Debug.log("---APP LOADED SUCCESSFULLY---\n")
-        # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
-
+    # region Qt events for triggering windows_detector
     def moveEvent(self, event):
         super().moveEvent(event)
-        windows_detector_schedule_update()
+        if self.pet_active:
+            windows_detector_schedule_update()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        windows_detector_schedule_update()
+        if self.pet_active:
+            windows_detector_schedule_update()
+
+    def changeEvent(self, event):
+        super().changeEvent(event)
+        if self.pet_active and event.type() == QEvent.ActivationChange: #type: ignore
+            windows_detector_schedule_update(update_window_list=True)
+    #endregion
+
+
+    def browse_file(self):
+        file_name, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open your Yoji",
+            "",
+            "Yoji/ZIP Files (*.yoji *.zip);;All Files (*)"
+        )
+
+        if file_name:
+            self.path_edit.setText(file_name)
+            print("File selected")
+            self.load_zip(file_name)
 
     def load_zip(self, path):
         if not path:
@@ -221,7 +248,7 @@ class MainWindow(QWidget):
         self.read_manifest()
 
         self.settings["last_path"] = path
-        self.save_settings()
+        self._save_settings()
 
     def read_manifest(self):
         archive = self.archive
@@ -283,71 +310,7 @@ class MainWindow(QWidget):
             )
             return
 
-    def browse_file(self):
-        file_name, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open your Yoji",
-            "",
-            "Yoji/ZIP Files (*.yoji *.zip);;All Files (*)"
-        )
-
-        if file_name:
-            self.path_edit.setText(file_name)
-            print("File selected")
-            self.load_zip(file_name)
-
-
-    def open_zip(self):
-        archive = self.archive
-
-        try:
-            files = []
-            for info in archive.infolist():
-                # print(repr(info.filename.encode("cp437")))
-                try:
-                    name = info.filename.encode("cp437").decode("cp866")
-                except UnicodeError:
-                    name = info.filename
-
-                files.append(name)
-
-            self.contents.clear()
-
-            if not files:
-                self.contents.appendPlainText("The archive is empty.")
-                return
-
-            self.contents.appendPlainText("Archive contents:\n")
-
-            for file in files:
-                self.contents.appendPlainText(file)
-                self.files.append(file)
-
-        except FileNotFoundError:
-            Debug.error(f"The specified file does not exist.")
-            QMessageBox.critical(
-                self,
-                "Error",
-                "The specified file does not exist."
-            )
-
-        except zipfile.BadZipFile:
-            Debug.error(f"Selected file is not a valid ZIP archive.")
-            QMessageBox.critical(
-                self,
-                "Error",
-                "Selected file is not a valid ZIP archive."
-            )
-
-        except Exception as e:
-            Debug.error(f"Unexpected Error:\n{e}")
-            QMessageBox.critical(
-                self,
-                "Unexpected Error",
-                str(e)
-            )
-
-    def load_settings(self):
+    def _load_settings(self):
         self.settings_file = settings_path
         default_settings = {
             "last_path": "",
@@ -365,7 +328,7 @@ class MainWindow(QWidget):
 
         self.resize(self.settings["size_w"], self.settings["size_h"])
 
-    def save_settings(self):
+    def _save_settings(self):
         with open(self.settings_file, "w", encoding="utf-8") as f:
             json.dump(self.settings, f, indent=4)
     
@@ -399,32 +362,22 @@ class MainWindow(QWidget):
         Debug.log("Atlas found: success")
         return True
 
-    def call_pet(self):
-        print("windows id", window.winId())
-
+    def call_button_clicked(self):
         if self.call_in_progress: return
 
-        if self.pet_active and self.pet is not None:
-            print("recalling pet")
-            Debug.log("---Recalling pet---\n")
-            self.pet.close()
-            self.pet.deleteLater()
-            self.pet = None
-            self.call_button.setEnabled(True)
-            self.pet_active = False
-            self.call_button.setText("Call")
+        if self.pet_active:
+            self.recall_pet()
             return
 
-        self.call_in_progress = True
-        self.call_button.setText("Calling...")
-        self.call_button.setEnabled(False)
-        QApplication.processEvents()
-        print(f"--Trying to call {self.archive_path}")
-        Debug.log(f"--Trying to call {self.archive_path}")
-   
+        self.start_call()
+
         try:
             PARTICLE_ASSETS = json.load(self.archive.open("data/particles/assets.json"))
             if not self.check_particle_atlas(PARTICLE_ASSETS):  return
+
+            # checking audio assets
+            # AUDIO_ASSETS = load something something
+            # if not self.check_audio_assets(AUDIO_ASSETS): return
         
             print("--Calling pet.py")
             Debug.log("--Calling pet.py")
@@ -442,11 +395,31 @@ class MainWindow(QWidget):
             print("finally")
             QTimer.singleShot(500, self.finish_call)
 
+    def start_call(self):
+        self.call_in_progress = True
+        self.call_button.setText("Calling...")
+        self.call_button.setEnabled(False)
+        QApplication.processEvents()
+        print(f"--Trying to call {self.archive_path}")
+        Debug.log(f"--Trying to call {self.archive_path}")
+
     def finish_call(self):
         self.pet_active = True
         self.call_button.setText("Recall")
         self.call_button.setEnabled(True)
         self.call_in_progress = False
+
+    def recall_pet(self):
+        print("recalling pet")
+        Debug.log("---Recalling pet---\n")
+        self.pet_active = False
+        if self.pet:
+            self.pet.close()
+            self.pet.deleteLater()
+        self.pet = None
+        self.call_button.setEnabled(True)
+        self.call_button.setText("Call")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

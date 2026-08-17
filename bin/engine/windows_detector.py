@@ -46,7 +46,7 @@ WinEventProcType = ctypes.WINFUNCTYPE(
 def win_event_callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime):
     global needs_window_list_update
 
-    print("event", event, hwnd)
+    # print("event", event, hwnd)
 
     # if event == win32con.EVENT_OBJECT_LOCATIONCHANGE:
     #     print("LOCATIONCHANGE:", hwnd, idObject, idChild)
@@ -60,7 +60,10 @@ def win_event_callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThr
     # print("Hook went off")
     schedule_update()
 
-def schedule_update():
+def schedule_update(update_window_list = False):
+    if update_window_list:
+        global needs_window_list_update
+        needs_window_list_update = True
     # print("schedule_update")
     if not update_timer.isActive():
         update_timer.start()
@@ -727,13 +730,13 @@ class WindowsOverlay(QWidget):
                 pass
     
         t2 = time.perf_counter()
-        print(f"Time for getting rects: {t2 - t1}")
+        # print(f"Time for getting rects: {t2 - t1}")
 
         # recompute clipped border segments in physical pixels
         segs = compute_visible_segments(self.windows, rects)
         
         t3 = time.perf_counter()
-        print(f"Time for computing visible segments: {t3 - t2}")
+        # print(f"Time for computing visible segments: {t3 - t2}")
 
         self.segments = segs
 
