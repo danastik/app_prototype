@@ -11,7 +11,7 @@ class Animator:  # contains different animation functions
 
         self.pet = pet
 
-    def set_animation(self, frames, fps, loop, times_to_loop, holds):
+    def set_animation(self, frames, fps, loop, times_to_loop, holds = {}):
         """
         Sets the animation up
         
@@ -25,7 +25,9 @@ class Animator:  # contains different animation functions
         self.times_to_loop = times_to_loop
         self.index = 0
         self.timer = 0
-        self.holds = holds
+        # self.holds: dict = holds
+        self.holds = {int(k): v for k, v in holds.items()} # converting from string to int
+        print(self.holds)
         self.ticks_left = self.hold_for(0)
         self.done = False
 
@@ -66,6 +68,7 @@ class Animator:  # contains different animation functions
 
 
     def hold_for(self, index):
+        # print("index", index, "hold is ", self.holds.get(index + 1, 1))
         return self.holds.get(index + 1, 1)
 
     def get_frame(self):
