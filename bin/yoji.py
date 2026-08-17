@@ -11,6 +11,8 @@ from engine.particles.atlas_generator import AtlasGenerator
 from engine.debug import Debug
 from app.registrator import register_yoji_file_type
 
+from engine.windows_detector import schedule_update as windows_detector_schedule_update
+
 from PySide6.QtCore import Qt, QTimer
 
 from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
@@ -186,6 +188,13 @@ class MainWindow(QWidget):
         Debug.log("---APP LOADED SUCCESSFULLY---\n")
         # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
 
+    def moveEvent(self, event):
+        super().moveEvent(event)
+        windows_detector_schedule_update()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        windows_detector_schedule_update()
 
     def load_zip(self, path):
         if not path:

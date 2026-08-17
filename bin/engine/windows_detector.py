@@ -46,6 +46,8 @@ WinEventProcType = ctypes.WINFUNCTYPE(
 def win_event_callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime):
     global needs_window_list_update
 
+    print("event", event, hwnd)
+
     # if event == win32con.EVENT_OBJECT_LOCATIONCHANGE:
     #     print("LOCATIONCHANGE:", hwnd, idObject, idChild)
     # Only top-level windows
@@ -101,7 +103,7 @@ def install_hooks():
             0,
             WinEventProc,
             0, 0,
-            win32con.WINEVENT_OUTOFCONTEXT #| win32con.WINEVENT_SKIPOWNPROCESS
+            win32con.WINEVENT_OUTOFCONTEXT | win32con.WINEVENT_SKIPOWNPROCESS
         )
         hooks.append(hook)
 
