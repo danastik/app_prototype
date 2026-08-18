@@ -53,11 +53,7 @@ class MainWindow(QWidget):
                 self.load_archive(input_file_path)
             except Exception as e:
                 Debug.warning(f"Could not open a .yoji file.\n{e}")
-                QMessageBox.warning(
-                    self,
-                    "Could not open a .yoji file",
-                    f"{e}"
-                )
+                self.show_warning_message("Could not open a .yoji file", f"{e}")
 
         self._load_settings()
 
@@ -179,7 +175,18 @@ class MainWindow(QWidget):
         grid.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
         info_layout.addLayout(grid)
-
+    
+    # @staticmethod
+    def show_warning_message(self, title, message):
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning) #type: ignore
+        box.setWindowTitle(title)
+        box.setText(message)
+        box.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
+        box.exec()
+    
     #set object names for easy acess in qss
     def set_qss_object_names(self):
         self.info_widget.setObjectName("info_widget")
@@ -226,11 +233,7 @@ class MainWindow(QWidget):
     def load_archive(self, path):
         if not path:
             Debug.warning(f"Missing Path - archive file path was not valid")
-            QMessageBox.warning(
-                self,
-                "Missing Path",
-                "Please enter a valid archive file path."
-            )
+            self.show_warning_message("Missing Path", "Please enter a valid archive file path.")
             return
         
         # self.archive = zipfile.ZipFile(path, "r")
@@ -239,11 +242,7 @@ class MainWindow(QWidget):
 
             if not archive:
                 Debug.warning(f"Could not open {path} as archive.")
-                QMessageBox.warning(
-                    self,
-                    "Cannot open file",
-                    f"Cannot open {path} as archive."
-                )
+                self.show_warning_message("Cannot open file", f"Cannot open {path} as archive.")
                 return
 
             self.read_manifest(archive)
@@ -291,12 +290,7 @@ class MainWindow(QWidget):
                 suggested = image_files[0]
                 text = f"Probably meant {suggested}" if suggested else ""
                 Debug.warning(f"Missing thumbnail - You have specified thumbnail as {thumbnail}, but it is not present in archive.\n{text}")
-                QMessageBox.warning(
-                    self,
-                    "Missing thumbnail",
-                    f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n" +
-                    text
-                )
+                self.show_warning_message(title="Missing thumbnail", message=f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n{text}")
 
             self.info_widget.show()
 
@@ -304,11 +298,7 @@ class MainWindow(QWidget):
             self.manifest = None
             print("Manifest not found.")
             Debug.warning(f"Missing manifest - Selected archive is missing a yoji manifest.")
-            QMessageBox.warning(
-                self,
-                "Missing manifest",
-                "Selected archive is missing a yoji manifest."
-            )
+            self.show_warning_message("Missing manifest", "Selected archive is missing a yoji manifest.")
             return
 
     def _load_settings(self):
@@ -394,12 +384,7 @@ class MainWindow(QWidget):
 
             except Exception as e:
                 Debug.error(f"Could not call yoji.\n{e}")
-                QMessageBox.warning(
-                    self,
-                    "Error",
-                    f"Could not call yoji.\n{e}"
-                )
-
+                self.show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
             finally:
                 print("finally")
                 archive.close()
