@@ -195,7 +195,7 @@ class ParticleEmitter:
                 pos_y = anchor_y - y * hitbox_y
 
             case EmitterShape.CIRCLE:
-                theta = random.uniform(0, 2 * math.pi) # Random angle 0-2π
+                theta = random.uniform(0, 2 * math.pi)
 
                 center_x = anchor_x - emitter_offset_x
                 center_y = anchor_y - emitter_offset_y
@@ -226,16 +226,12 @@ class ParticleEmitter:
                 pos_y = y
 
             case EmitterShape.RECTANGLE:
-                # corner1 = self.particleSystem.pet.anchor + Vec2(-self.hitbox_x/2 -expand_x, +expand_y) - self.emitter_offset
                 corner1 = Vec2(anchor_x - hitbox_x/2 - expand_x - emitter_offset_x, anchor_y + expand_y - emitter_offset_y)
 
-                # corner2 = anchor + Vec2(-self.hitbox_x/2 -expand_x, -self.hitbox_y -expand_y) - self.emitter_offset
                 corner2 = Vec2(anchor_x - hitbox_x/2 - expand_x - emitter_offset_x, anchor_y - hitbox_y - expand_y - emitter_offset_y)
 
-                # corner3 = anchor + Vec2(+self.hitbox_x/2 +expand_x, -self.hitbox_y -expand_y) - self.emitter_offset
                 corner3 = Vec2(anchor_x + hitbox_x/2 + expand_x - emitter_offset_x, anchor_y - hitbox_y - expand_y - emitter_offset_y)
 
-                # corner4 = anchor + Vec2(+self.hitbox_x/2 +expand_x, +expand_y) - self.emitter_offset
                 corner4 = Vec2(anchor_x + hitbox_x/2 + expand_x - emitter_offset_x, anchor_y + expand_y - emitter_offset_y)
 
                 rec_width: Vec2 = corner3 - corner2 

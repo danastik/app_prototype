@@ -63,15 +63,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
         avail_geom = self.primary_screen.geometry() # later if needed will use availableGeomtry, but that rquires rewriting rendering code so idk
         self.setGeometry(avail_geom)
 
-        # transparency debugging, delete later
-        # print("native:", self.testAttribute(Qt.WidgetAttribute.WA_NativeWindow))
-        # print(hex(ctypes.windll.user32.GetWindowLongW(int(self.winId()), -20)))
-
-        # Make window fully windows click-through
-        # hwnd = int(self.winId())
-        # extended_style = ctypes.windll.user32.GetWindowLongW(hwnd, -20)
-        # ctypes.windll.user32.SetWindowLongW(hwnd, -20, extended_style | 0x80000 | 0x20)
-
         # Create dummy data with FINAL types
         dummy_positions = np.zeros(1000, dtype=np.float32)
         dummy_vels = np.zeros(1000, dtype=np.float32)

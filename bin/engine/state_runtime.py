@@ -111,6 +111,9 @@ class StateRuntime:
         else:
             self._emit_particles(particles_on_transition)
 
+        # сюда скопировать вот то что сверху только переделать под звук
+
+
     def _apply_on_exit(self): # called from state machine on exit
         for cmd in self.config.get("variables_on_exit", []):
             self._execute_command(cmd)
@@ -120,6 +123,8 @@ class StateRuntime:
         for emitter in self.constant_emitters:
             emitter.done_emitting = True
         self.constant_emitters.clear()
+
+        # сюда добавить чтоб он тоже для всех "audio_on_exit" играл аудио
 
 
     def _emit_particles(self, particle_cmd, constant = False):
@@ -150,6 +155,11 @@ class StateRuntime:
         elif "clear_flag" in cmd:
             self.flags.discard(cmd["clear_flag"])
 
+    def _play_audio(self, audio_cmd):
+        pass
+        # а тут надо обработать команду, можешь посмотреть как это в партиклах и в _execute_command делается
+        # if "play" in audio_cmd:
+        #     # print("Playing audio")
 
     def _check_condition(self, cond):
         if "flag" in cond:
@@ -215,6 +225,16 @@ class StateRuntime:
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
                 self._emit_particles(p)
 
+        # чето типа такого тебе надо
+        # это чтоб в любом месте можно было звук проигрывать
+        # audio_commands = self.config.get("conditional_audio", [])
+
+        # for au in audio_commands:
+        #     conditions = au["when"]
+        #     chance = au.get("chance", 1)
+        #     if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
+        #         self._play_audio(au)
+
         # --- Checking for state transitions ---
         transitions = self.config.get("transitions", [])
 
@@ -222,10 +242,8 @@ class StateRuntime:
             conditions = t["when"]
             chance = t.get("chance", 1)
 
-            if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
-                # if all conditions are True - we make the transition
+            if all(self._check_condition(c) for c in conditions) and random.random() <= chance: # if all conditions are True - we make the transition
                 self._apply_on_transition(transition_info=t)
-
                 return (
                     t["to"],  # next state
                     t.get("transition_animation", None),
@@ -235,7 +253,7 @@ class StateRuntime:
         exit_conditions = self.config.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
             # print("exiting state")
-            return(self.config["exit_to"], self.config.get("exit_animation", None), self.config.get("exit_animation_cfg", None))
+            return(self.config["exit_to"], self.config.get("exit_animation"), self.config.get("exit_animation_cfg"))
 
         return None
 
