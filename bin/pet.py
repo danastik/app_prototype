@@ -68,20 +68,20 @@ class Pet(QWidget): # main logic
         Debug.log("---INITIALISATION START---")
 
         config_path = "data/render_config.json"
-        try:
-            with archive.open(config_path) as f:
+        with archive.open(config_path) as f:
+            try:
                 self.RENDER_CONFIG = json.load(f)
                 self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
                 self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
                 self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
-        except json.JSONDecodeError as e:
-            msg = f"Invalid JSON syntax in {config_path}\n{e}"
-            Debug.error(msg)
-            raise ValueError(msg)
-        except Exception as e:
-            msg = f"Could not parse {config_path}\n{e}"
-            Debug.error(msg)
-            raise ValueError(msg)
+            except json.JSONDecodeError as e:
+                msg = f"Invalid JSON syntax in {config_path}\n{e}"
+                Debug.error(msg)
+                raise ValueError(msg)
+            except Exception as e:
+                msg = f"Could not parse {config_path}\n{e}"
+                Debug.error(msg)
+                raise ValueError(msg)
 
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
 
@@ -200,25 +200,26 @@ class Pet(QWidget): # main logic
 
 
     def _load_json(self, archive: zipfile.ZipFile, path, convert_int_keys=False):
-        try:
-            data = json.load(archive.open(path))
+        with archive.open(path) as f:
+            try:
+                data = json.load(f)
 
-            if convert_int_keys:
-                data = _convert_string_indexes_to_int(
-                    data,
-                    self.dicts_with_ints_as_keys)
+                if convert_int_keys:
+                    data = _convert_string_indexes_to_int(
+                        data,
+                        self.dicts_with_ints_as_keys)
 
-            Debug.log(f"{path} loaded: success")
-            return data
-        
-        except json.JSONDecodeError as e:
-            msg = f"Invalid JSON syntax in {path}\n{e}"
-            Debug.error(msg)
-            raise ValueError(msg)
-        except Exception as e:
-            msg = f"Could not parse {path}\n{e}"
-            Debug.error(msg)
-            raise ValueError(msg)
+                Debug.log(f"{path} loaded: success")
+                return data
+            
+            except json.JSONDecodeError as e:
+                msg = f"Invalid JSON syntax in {path}\n{e}"
+                Debug.error(msg)
+                raise ValueError(msg)
+            except Exception as e:
+                msg = f"Could not parse {path}\n{e}"
+                Debug.error(msg)
+                raise ValueError(msg)
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)
@@ -558,7 +559,7 @@ class Pet(QWidget): # main logic
         self.state_machine.pulse(Pulse.GAINED_PARENT)
         self.state_machine.raise_flag(Flag.PARENTED_TO_WINDOW)
         self.state_machine.remove_flag(Flag.NOT_PARENTED_TO_WINDOW)
-        print("Parent window:", hwnd)
+        # print("Parent window:", hwnd)
 
     def apply_window_position(self):
         self.move(
