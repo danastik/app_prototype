@@ -191,11 +191,6 @@ class Mover:
 
         self.pos += self.vel * dt
 
-        # landing
-        if self.pos.y >= self.grounded_y:
-            # print("jumping reached")
-            pass
-
         return False
     
     def begin_drag(self, mouse_pos: Vec2):
