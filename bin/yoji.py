@@ -383,6 +383,9 @@ class MainWindow(QWidget):
             Debug.log("--Calling pet.py")
             self.pet = Pet(self.archive, main_hwnd=int(window.winId()))
             self.pet.show()
+            self.pet_active = True
+            self.call_button.setText("Recall")
+            self.call_button.setEnabled(True)
 
         except Exception as e:
             Debug.error(f"Could not call yoji.\n{e}")
@@ -404,8 +407,8 @@ class MainWindow(QWidget):
         Debug.log(f"--Trying to call {self.archive_path}")
 
     def finish_call(self):
-        self.pet_active = True
-        self.call_button.setText("Recall")
+        self.pet_active = False
+        self.call_button.setText("Call")
         self.call_button.setEnabled(True)
         self.call_in_progress = False
 

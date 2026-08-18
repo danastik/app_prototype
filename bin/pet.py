@@ -67,29 +67,30 @@ class Pet(QWidget): # main logic
         super().__init__()
         Debug.log("---INITIALISATION START---")
 
-        with archive.open("data/render_config.json") as f:
-            self.RENDER_CONFIG = json.load(f)
-            self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
-            self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
-            self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
+        config_path = "data/render_config.json"
+        try:
+            with archive.open(config_path) as f:
+                self.RENDER_CONFIG = json.load(f)
+                self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
+                self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
+                self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
+        except json.JSONDecodeError as e:
+            msg = f"Invalid JSON syntax in {config_path}\n{e}"
+            Debug.error(msg)
+            raise ValueError(msg)
+        except Exception as e:
+            msg = f"Could not parse {config_path}\n{e}"
+            Debug.error(msg)
+            raise ValueError(msg)
 
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
 
-        STATES = json.load(archive.open("data/states.json"))
-        self.STATES = _convert_string_indexes_to_int(STATES, self.dicts_with_ints_as_keys)
-        Debug.log("states.json - found")
-        ANIMATIONS = json.load(archive.open("data/animations.json"))
-        self.ANIMATIONS = _convert_string_indexes_to_int(ANIMATIONS, self.dicts_with_ints_as_keys)
-        Debug.log("animations.json - found")
-        VARIABLES = json.load(archive.open("data/variables.json"))
-        Debug.log("variables.json - found")
-        BEHAVIOURS = json.load(archive.open("data/behaviours.json"))
-        Debug.log("behaviours.json - found")
-
-        ASSETS = json.load(archive.open("data/particles/assets.json"))
-        Debug.log("particles/assets.json - found")
-        PARTICLES = json.load(archive.open("data/particles/particles.json"))
-        Debug.log("particles/particles.json - found")
+        self.STATES = self._load_json(archive, "data/states.json", convert_int_keys=True)
+        self.ANIMATIONS = self._load_json(archive, "data/animations.json", convert_int_keys=True)
+        VARIABLES = self._load_json(archive, "data/variables.json")
+        BEHAVIOURS = self._load_json(archive, "data/behaviours.json")
+        ASSETS = self._load_json(archive, "data/particles/assets.json")
+        PARTICLES = self._load_json(archive, "data/particles/particles.json")
 
         Debug.log("--All .json files loaded: success")
 
@@ -197,6 +198,27 @@ class Pet(QWidget): # main logic
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
+
+    def _load_json(self, archive: zipfile.ZipFile, path, convert_int_keys=False):
+        try:
+            data = json.load(archive.open(path))
+
+            if convert_int_keys:
+                data = _convert_string_indexes_to_int(
+                    data,
+                    self.dicts_with_ints_as_keys)
+
+            Debug.log(f"{path} loaded: success")
+            return data
+        
+        except json.JSONDecodeError as e:
+            msg = f"Invalid JSON syntax in {path}\n{e}"
+            Debug.error(msg)
+            raise ValueError(msg)
+        except Exception as e:
+            msg = f"Could not parse {path}\n{e}"
+            Debug.error(msg)
+            raise ValueError(msg)
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)

@@ -48,7 +48,7 @@ class BehaviourResolver:
             min_val = self._resolve_bound(spec["min"], axis)
             max_val = self._resolve_bound(spec["max"], axis)
             new_val = current_pos + random.randrange(-range, range)
-            return max(min_val, min(max_val, new_val))   # returning a clamped value
+            return max(min_val, min(max_val, new_val))
         
         if spec["type"] == "fixed":
             val = self._resolve_bound(spec["to"], axis)
@@ -71,7 +71,7 @@ class BehaviourResolver:
             if name == "surface.right":
                 return x2 - self.pet.hitbox_width / 2 #type: ignore
             
-            if name == "surface.up":   # NOT SURE IT MIGHT BE Y2 AND Y1 i dunno
+            if name == "surface.up":
                 return y1 - self.pet.hitbox_height #type: ignore
 
             if name == "surface.down":
@@ -97,7 +97,7 @@ class BehaviourResolver:
 
         if not cfg: return surfaces
 
-        cmd_cfg = str(cfg).lower() # converting to lowercase string for ease of comparing
+        cmd_cfg = str(cfg).lower()
         # print("cmd_cfg", cmd_cfg)
 
         if cmd_cfg == "all":
@@ -110,10 +110,7 @@ class BehaviourResolver:
         else:
             cfg = set(cfg) if isinstance(cfg, list) else {cfg}
             for surface in cfg:
-                # print(f"trying to get {surface} from {SurfaceType.__members__}")
-                # print(type(SurfaceType.__members__.get(str(surface).upper())))
                 surfaces.add(SurfaceType.__members__.get(str(surface).upper()))
 
         # print("surfaces", surfaces)
-        # print("surface types", [type(x) for x in surfaces])
         return surfaces
