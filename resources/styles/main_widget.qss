@@ -58,6 +58,12 @@ QLabel#info_thumbnail {
     color: white;
 }
 
+#debug_checkbox {
+    font-family: "Rubik";
+    font-size: 10px;
+    color: #569;
+}
+
 
 #call_button {
     font-family: "Rubik";
@@ -68,6 +74,7 @@ QLabel#info_thumbnail {
     border: 0px;
     width: 80px;
     max-width: 150px;
+    margin-top: 10px;
 }
 
 #call_button:hover {

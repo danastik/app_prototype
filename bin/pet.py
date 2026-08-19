@@ -20,7 +20,8 @@ from engine.windows_detector import WindowsOverlay
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.variable_manager import VariableManager
 
-from engine.logger import debug_logger as log
+from engine.logger import app_logger as log
+from engine.logger import debug_logger as debug_log
 
 # import cProfile
 
@@ -193,6 +194,8 @@ class Pet(QWidget): # main logic
         print("---LOADING SUCCESSFUL---\n")
         log.info("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
 
+        debug_log.info("---Yoji loaded---")
+
         # Timer for updating logic
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_logic) 
@@ -239,11 +242,14 @@ class Pet(QWidget): # main logic
         anim_name = cfg.get("animation")
         self.play_animation(anim_name=anim_name, cfg=cfg)
 
+        debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
+
        
     def on_state_exit(self, state): # called in state_machine when exiting a state
         # cfg = self.STATES[state]
         # print("exiting state", state)
-        pass
+        debug_log.info(f"Exiting state {state}")
+        
 
     def resolve_behavior(self, behaviour, cfg):
         # print(self.behaviour_name)

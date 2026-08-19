@@ -16,7 +16,8 @@ from collections import defaultdict
 import numpy as np
 from numba import njit
 
-from engine.logger import debug_logger as log
+from engine.logger import app_logger as log
+from engine.logger import debug_logger as debug_log
 
 def get_frame_index(anim, age):
     """

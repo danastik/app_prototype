@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QFileDialog,
+    QCheckBox,
     QGridLayout,
 )
 
@@ -42,6 +43,7 @@ app_path = Path(__file__).resolve()
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        debug_logger.set_enabled(False)
 
         log.info("---APP LAUNCHED---")
         self.pet_active = False
@@ -54,9 +56,10 @@ class MainWindow(QWidget):
             try:
                 input_file_path = str(Path(sys.argv[1]))
                 self.load_archive(input_file_path)
+                log.info(f"Opening application with arguments.")
             except Exception as e:
                 log.error(f"Could not open a .yoji file.\n{e}")
-                self.show_warning_message("Could not open a .yoji file", f"{e}")
+                self._show_warning_message("Could not open a .yoji file", f"{e}")
 
         self._load_settings()
 
@@ -110,6 +113,7 @@ class MainWindow(QWidget):
         if self.settings["last_path"]:
             try:
                 self.load_archive(self.settings["last_path"])
+                log.info(f"Opening file from last path {self.settings["last_path"]}")
             except Exception: pass
 
         self.setWindowTitle("Yoji")
@@ -122,6 +126,7 @@ class MainWindow(QWidget):
         """Registering the .yoji file format"""
         try:
             register_yoji_file_type(exe_path=app_path, icon_path=icon_path)
+            log.info(f"Registered a .yoji file.")
         except Exception as e:
             pass
             log.warning(f"Could not register .yoji file.\n{e}")
@@ -173,6 +178,9 @@ class MainWindow(QWidget):
 
         self.info_widget.hide()
 
+        self.debug_checkbox = QCheckBox("debug mode")
+        grid.addWidget(self.debug_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
+
         self.call_button = QPushButton("Call")
         self.call_button.clicked.connect(self.call_button_clicked)
 
@@ -180,8 +188,7 @@ class MainWindow(QWidget):
 
         info_layout.addLayout(grid)
     
-    # @staticmethod
-    def show_warning_message(self, title, message):
+    def _show_warning_message(self, title, message):
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Warning) #type: ignore
         box.setWindowTitle(title)
@@ -200,6 +207,7 @@ class MainWindow(QWidget):
         self.info_description.setObjectName("info_description")
         self.info_tags.setObjectName("info_tags")
         self.browse_button.setObjectName("browse_button")
+        self.debug_checkbox.setObjectName("debug_checkbox")
         self.call_button.setObjectName("call_button")
 
 
@@ -237,16 +245,17 @@ class MainWindow(QWidget):
     def load_archive(self, path):
         if not path:
             log.warning(f"Missing Path - archive file path was not valid")
-            self.show_warning_message("Missing Path", "Please enter a valid archive file path.")
+            self._show_warning_message("Missing Path", "Please enter a valid archive file path.")
             return
         
-        # self.archive = zipfile.ZipFile(path, "r")
+        log.info(f"Opening file {path}")
+        
         with zipfile.ZipFile(path, "r") as archive:
             self.archive_path = path
 
             if not archive:
                 log.error(f"Could not open {path} as archive.")
-                self.show_warning_message("Cannot open file", f"Cannot open {path} as archive.")
+                self._show_warning_message("Cannot open file", f"Cannot open {path} as archive.")
                 return
 
             self.read_manifest(archive)
@@ -294,7 +303,7 @@ class MainWindow(QWidget):
                 suggested = image_files[0]
                 text = f"Probably meant {suggested}" if suggested else ""
                 log.warning(f"Missing thumbnail - You have specified thumbnail as {thumbnail}, but it is not present in archive.\n{text}")
-                self.show_warning_message(title="Missing thumbnail", message=f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n{text}")
+                self._show_warning_message(title="Missing thumbnail", message=f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n{text}")
 
             self.info_widget.show()
 
@@ -302,10 +311,11 @@ class MainWindow(QWidget):
             self.manifest = None
             print("Manifest not found.")
             log.warning(f"Missing manifest - Selected archive is missing a yoji manifest.")
-            self.show_warning_message("Missing manifest", "Selected archive is missing a yoji manifest.")
+            self._show_warning_message("Missing manifest", "Selected archive is missing a yoji manifest.")
             return
 
     def _load_settings(self):
+        log.info(f"Loading settings...")
         self.settings_file = settings_path
         default_settings = {
             "last_path": "",
@@ -382,18 +392,30 @@ class MainWindow(QWidget):
             
                 print("--Calling pet.py")
                 log.info("--Calling pet.py")
+
+                self._check_debug_mode_checkbox()
+
                 self.pet = Pet(archive, main_hwnd=int(window.winId()))
                 self.pet.show()
                 self.pet_active = True
 
             except Exception as e:
                 #Debug.error(f"Could not call yoji.\n{e}")
-                self.show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
+                self._show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
             finally:
                 print("finally")
                 archive.close()
                 print("archive is", archive)
                 QTimer.singleShot(500, self.finish_call)
+
+
+    def _check_debug_mode_checkbox(self):
+        self.debug_checkbox.setDisabled(True)
+        if self.debug_checkbox.isChecked():
+            log.info(f"Launching pet in debug mode")
+            debug_logger.set_enabled(True)
+        else: 
+            debug_logger.set_enabled(False)
 
     def start_call(self):
         self.call_in_progress = True
@@ -422,6 +444,7 @@ class MainWindow(QWidget):
         self.pet = None
         self.call_button.setEnabled(True)
         self.call_button.setText("Call")
+        self.debug_checkbox.setDisabled(False)
 
 
 if __name__ == "__main__":
