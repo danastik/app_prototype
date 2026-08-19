@@ -6,9 +6,11 @@ import zipfile
 
 from pet import Pet
 from engine.particles.atlas_generator import AtlasGenerator
-from engine.debug import Debug
 from app.registrator import register_yoji_file_type
 from engine.windows_detector import schedule_update as windows_detector_schedule_update
+
+from engine.logger import app_logger as log
+from engine.logger import debug_logger
 
 from PySide6.QtCore import Qt, QTimer, QEvent
 from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
@@ -40,7 +42,8 @@ app_path = Path(__file__).resolve()
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        Debug.log("\n---APP LAUNCHED---")
+
+        log.info("---APP LAUNCHED---")
         self.pet_active = False
         self.files = []
         self.manifest = None
@@ -52,7 +55,7 @@ class MainWindow(QWidget):
                 input_file_path = str(Path(sys.argv[1]))
                 self.load_archive(input_file_path)
             except Exception as e:
-                Debug.warning(f"Could not open a .yoji file.\n{e}")
+                log.error(f"Could not open a .yoji file.\n{e}")
                 self.show_warning_message("Could not open a .yoji file", f"{e}")
 
         self._load_settings()
@@ -112,7 +115,7 @@ class MainWindow(QWidget):
         self.setWindowTitle("Yoji")
         self.resize(500, 400)
 
-        Debug.log("---APP LOADED SUCCESSFULLY---\n")
+        log.info("---APP LOADED SUCCESSFULLY---\n")
         # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
 
     def register_yoji_format(self):
@@ -120,7 +123,8 @@ class MainWindow(QWidget):
         try:
             register_yoji_file_type(exe_path=app_path, icon_path=icon_path)
         except Exception as e:
-            Debug.warning(f"Could not register .yoji file.\n{e}")
+            pass
+            log.warning(f"Could not register .yoji file.\n{e}")
 
     def load_fonts(self):
         try:
@@ -132,7 +136,7 @@ class MainWindow(QWidget):
             font = QFont("Rubik", 12)
             app.setFont(font)
         except Exception:
-            Debug.error(f"Could not find font 'Rubik' in {font_path}")
+            #Debug.error(f"Could not find font 'Rubik' in {font_path}")
             font = QFont("Arial", 12)
             app.setFont(font)
 
@@ -232,7 +236,7 @@ class MainWindow(QWidget):
 
     def load_archive(self, path):
         if not path:
-            Debug.warning(f"Missing Path - archive file path was not valid")
+            log.warning(f"Missing Path - archive file path was not valid")
             self.show_warning_message("Missing Path", "Please enter a valid archive file path.")
             return
         
@@ -241,7 +245,7 @@ class MainWindow(QWidget):
             self.archive_path = path
 
             if not archive:
-                Debug.warning(f"Could not open {path} as archive.")
+                log.error(f"Could not open {path} as archive.")
                 self.show_warning_message("Cannot open file", f"Cannot open {path} as archive.")
                 return
 
@@ -289,7 +293,7 @@ class MainWindow(QWidget):
                 ]
                 suggested = image_files[0]
                 text = f"Probably meant {suggested}" if suggested else ""
-                Debug.warning(f"Missing thumbnail - You have specified thumbnail as {thumbnail}, but it is not present in archive.\n{text}")
+                log.warning(f"Missing thumbnail - You have specified thumbnail as {thumbnail}, but it is not present in archive.\n{text}")
                 self.show_warning_message(title="Missing thumbnail", message=f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n{text}")
 
             self.info_widget.show()
@@ -297,7 +301,7 @@ class MainWindow(QWidget):
         except Exception:
             self.manifest = None
             print("Manifest not found.")
-            Debug.warning(f"Missing manifest - Selected archive is missing a yoji manifest.")
+            log.warning(f"Missing manifest - Selected archive is missing a yoji manifest.")
             self.show_warning_message("Missing manifest", "Selected archive is missing a yoji manifest.")
             return
 
@@ -326,7 +330,7 @@ class MainWindow(QWidget):
     def check_particle_atlas(self, PARTICLE_ASSETS, archive) -> bool:
         atlas_generator = AtlasGenerator(PARTICLE_ASSETS, archive)
         print("Checking particle atlas")
-        Debug.log(f"Checking particle atlas")
+        log.info(f"Checking particle atlas")
 
         if not atlas_generator.atlas_exists():
             reply = QMessageBox.question(
@@ -341,10 +345,10 @@ class MainWindow(QWidget):
                 print("closing old archive")
                 archive.close()
                 print("regenerating archive")
-                Debug.log("Regenerating atlas: start")
+                log.info("Regenerating atlas: start")
                 atlas_generator.generate_atlas(self.archive_path)
                 print("loading zip")
-                Debug.log("--Loading ZIP archive")
+                log.info("--Loading ZIP archive")
                 self.load_archive(self.archive_path)
                 return True
 
@@ -352,7 +356,7 @@ class MainWindow(QWidget):
             return False
         
         print("Atlas found: success")
-        Debug.log("Atlas found: success")
+        log.info("Atlas found: success")
         return True
 
     def call_button_clicked(self):
@@ -377,13 +381,13 @@ class MainWindow(QWidget):
                 # if not self.check_audio_assets(AUDIO_ASSETS): return
             
                 print("--Calling pet.py")
-                Debug.log("--Calling pet.py")
+                log.info("--Calling pet.py")
                 self.pet = Pet(archive, main_hwnd=int(window.winId()))
                 self.pet.show()
                 self.pet_active = True
 
             except Exception as e:
-                Debug.error(f"Could not call yoji.\n{e}")
+                #Debug.error(f"Could not call yoji.\n{e}")
                 self.show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
             finally:
                 print("finally")
@@ -397,7 +401,7 @@ class MainWindow(QWidget):
         self.call_button.setEnabled(False)
         QApplication.processEvents()
         print(f"--Trying to call {self.archive_path}")
-        Debug.log(f"--Trying to call {self.archive_path}")
+        log.info(f"--Trying to call {self.archive_path}")
 
     def finish_call(self):
         if self.pet_active:
@@ -410,7 +414,7 @@ class MainWindow(QWidget):
 
     def recall_pet(self):
         print("recalling pet")
-        Debug.log("---Recalling pet---\n")
+        log.info("---Recalling pet---\n")
         self.pet_active = False
         if self.pet:
             self.pet.close()

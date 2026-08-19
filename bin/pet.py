@@ -18,11 +18,11 @@ from engine.vec2 import Vec2
 from engine.behaviour_resolver import BehaviourResolver
 from engine.windows_detector import WindowsOverlay
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
-from engine.debug import Debug
+from engine.variable_manager import VariableManager
+
+from engine.logger import debug_logger as log
 
 # import cProfile
-
-from engine.variable_manager import VariableManager
 
 
 #region --- HELPERS ---
@@ -65,7 +65,7 @@ def _convert_recursive(obj: Any, dict_names: list[str]) -> Any:
 class Pet(QWidget): # main logic
     def __init__(self, archive: zipfile.ZipFile, main_hwnd):
         super().__init__()
-        Debug.log("---INITIALISATION START---")
+        log.info("---INITIALISATION START---")
 
         config_path = "data/render_config.json"
         with archive.open(config_path) as f:
@@ -76,11 +76,11 @@ class Pet(QWidget): # main logic
                 self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
             except json.JSONDecodeError as e:
                 msg = f"Invalid JSON syntax in {config_path}\n{e}"
-                Debug.error(msg)
+                #Debug.error(msg)
                 raise ValueError(msg)
             except Exception as e:
                 msg = f"Could not parse {config_path}\n{e}"
-                Debug.error(msg)
+                #Debug.error(msg)
                 raise ValueError(msg)
 
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
@@ -92,14 +92,14 @@ class Pet(QWidget): # main logic
         ASSETS = self._load_json(archive, "data/particles/assets.json")
         PARTICLES = self._load_json(archive, "data/particles/particles.json")
 
-        Debug.log("--All .json files loaded: success")
+        log.info("--All .json files loaded: success")
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
         print("--- LOADING ANIMATIONS ---")
-        Debug.log("---LOADING ANIMATIONS---")
+        log.info("---LOADING ANIMATIONS---")
         self.animations = {}
         max_bounds_w = 0
         max_bounds_h = 0
@@ -128,7 +128,7 @@ class Pet(QWidget): # main logic
                 "times_to_loop": cfg.get("times_to_loop", 1)
             }
             print(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
-            Debug.log(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
+            log.info(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
     
         self.variables = VariableManager(VARIABLES)
 
@@ -191,7 +191,7 @@ class Pet(QWidget): # main logic
         self.click_detector = ClickDetector(pet=self)
 
         print("---LOADING SUCCESSFUL---\n")
-        Debug.log("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
+        log.info("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
 
         # Timer for updating logic
         self.timer = QTimer()
@@ -209,16 +209,16 @@ class Pet(QWidget): # main logic
                         data,
                         self.dicts_with_ints_as_keys)
 
-                Debug.log(f"{path} loaded: success")
+                log.info(f"{path} loaded: success")
                 return data
             
             except json.JSONDecodeError as e:
                 msg = f"Invalid JSON syntax in {path}\n{e}"
-                Debug.error(msg)
+                #Debug.error(msg)
                 raise ValueError(msg)
             except Exception as e:
                 msg = f"Could not parse {path}\n{e}"
-                Debug.error(msg)
+                #Debug.error(msg)
                 raise ValueError(msg)
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
@@ -307,7 +307,7 @@ class Pet(QWidget): # main logic
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
-            Debug.warning(f"Animation {anim_name} not found in animations.json")
+            #Debug.warning(f"Animation {anim_name} not found in animations.json")
             raise Exception(f"Animation {anim_name} not found in animations.json")  #no idea what this does will add user notification that error occured
 
         anim_cfg = self.ANIMATIONS[anim_name]
@@ -590,7 +590,7 @@ class Pet(QWidget): # main logic
         print("screen dpi", self.dpi_scale)
         print("new scale", self.scale)
 
-        Debug.log(f"Updating dpi and scale:\nScreen height: {h}\n First frame height: {first_frame.height()}\nPixel ratio: {self.pixel_ratio}\nScreen DPI: {self.dpi_scale}\nNew scale: {self.scale}")
+        log.info(f"Updating dpi and scale:\nScreen height: {h}\n First frame height: {first_frame.height()}\nPixel ratio: {self.pixel_ratio}\nScreen DPI: {self.dpi_scale}\nNew scale: {self.scale}")
 
     def update_hitbox_size_and_drag_offset(self, frame):
             if not frame:

@@ -3,15 +3,11 @@ from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QColor, QPainter, QFont
 from PySide6.QtWidgets import QApplication
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
-
 import json
-
 import zipfile
 
 from engine.asset_loader import AssetLoader
-
 from engine.particles.particle_emitter import ParticleEmitter
-from engine.debug import Debug
 
 from OpenGL.GL import * #type: ignore
 
@@ -20,6 +16,7 @@ from collections import defaultdict
 import numpy as np
 from numba import njit
 
+from engine.logger import debug_logger as log
 
 def get_frame_index(anim, age):
     """
@@ -130,7 +127,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
 
         print("\n----- LOADING PARTICLES -----")
-        Debug.log("---LOADING PARTICLES---")
+        log.info("---LOADING PARTICLES---")
 
         for name in list(self.PARTICLES):
             cfg = self.PARTICLES[name]
@@ -185,30 +182,30 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         # getting texture atlas
         print("Getting atlas.png from:", atlas_path)
-        Debug.log(f"Getting atlas.png from: {atlas_path}")
+        log.info(f"Getting atlas.png from: {atlas_path}")
 
         self.atlas_texture = AssetLoader.load_openGL_texture(archive=archive, path=atlas_path)
 
         if self.atlas_texture: 
             print("--Success!")
-            Debug.log("--Success!")
+            log.info("--Success!")
         else: raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
 
         # getting json config
         print(f"Getting atlas.json from: {atlas_path}")
-        Debug.log(f"Getting atlas.json from: {atlas_path}")
+        log.info(f"Getting atlas.json from: {atlas_path}")
 
         with archive.open(config_path) as f:
             self.atlas_config = json.load(f)
 
         if self.atlas_config: 
             print("--Success!")
-            Debug.log("--Success!")
+            log.info("--Success!")
         else: raise RuntimeError(f"No atlas.json found at '{config_path}'")
 
         # --- loading particle information into memory for fast access ---
         print("---Loading particles into memory---")
-        Debug.log("---Loading particles into memory---")
+        log.info("---Loading particles into memory---")
 
         self.atlas_lookup = [] # id = full information from the atlas about a particle
         self.frame_lookup = [] # id = which asset lookup to look in
@@ -219,7 +216,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
             self.atlas_lookup.append(particle_data)
             self.frame_lookup.append(particle_data["frames"])
             print(f"Asset loaded: {asset_name}")
-            Debug.log(f"Asset loaded: {asset_name}")
+            log.info(f"Asset loaded: {asset_name}")
 
         self.asset_ids = {} # assigning each name is ASSETS an id ("dirt": 0, "smoke": 1)
         for i, name in enumerate(self.ASSETS.keys()):
@@ -242,15 +239,15 @@ class ParticleOverlayWidget(QOpenGLWidget):
         print("assets ids", self.asset_ids)
         print("assets lookup", self.asset_lookup)
         print("aspect_ratio_by_id", self.aspect_ratio_by_id)
-        Debug.log("Debug information:")
-        Debug.log(f"atlas lookup: {self.atlas_lookup}")
-        Debug.log(f"frame lookup: {self.frame_lookup}")
-        Debug.log(f"assets ids: {self.asset_ids}")
-        Debug.log(f"assets lookup: {self.asset_lookup}")
-        Debug.log(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
+        log.info("Debug information:")
+        log.info(f"atlas lookup: {self.atlas_lookup}")
+        log.info(f"frame lookup: {self.frame_lookup}")
+        log.info(f"assets ids: {self.asset_ids}")
+        log.info(f"assets lookup: {self.asset_lookup}")
+        log.info(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
 
         print("---PARTICLES LOADED---\n")
-        Debug.log("---PARTICLES LOADED---")
+        log.info("---PARTICLES LOADED---")
 
     def update_dpi_and_scale(self, new_scale):
         self.scale = new_scale
@@ -277,7 +274,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
         cfg = self.PARTICLES.get(name)
 
         if not cfg:
-            Debug.warning(f"Particle {name} not found in particles.json")
+            #Debug.warning(f"Particle {name} not found in particles.json")
             raise Exception("Particle", name, "not found in particles.json")
 
 
