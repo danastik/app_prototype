@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QCheckBox,
     QGridLayout,
+    QSizePolicy,
 )
 
 root = Path(__file__).resolve().parents[1]
@@ -37,6 +38,8 @@ logo_path = root / "resources" / "icons" / "icon.png"
 font_path = root / "resources" / "fonts"
 qss_path = root / "resources" / "styles" / "main_widget.qss"
 settings_path = root / "settings.json"
+
+LOG_FOLDER = os.path.join(os.environ["LOCALAPPDATA"], "Yoji", "logs")
 
 app_path = Path(__file__).resolve()
 
@@ -95,10 +98,15 @@ class MainWindow(QWidget):
             self.setStyleSheet(f.read())
 
         # it doesnt work when applied through qss for some reason
+        self.info_thumbnail.setSizePolicy(
+            QSizePolicy.Policy.Maximum,
+            QSizePolicy.Policy.Maximum
+        )
         self.info_thumbnail.setStyleSheet("""
                 QLabel {
                     max-width: 230px;
                     max-height: 230px;
+                    
                 }
             """)
 
@@ -112,8 +120,8 @@ class MainWindow(QWidget):
 
         if self.settings["last_path"]:
             try:
+                log.info(f"Last used path was {self.settings["last_path"]}")
                 self.load_archive(self.settings["last_path"])
-                log.info(f"Opening file from last path {self.settings["last_path"]}")
             except Exception: pass
 
         self.setWindowTitle("Yoji")
@@ -126,10 +134,9 @@ class MainWindow(QWidget):
         """Registering the .yoji file format"""
         try:
             register_yoji_file_type(exe_path=app_path, icon_path=icon_path)
-            log.info(f"Registered a .yoji file.")
+            log.info(f"Registered .yoji file extention: success.")
         except Exception as e:
-            pass
-            log.warning(f"Could not register .yoji file.\n{e}")
+            log.warning(f"Could not register .yoji file extension.\n{e}")
 
     def load_fonts(self):
         try:
@@ -147,13 +154,13 @@ class MainWindow(QWidget):
 
     def make_info_widget(self):
         self.info_widget = QWidget()
-        info_layout = QHBoxLayout(self.info_widget)
+        self.info_layout = QHBoxLayout(self.info_widget)
 
         self.info_thumbnail = QLabel()
         self.info_thumbnail.setPixmap(QPixmap(str(logo_path)))
-        info_layout.addWidget(self.info_thumbnail)
+        self.info_layout.addWidget(self.info_thumbnail)
 
-        info_layout.addSpacing(10)
+        self.info_layout.addSpacing(10)
 
         grid = QVBoxLayout()
 
@@ -178,15 +185,20 @@ class MainWindow(QWidget):
 
         self.info_widget.hide()
 
+        self.view_logs_button = QPushButton("view log folder")
+        self.view_logs_button.clicked.connect(self._open_logs_folder)
+        grid.addWidget(self.view_logs_button, alignment=Qt.AlignmentFlag.AlignRight)
+        self.view_logs_button.setVisible(False)
+
         self.debug_checkbox = QCheckBox("debug mode")
+        self.debug_checkbox.toggled.connect(self.view_logs_button.setVisible)
         grid.addWidget(self.debug_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.call_button = QPushButton("Call")
         self.call_button.clicked.connect(self.call_button_clicked)
-
         grid.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
-        info_layout.addLayout(grid)
+        self.info_layout.addLayout(grid)
     
     def _show_warning_message(self, title, message):
         box = QMessageBox(self)
@@ -198,6 +210,9 @@ class MainWindow(QWidget):
         )
         box.exec()
     
+    def _open_logs_folder(self):
+        os.startfile(LOG_FOLDER)
+
     #set object names for easy acess in qss
     def set_qss_object_names(self):
         self.info_widget.setObjectName("info_widget")
@@ -207,6 +222,7 @@ class MainWindow(QWidget):
         self.info_description.setObjectName("info_description")
         self.info_tags.setObjectName("info_tags")
         self.browse_button.setObjectName("browse_button")
+        self.view_logs_button.setObjectName("view_logs_button")
         self.debug_checkbox.setObjectName("debug_checkbox")
         self.call_button.setObjectName("call_button")
 
@@ -263,7 +279,6 @@ class MainWindow(QWidget):
             self.settings["last_path"] = path
             self._save_settings()
             
-
     def read_manifest(self, archive):
         try:
             with archive.open("manifest.json") as f:

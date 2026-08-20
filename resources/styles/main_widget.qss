@@ -58,12 +58,32 @@ QLabel#info_thumbnail {
     color: white;
 }
 
-#debug_checkbox {
-    font-family: "Rubik";
-    font-size: 10px;
-    color: #569;
+QCheckBox#debug_checkbox {
+    font-size: 11px;
+    color: #555;
 }
 
+QCheckBox#debug_checkbox:hover {
+    color: #37d;
+}
+
+QCheckBox#debug_checkbox::indicator {
+    width: 13px;
+    height: 13px;
+}
+
+QPushButton#view_logs_button {
+    font-size: 11px;
+    color: #555;
+    text-decoration: underline;
+    border: none;
+    padding: 0px;
+    margin: 0px, 4px;
+}
+
+QPushButton#view_logs_button:hover {
+    color: #7bf;
+}
 
 #call_button {
     font-family: "Rubik";

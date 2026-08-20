@@ -77,11 +77,11 @@ class Pet(QWidget): # main logic
                 self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
             except json.JSONDecodeError as e:
                 msg = f"Invalid JSON syntax in {config_path}\n{e}"
-                #Debug.error(msg)
+                log.error(msg)
                 raise ValueError(msg)
             except Exception as e:
                 msg = f"Could not parse {config_path}\n{e}"
-                #Debug.error(msg)
+                log.error(msg)
                 raise ValueError(msg)
 
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
@@ -201,7 +201,6 @@ class Pet(QWidget): # main logic
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
-
     def _load_json(self, archive: zipfile.ZipFile, path, convert_int_keys=False):
         with archive.open(path) as f:
             try:
@@ -217,11 +216,11 @@ class Pet(QWidget): # main logic
             
             except json.JSONDecodeError as e:
                 msg = f"Invalid JSON syntax in {path}\n{e}"
-                #Debug.error(msg)
+                log.error(msg)
                 raise ValueError(msg)
             except Exception as e:
                 msg = f"Could not parse {path}\n{e}"
-                #Debug.error(msg)
+                log.error(msg)
                 raise ValueError(msg)
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
@@ -313,7 +312,7 @@ class Pet(QWidget): # main logic
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
-            #Debug.warning(f"Animation {anim_name} not found in animations.json")
+            debug_log.error(f"Animation {anim_name} not found in animations.json")
             raise Exception(f"Animation {anim_name} not found in animations.json")  #no idea what this does will add user notification that error occured
 
         anim_cfg = self.ANIMATIONS[anim_name]

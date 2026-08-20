@@ -24,14 +24,14 @@ class StateRuntime:
                 exception_states = t.get("except_states")
                 to = state
                 chance = t.get("chance", 1)
-                trans_anim = t.get("transition_animationation")
-                trans_anim_cfg = t.get("transition_animationation_cfg")
+                trans_anim = t.get("transition_animation")
+                trans_anim_cfg = t.get("transition_animation_cfg")
 
                 # print(conditions)
                 # print(to)
                 # print(chance)
 
-                self.all_forced_transitions[to] = {"conditions": conditions, "except_states": exception_states, "chance": chance, "transition_animationation": trans_anim, "transition_animationation_cfg": trans_anim_cfg}
+                self.all_forced_transitions[to] = {"conditions": conditions, "except_states": exception_states, "chance": chance, "transition_animation": trans_anim, "transition_animation_cfg": trans_anim_cfg}
 
         # print(self.all_forced_transitions)
 
