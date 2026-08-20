@@ -66,13 +66,13 @@ class DebugLogger:
 
         self.enabled = False
 
-        self._setup()
+        # self._setup()
 
-    def _setup(self):
+    def _setup(self, name: str):
         self.log_folder.mkdir(parents=True, exist_ok=True)
 
         date = datetime.now().strftime("%Y-%m-%d")
-        log_file = self.log_folder / f"{date}.txt"
+        log_file = self.log_folder / f"{name} {date}.txt"
 
         handler = logging.FileHandler(
             log_file,
@@ -92,9 +92,18 @@ class DebugLogger:
         # Disabled by default
         self.logger.disabled = True
 
-    def set_enabled(self, enabled: bool):
-        self.enabled = enabled
-        self.logger.disabled = not enabled
+    def start_logging(self, name: str):
+        self._setup(name=name)
+        self.enabled = True
+        self.logger.disabled = False
+
+    def stop_logging(self):
+        self.enabled = False
+        self.logger.disabled = True
+
+    # def set_enabled(self, enabled: bool):
+    #     self.enabled = enabled
+    #     self.logger.disabled = not enabled
 
     def debug(self, message, *args):
         self.logger.debug(message, *args)

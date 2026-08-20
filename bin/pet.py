@@ -67,6 +67,8 @@ class Pet(QWidget): # main logic
     def __init__(self, archive: zipfile.ZipFile, main_hwnd):
         super().__init__()
         log.info("---INITIALISATION START---")
+        debug_log.info("\n")
+        debug_log.info("---CALLING YOJI---")
 
         config_path = "data/render_config.json"
         with archive.open(config_path) as f:
@@ -77,7 +79,7 @@ class Pet(QWidget): # main logic
                 self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
             except json.JSONDecodeError as e:
                 msg = f"Invalid JSON syntax in {config_path}\n{e}"
-                log.error(msg)
+                log.error(msg) 
                 raise ValueError(msg)
             except Exception as e:
                 msg = f"Could not parse {config_path}\n{e}"
@@ -194,7 +196,7 @@ class Pet(QWidget): # main logic
         print("---LOADING SUCCESSFUL---\n")
         log.info("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
 
-        debug_log.info("---Yoji loaded---")
+        debug_log.info("---Yoji loaded---\n")
 
         # Timer for updating logic
         self.timer = QTimer()
@@ -229,19 +231,21 @@ class Pet(QWidget): # main logic
         # if self.parent_window_hwnd:
         #     # print(f"Position: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}")
 
-        self.variables.set("times_clicked_this_state", 0)
-        self.variables.set("time_spent_in_this_state", 0)
+        self.variables.reset("times_clicked_this_state")
+        self.variables.reset("time_spent_in_this_state")
 
         cfg = self.STATES[state]
 
         next_behaviour = cfg.get("behaviour", "STATIONARY")
         self.resolve_behavior(next_behaviour, cfg)
 
-        # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         anim_name = cfg.get("animation")
-        self.play_animation(anim_name=anim_name, cfg=cfg)
-
+        
+        debug_log.info(f"- - -")
         debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
+
+        # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
+        self.play_animation(anim_name=anim_name, cfg=cfg)
 
        
     def on_state_exit(self, state): # called in state_machine when exiting a state
@@ -312,8 +316,8 @@ class Pet(QWidget): # main logic
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
-            debug_log.error(f"Animation {anim_name} not found in animations.json")
-            raise Exception(f"Animation {anim_name} not found in animations.json")  #no idea what this does will add user notification that error occured
+            debug_log.error(f"{__name__}: Animation {anim_name} not found in animations.json")
+            raise Exception(f"Animation {anim_name} not found in animations.json")
 
         anim_cfg = self.ANIMATIONS[anim_name]
 
@@ -329,6 +333,9 @@ class Pet(QWidget): # main logic
         if isTransitionAnimation:
             loop = False
             # print("transition animation playing")
+
+        transit_txt = "transition " if isTransitionAnimation else ""
+        debug_log.debug(f"Playing {transit_txt}animation: {anim_name}, Frame count: {len(frames)}, Loop: {loop}, Times to loop: {times_to_loop}, Holds: {holds}")
 
         # print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
         self.animator.set_animation(frames=frames, fps=fps, loop=loop, times_to_loop=times_to_loop, holds=holds)

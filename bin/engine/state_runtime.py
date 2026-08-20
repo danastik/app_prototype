@@ -1,6 +1,8 @@
 import random
 from engine.enums import Flag, Pulse
 
+from engine.logger import debug_logger as debug_log
+
 class StateRuntime:
     def __init__(self, pet, current_state_name, config, all_configs, variables):
         self.pet = pet
@@ -206,6 +208,7 @@ class StateRuntime:
 
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
                 # print("Forced transition:", conditions)
+                debug_log.debug(f"Forced transition from {self.current_state_name} to {state} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {force_trans.get("transition_animation")}, config: {force_trans.get("transition_animation_cfg")}")
                 return (
                     state,  # return the destination state
                     force_trans.get("transition_animation", None),
@@ -224,6 +227,7 @@ class StateRuntime:
             chance = p.get("chance", 1)
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
                 self._emit_particles(p)
+                debug_log.debug(f"Emitting conditional_particles {p["emit"]} - satisfied all conditions {conditions} and chance {chance}")
 
         # чето типа такого тебе надо
         # это чтоб в любом месте можно было звук проигрывать
@@ -244,6 +248,7 @@ class StateRuntime:
 
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance: # if all conditions are True - we make the transition
                 self._apply_on_transition(transition_info=t)
+                debug_log.debug(f"Transition from {self.current_state_name} to {t["to"]} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
                 return (
                     t["to"],  # next state
                     t.get("transition_animation", None),
@@ -253,6 +258,7 @@ class StateRuntime:
         exit_conditions = self.config.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
             # print("exiting state")
+            debug_log.debug(f"Exiting from {self.current_state_name} to {self.config["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.config.get("exit_animation")}, config: {self.config.get("exit_animation_cfg")}")
             return(self.config["exit_to"], self.config.get("exit_animation"), self.config.get("exit_animation_cfg"))
 
         return None

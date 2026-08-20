@@ -1,3 +1,5 @@
+from engine.logger import debug_logger as debug_log
+
 class VariableManager:
     def __init__(self, variables):
         self.values = {}
@@ -23,8 +25,12 @@ class VariableManager:
         return self.values.get(name, 0.0)
 
     def set(self, name, value):
+        debug_log.debug(f"[Variables] Setting {name} = {value} (previous value: {self.values[name]})")
         self.values[name] = float(value)
 
+    def reset(self, name):
+        self.values[name] = 0
+
     def add(self, name, delta):
+        debug_log.debug(f"[Variables] Adding {name} += {delta} (previous value: {self.values[name]})")
         self.values[name] += delta
-        # print(self.values[name], name)

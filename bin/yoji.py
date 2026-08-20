@@ -46,7 +46,7 @@ app_path = Path(__file__).resolve()
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        debug_logger.set_enabled(False)
+        # debug_logger.set_enabled(False)
 
         log.info("---APP LAUNCHED---")
         self.pet_active = False
@@ -292,7 +292,10 @@ class MainWindow(QWidget):
             tags = " ".join(f"#{tag}" for tag in tag_list)
             self.info_tags.setText(tags)
 
-            print("manifest opened successfully")
+            print("Manifest opened successfully")
+            log.info(f"Manifest opened successfully")
+
+            self.yoji_name = self.manifest.get("name", "unnamed")
 
             thumbnail = self.manifest.get("thumbnail", "icon.png")
 
@@ -428,9 +431,9 @@ class MainWindow(QWidget):
         self.debug_checkbox.setDisabled(True)
         if self.debug_checkbox.isChecked():
             log.info(f"Launching pet in debug mode")
-            debug_logger.set_enabled(True)
+            debug_logger.start_logging(self.yoji_name)
         else: 
-            debug_logger.set_enabled(False)
+            debug_logger.stop_logging()
 
     def start_call(self):
         self.call_in_progress = True
