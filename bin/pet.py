@@ -241,7 +241,7 @@ class Pet(QWidget): # main logic
 
         anim_name = cfg.get("animation")
         
-        debug_log.info(f"- - -")
+        debug_log.info(f"--->")
         debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
 
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later

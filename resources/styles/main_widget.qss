@@ -18,15 +18,14 @@ QLineEdit {
 }
 
 #info_widget {
-    margin-left: 1px;
     background-color: white;
 }
 
-QLabel#info_thumbnail {
+/* QLabel#info_thumbnail {
     max-width: 250px;
     max-height: 250px;
-    /* background-color: #3c3; */
-}
+    background-color: #3c3;
+} */
 
 #info_name {
     font-family: "Rubik";

@@ -23,7 +23,7 @@ class AppLogger:
         self.log_folder.mkdir(parents=True, exist_ok=True)
 
         date = datetime.now().strftime("%Y-%m-%d")
-        log_file = self.log_folder / f"{date}.txt"
+        log_file = self.log_folder / f"{date}.log"
 
         handler = logging.FileHandler(
             log_file,
@@ -72,7 +72,7 @@ class DebugLogger:
         self.log_folder.mkdir(parents=True, exist_ok=True)
 
         date = datetime.now().strftime("%Y-%m-%d")
-        log_file = self.log_folder / f"{name} {date}.txt"
+        log_file = self.log_folder / f"{name} {date}.log"
 
         handler = logging.FileHandler(
             log_file,

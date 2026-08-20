@@ -46,13 +46,14 @@ app_path = Path(__file__).resolve()
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        # debug_logger.set_enabled(False)
-
         log.info("---APP LAUNCHED---")
         self.pet_active = False
         self.files = []
         self.manifest = None
         self.call_in_progress = False
+
+        self.setWindowTitle("Yoji")
+        self.resize(500, 400)
 
         # opening the app when opening a .yoji file 
         if len(sys.argv) > 1:
@@ -97,8 +98,8 @@ class MainWindow(QWidget):
         # it doesnt work when applied through qss for some reason
         self.info_thumbnail.setStyleSheet("""
                 QLabel {
-                    max-width: 300px;
-                    max-height: 300px;
+                    max-width: 350px;
+                    max-height: 350px;
                 }
             """)
         
@@ -120,9 +121,6 @@ class MainWindow(QWidget):
                 log.info(f"Last used path was {self.settings["last_path"]}")
                 self.load_archive(self.settings["last_path"])
             except Exception: pass
-
-        self.setWindowTitle("Yoji")
-        self.resize(500, 400)
 
         log.info("---APP LOADED SUCCESSFULLY---\n")
         # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
@@ -178,8 +176,6 @@ class MainWindow(QWidget):
         self.info_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         vertical_layout.addWidget(self.info_tags)
 
-        vertical_layout.addStretch()
-
         self.info_widget.hide()
 
         self.call_box = QWidget()
@@ -200,6 +196,7 @@ class MainWindow(QWidget):
         self.call_button.clicked.connect(self.call_button_clicked)
         call_box_layout.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
+        vertical_layout.addStretch()
         vertical_layout.addWidget(self.call_box, alignment=Qt.AlignmentFlag.AlignBaseline)
         self.info_layout.addLayout(vertical_layout)
     
@@ -281,6 +278,8 @@ class MainWindow(QWidget):
             self.read_manifest(archive)
 
             self.settings["last_path"] = path
+            self.settings["size_w"] = self.width()
+            self.settings["size_h"] = self.height()
             self._save_settings()
             
     def read_manifest(self, archive):
@@ -353,7 +352,7 @@ class MainWindow(QWidget):
         with open(self.settings_file, "r", encoding="utf-8") as f:
             self.settings = json.load(f)
 
-        self.resize(self.settings["size_w"], self.settings["size_h"])
+        self.resize(self.settings.get("size_w", 500), self.settings.get("size_h", 400))
 
     def _save_settings(self):
         with open(self.settings_file, "w", encoding="utf-8") as f:
