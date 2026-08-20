@@ -1,3 +1,7 @@
+QMainWindow {
+    background-color: #8e6;
+}
+
 QWidget {
     font-family: "Rubik";
     font-size: 10pt;
@@ -15,11 +19,13 @@ QLineEdit {
 
 #info_widget {
     margin-left: 1px;
+    background-color: white;
 }
 
 QLabel#info_thumbnail {
-    max-width: 230px;
-    max-height: 230px;
+    max-width: 250px;
+    max-height: 250px;
+    /* background-color: #3c3; */
 }
 
 #info_name {
@@ -83,6 +89,11 @@ QPushButton#view_logs_button {
 
 QPushButton#view_logs_button:hover {
     color: #7bf;
+}
+
+#call_box {
+    /* background-color: #d855bc; */
+    min-height: 100px;
 }
 
 #call_button {

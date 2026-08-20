@@ -88,9 +88,6 @@ class MainWindow(QWidget):
         # info box
         self.make_info_widget()
 
-        self.contents = QPlainTextEdit()
-        self.contents.setReadOnly(True)
-
         self.set_qss_object_names()
 
         # --- stylesheets ---
@@ -98,17 +95,17 @@ class MainWindow(QWidget):
             self.setStyleSheet(f.read())
 
         # it doesnt work when applied through qss for some reason
+        self.info_thumbnail.setStyleSheet("""
+                QLabel {
+                    max-width: 300px;
+                    max-height: 300px;
+                }
+            """)
+        
         self.info_thumbnail.setSizePolicy(
             QSizePolicy.Policy.Maximum,
             QSizePolicy.Policy.Maximum
         )
-        self.info_thumbnail.setStyleSheet("""
-                QLabel {
-                    max-width: 230px;
-                    max-height: 230px;
-                    
-                }
-            """)
 
         # --- main layout  ---
 
@@ -158,47 +155,53 @@ class MainWindow(QWidget):
 
         self.info_thumbnail = QLabel()
         self.info_thumbnail.setPixmap(QPixmap(str(logo_path)))
-        self.info_layout.addWidget(self.info_thumbnail)
+        self.info_layout.addWidget(self.info_thumbnail, alignment=Qt.AlignmentFlag.AlignTop)
 
         self.info_layout.addSpacing(10)
 
-        grid = QVBoxLayout()
+        vertical_layout = QVBoxLayout()
 
         self.info_name = QLabel("Name")
         self.info_name.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        grid.addWidget(self.info_name)
+        vertical_layout.addWidget(self.info_name)
 
         self.info_author = QLabel("author")
         self.info_author.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        grid.addWidget(self.info_author)
+        vertical_layout.addWidget(self.info_author)
 
         self.info_description = QLabel("description")
         self.info_description.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.info_description.setWordWrap(True)
-        grid.addWidget(self.info_description)
+        vertical_layout.addWidget(self.info_description)
 
         self.info_tags = QLabel("#yoji #pet #cute")
         self.info_tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        grid.addWidget(self.info_tags)
+        vertical_layout.addWidget(self.info_tags)
 
-        grid.addStretch()
+        vertical_layout.addStretch()
 
         self.info_widget.hide()
 
+        self.call_box = QWidget()
+        call_box_layout = QVBoxLayout(self.call_box)
+
+        call_box_layout.addStretch()
+
         self.view_logs_button = QPushButton("view log folder")
         self.view_logs_button.clicked.connect(self._open_logs_folder)
-        grid.addWidget(self.view_logs_button, alignment=Qt.AlignmentFlag.AlignRight)
+        call_box_layout.addWidget(self.view_logs_button, alignment=Qt.AlignmentFlag.AlignRight)
         self.view_logs_button.setVisible(False)
 
         self.debug_checkbox = QCheckBox("debug mode")
         self.debug_checkbox.toggled.connect(self.view_logs_button.setVisible)
-        grid.addWidget(self.debug_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
+        call_box_layout.addWidget(self.debug_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.call_button = QPushButton("Call")
         self.call_button.clicked.connect(self.call_button_clicked)
-        grid.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
+        call_box_layout.addWidget(self.call_button, alignment=Qt.AlignmentFlag.AlignRight)
 
-        self.info_layout.addLayout(grid)
+        vertical_layout.addWidget(self.call_box, alignment=Qt.AlignmentFlag.AlignBaseline)
+        self.info_layout.addLayout(vertical_layout)
     
     def _show_warning_message(self, title, message):
         box = QMessageBox(self)
@@ -225,6 +228,7 @@ class MainWindow(QWidget):
         self.view_logs_button.setObjectName("view_logs_button")
         self.debug_checkbox.setObjectName("debug_checkbox")
         self.call_button.setObjectName("call_button")
+        self.call_box.setObjectName("call_box")
 
 
     # region Qt events for triggering windows_detector
@@ -285,8 +289,8 @@ class MainWindow(QWidget):
                 self.manifest = json.load(f)
 
             print(self.manifest)
-            self.info_name.setText(str(self.manifest.get("name", "Unnamed")))
-            self.info_author.setText(f"v{self.manifest.get("version", 1)} by {self.manifest.get("author", "unknown")}")
+            self.info_name.setText(str(" " + self.manifest.get("name", "Unnamed")))
+            self.info_author.setText(f" v{self.manifest.get("version", 1)} by {self.manifest.get("author", "unknown")}")
             self.info_description.setText(str(self.manifest.get("description", "")))
             tag_list = self.manifest.get("tags", ["#untagged"])
             tags = " ".join(f"#{tag}" for tag in tag_list)
