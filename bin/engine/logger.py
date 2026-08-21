@@ -33,7 +33,7 @@ class AppLogger:
         handler.setLevel(logging.INFO)
         handler.setFormatter(
             logging.Formatter(
-                "%(asctime)s [%(levelname)s]: %(message)s",
+                "[%(asctime)s][%(levelname)s]: %(message)s",
                 datefmt="%H:%M:%S"
             )
         )
@@ -82,7 +82,7 @@ class DebugLogger:
         handler.setLevel(logging.DEBUG)
         handler.setFormatter(
             logging.Formatter(
-                "%(asctime)s [%(levelname)s]: %(message)s",
+                "[%(asctime)s][%(levelname)s]: %(message)s",
                 datefmt="%H:%M:%S"
             )
         )
