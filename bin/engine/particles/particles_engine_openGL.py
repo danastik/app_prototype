@@ -61,6 +61,8 @@ class ParticleOverlayWidget(QOpenGLWidget):
         avail_geom = self.primary_screen.geometry() # later if needed will use availableGeomtry, but that rquires rewriting rendering code so idk
         self.setGeometry(avail_geom)
 
+        self.clear_surface = True
+
         # Create dummy data with FINAL types
         dummy_positions = np.zeros(1000, dtype=np.float32)
         dummy_vels = np.zeros(1000, dtype=np.float32)
@@ -173,9 +175,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
             print(f"[PARTICLES LOADED] {name}: {frame_count} frames, asset: {cfg["asset"]}")
 
         # generating particle texture atlas
-        # print("Generating atlas:")
-        # atlas_generator = AtlasGenerator(ASSETS=ASSETS, archive=archive)
-        # atlas_generator.generate_atlas()
 
         # loading atlas texure
         atlas_path = "generated/atlas/atlas.png"
@@ -190,7 +189,9 @@ class ParticleOverlayWidget(QOpenGLWidget):
         if self.atlas_texture: 
             print("--Success!")
             log.info("--Success!")
-        else: raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
+        else: 
+            log.error(f"  No atlas.png found at '{atlas_path}'")
+            raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
 
         # getting json config
         print(f"Getting atlas.json from: {atlas_path}")
@@ -202,7 +203,9 @@ class ParticleOverlayWidget(QOpenGLWidget):
         if self.atlas_config: 
             print("--Success!")
             log.info("--Success!")
-        else: raise RuntimeError(f"No atlas.json found at '{config_path}'")
+        else:
+            log.error(f"  No atlas.json found at '{config_path}'")
+            raise RuntimeError(f"No atlas.json found at '{config_path}'")
 
         # --- loading particle information into memory for fast access ---
         print("---Loading particles into memory---")
@@ -240,12 +243,12 @@ class ParticleOverlayWidget(QOpenGLWidget):
         print("assets ids", self.asset_ids)
         print("assets lookup", self.asset_lookup)
         print("aspect_ratio_by_id", self.aspect_ratio_by_id)
-        log.info("Debug information:")
-        log.info(f"atlas lookup: {self.atlas_lookup}")
-        log.info(f"frame lookup: {self.frame_lookup}")
-        log.info(f"assets ids: {self.asset_ids}")
-        log.info(f"assets lookup: {self.asset_lookup}")
-        log.info(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
+        debug_log.info("Debug information:")
+        debug_log.info(f"atlas lookup: {self.atlas_lookup}")
+        debug_log.info(f"frame lookup: {self.frame_lookup}")
+        debug_log.info(f"assets ids: {self.asset_ids}")
+        debug_log.info(f"assets lookup: {self.asset_lookup}")
+        debug_log.info(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
 
         print("---PARTICLES LOADED---\n")
         log.info("---PARTICLES LOADED---")
@@ -369,6 +372,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
     # --- DRAWING ---
     def draw(self):
+        if not self.count and self.clear_surface: return
         self.update()  # triggers paintGL
 
     def initializeGL(self):
@@ -398,13 +402,17 @@ class ParticleOverlayWidget(QOpenGLWidget):
         glClearColor(0, 0, 0, 0)
         glClear(GL_COLOR_BUFFER_BIT)
 
-        if not self.count: return
+        if not self.count: 
+            self.clear_surface = True
+            return
+        
+        self.clear_surface = False
         # print("count:", self.count)
         
         # дебаг штука
-        total_particles = self.count
-        culled_particles = 0
-        drawn_particles = 0
+        # total_particles = self.count
+        # culled_particles = 0
+        # drawn_particles = 0
 
         vertices = []
         texcoords = []
@@ -440,17 +448,16 @@ class ParticleOverlayWidget(QOpenGLWidget):
             sy = size * self.aspect * frame_aspect_ratio
 
             # skipping if whole quad would be outside of screen
-            # To-do: add taskbar position as the lower boundary instead of screen border
             if (
                 x + sx < -1.0 or
                 x - sx > 1.0 or
                 y < self.taskbar_ndc_y or  # it was:   y + sy < -1.0  before (for the bottom of the screen)
                 y - sy > 1.0
             ):
-                culled_particles += 1
+                # culled_particles += 1
                 continue
 
-            drawn_particles += 1
+            # drawn_particles += 1
 
             # creating the quad
             vertices.extend([
