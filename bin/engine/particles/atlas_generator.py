@@ -6,8 +6,6 @@ import os
 
 from engine.logger import app_logger as log
 
-# from ...app.logger import debug_logger as log
-
 INPUT = "assets/particles"
 
 atlas_path = "generated/atlas/atlas.png"

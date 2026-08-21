@@ -1,6 +1,8 @@
 from engine.state_runtime import StateRuntime
 from engine.enums import Flag, Pulse
 
+from engine.logger import debug_logger as debug_log
+
 class StateMachine:
     def __init__(self, pet, configs, initial):
         self.pet = pet
@@ -35,7 +37,7 @@ class StateMachine:
         # print("state_machine update", result)
 
         if not result and not self.in_transition:
-            result = self.state.handle_events()  # sends event to state_runtime.py expecting two strings (next state and animation name)
+            result = self.state.handle_events()  # sends event to state_runtime.py expecting (next_state, animation_name, config_dictionary[])
 
 
         # TRANSITION LOGIC
@@ -63,10 +65,10 @@ class StateMachine:
         self.pending_transition_cfg = cfg
         self.in_transition = True
 
-        # if transition animation then play it
         if self.pending_transition_anim:
             # print("state_machine: animation queued")
             if type(self.pending_transition_cfg) != dict:
+                debug_log.error(f"Wrong format config for transition animation: {self.pending_transition_anim}, should be a dict")
                 raise RuntimeError(f"Wrong format config for transition animation: {self.pending_transition_anim}, should be a dict")
 
             self.pet.play_animation(
@@ -85,7 +87,6 @@ class StateMachine:
 
         self.in_transition = False
 
-        # Change state
         self.change(self.pending_state)
         # print("state_machine: pending changes applied")
 

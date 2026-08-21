@@ -12,7 +12,7 @@ class VariableManager:
         self.values["time_spent_in_this_state"] = 0
         self.rates["time_spent_in_this_state"] = 1
 
-        # loading values and rates from data.variables
+        # getting values and rates from data.variables
         for name, cfg in config.items():
             self.values[name] = float(cfg.get("value", 0.0))
             self.rates[name] = float(cfg.get("rate", 0.0))

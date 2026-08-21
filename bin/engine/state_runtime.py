@@ -73,6 +73,7 @@ class StateRuntime:
     def clear_pulses(self):
         self.pulses.clear()
     
+    # apps
     def update_apps(self, app_state):
         # print("apps")
         active, visible, maximised, fullscreen, focused_title, focused = app_state
@@ -89,6 +90,7 @@ class StateRuntime:
         self.focused_app_title = focused_title
         self.focused_app = focused
     
+    # helpers
     def _apply_on_enter(self):  # called from state machine on enter
         for cmd in self.config.get("variables_on_enter", []):
             self._execute_command(cmd)
@@ -115,7 +117,6 @@ class StateRuntime:
 
         # сюда скопировать вот то что сверху только переделать под звук
 
-
     def _apply_on_exit(self): # called from state machine on exit
         for cmd in self.config.get("variables_on_exit", []):
             self._execute_command(cmd)
@@ -128,7 +129,7 @@ class StateRuntime:
 
         # сюда добавить чтоб он тоже для всех "audio_on_exit" играл аудио
 
-
+    # commands
     def _emit_particles(self, particle_cmd, constant = False):
         if "emit" in particle_cmd:
             # print("emitting")
@@ -163,6 +164,8 @@ class StateRuntime:
         # if "play" in audio_cmd:
         #     # print("Playing audio")
 
+
+    # transitions
     def _check_condition(self, cond):
         if "flag" in cond:
             return Flag.__members__.get(cond["flag"]) in self.flags
@@ -217,7 +220,6 @@ class StateRuntime:
             
         return None 
 
-
     def handle_events(self) -> tuple[str, str, dict] | None:
         # print(f"state_runtime: handling events: Flags: ", self.flags, " Pulses: ", self.pulses)
         particle_commands = self.config.get("conditional_particles", [])
@@ -257,7 +259,6 @@ class StateRuntime:
             
         exit_conditions = self.config.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
-            # print("exiting state")
             debug_log.debug(f"Exiting from {self.current_state_name} to {self.config["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.config.get("exit_animation")}, config: {self.config.get("exit_animation_cfg")}")
             return(self.config["exit_to"], self.config.get("exit_animation"), self.config.get("exit_animation_cfg"))
 

@@ -373,7 +373,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
     # --- DRAWING ---
     def draw(self):
         if not self.count and self.clear_surface: return
-        self.update()  # triggers paintGL
+        self.update()  # trigger paintGL
 
     def initializeGL(self):
         # print("initialiseGL")
@@ -420,16 +420,13 @@ class ParticleOverlayWidget(QOpenGLWidget):
         for i in range(self.count):
             particle_id = self.type_id[i]
             anim_data = self.animations[particle_id]
-            # frame_id = get_frame_index(anim_data, self.age[i])
 
-            # instead of using get_frame_index function (trying for optimisation)
             frame_id = int(self.age[i] * anim_data["fps"])
             if anim_data["loop"]:
                 frame_id %= anim_data["frame_count"]
             else:
                 frame_id = min(frame_id, anim_data["frame_count"] - 1)
 
-            # particle_data = self.atlas_lookup[particle_id]
             frame_data = self.frame_lookup[self.asset_lookup[particle_id]][frame_id]
 
             x_px = self.pos_x[i]
@@ -506,6 +503,10 @@ class ParticleOverlayWidget(QOpenGLWidget):
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+        t2 = time.perf_counter()
+
         # подсчёт партиклов для дебага
         # self.debug_counter += 1
 
@@ -517,10 +518,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
         #         f"Drawn: {drawn_particles} | "
         #         f"Culled: {culled_particles}"
         #     )
-
-        glBindTexture(GL_TEXTURE_2D, 0)
-
-        t2 = time.perf_counter()
 
         # print(f"For i in particle_count: {t1-t0}, Drawing: {t2-t1}")
 
