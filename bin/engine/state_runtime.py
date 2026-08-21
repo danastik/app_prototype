@@ -260,7 +260,7 @@ class StateRuntime:
         exit_conditions = self.config.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
             debug_log.debug(f"Exiting from {self.current_state_name} to {self.config["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.config.get("exit_animation")}, config: {self.config.get("exit_animation_cfg")}")
-            return(self.config["exit_to"], self.config.get("exit_animation"), self.config.get("exit_animation_cfg"))
+            return(self.config["exit_to"], self.config.get("exit_animation"), self.config.get("exit_animation_cfg", {}))
 
         return None
 
