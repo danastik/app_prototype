@@ -14,7 +14,7 @@ class AppLogger:
         self.log_folder = (BASE_LOG_FOLDER / APP_LOG_FOLDER)
 
         self.logger = logging.getLogger("app")
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)
         self.logger.propagate = False
 
         self._setup()
@@ -38,6 +38,7 @@ class AppLogger:
             )
         )
 
+        self.logger.handlers.clear()
         self.logger.addHandler(handler)
 
     def debug(self, message, *args):
@@ -87,8 +88,10 @@ class DebugLogger:
             )
         )
 
+        self.logger.handlers.clear()
         self.logger.addHandler(handler)
 
+        print("LOGGER SET UP")
         # Disabled by default
         self.logger.disabled = True
 
