@@ -1,0 +1,78 @@
+{
+    "dirt": {
+        "asset": "dirt",
+        "fps": 6,
+        "loop": false,
+
+        "emitter_shape": "LINE",
+        "point1": [-0.5, -0],
+        "point2": [0.5, -0],
+        "round_square": {"constant": 0},
+        
+        "modify_border": [
+            {"constant": 0}, 
+            {"constant": 0}
+        ],
+
+        "emitter_offset": [
+            {"constant": 0}, 
+            {"constant": 0}
+        ], 
+
+        "hollow": false,
+        "emit_bottom": true,
+
+        "duration": {"constant": 0.1},
+        "rate_over_time": {"constant": 100},
+        "random_timing": {"constant": 1},
+        "total_count": {"constant": 300},
+
+        "lifetime": {"constant": 2},
+        "start_vel": [{"constant": 0}, {"random_range": [300, 500]}],
+        "start_acceleration": [{"constant": 0}, {"constant": -2500}],
+        "start_size": {"constant": 0.4}
+    },
+
+    "single_z": {
+        "asset": "sleep_zzz",
+        "fps": 6,
+        "loop": true,
+
+        "emitter_shape": "CIRCLE",
+        "radius": 2,
+        "hollow": false,
+        "duration": 1,
+        "rate_over_time": 1,
+        "start_vel": [0, 150],
+        "start_size": 0.6
+    },
+
+    "sleep_z": {
+        "asset": "sleep_zzz",
+        "fps": 6,
+        "loop": false,
+
+        "emitter_shape": "CIRCLE",
+        "radius": 0.5,
+        "hollow": false,
+        "duration": 1,
+        "rate_over_time": 0.6,
+        "random_timing": 1,
+        "start_vel": [0, 150],
+        "start_size": 0.5
+    },
+
+    "sleep_zzz": {
+        "asset": "sleep_zzz",
+        "fps": 6,
+        "loop": true,
+
+        "emitter_shape": "CIRCLE",
+        "radius": 0.5,
+        "duration": 1,
+        "rate_over_time": 2,
+        "random_timing": 1,
+        "start_vel": [0, 150],
+        "start_size": 0.5
+    }
+}

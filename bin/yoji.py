@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import zipfile
+import tempfile
 
 from pet import Pet
 from engine.particles.atlas_generator import AtlasGenerator
@@ -51,6 +52,7 @@ class MainWindow(QWidget):
         self.files = []
         self.manifest = None
         self.call_in_progress = False
+        self.temp_archive_path = None
 
         self.setWindowTitle("Yoji")
         self.resize(500, 400)
@@ -59,7 +61,7 @@ class MainWindow(QWidget):
         if len(sys.argv) > 1:
             try:
                 input_file_path = str(Path(sys.argv[1]))
-                self.load_archive(input_file_path)
+                self.open_path(input_file_path)
                 log.info(f"Opening application with arguments.")
             except Exception as e:
                 log.error(f"Could not open a .yoji file.\n{e}")
@@ -119,8 +121,11 @@ class MainWindow(QWidget):
         if self.settings["last_path"]:
             try:
                 log.info(f"Last used path was {self.settings["last_path"]}")
-                self.load_archive(self.settings["last_path"])
-            except Exception: pass
+                path = self.settings["last_path"]
+                self.open_path(path)
+
+            except Exception:
+                log.warning(f"Could not load last path: {self.settings["last_path"]}")
 
         log.info("---APP LOADED SUCCESSFULLY---\n")
         # self.hotkeys = HotkeyManager(self) # not doing anything for now, meh
@@ -247,17 +252,61 @@ class MainWindow(QWidget):
 
 
     def browse_file(self):
-        file_name, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open your Yoji",
-            "",
-            "Yoji/ZIP Files (*.yoji *.zip);;All Files (*)"
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Open your Yoji")
+        dialog.setText("What would you like to open?")
+
+        archive_button = dialog.addButton(
+            "Archive",
+            QMessageBox.ButtonRole.AcceptRole
+        )
+        directory_button = dialog.addButton(
+            "Directory",
+            QMessageBox.ButtonRole.AcceptRole
+        )
+        dialog.addButton(
+            "Cancel",
+            QMessageBox.ButtonRole.RejectRole
         )
 
-        if file_name:
-            self.path_edit.setText(file_name)
-            print("File selected")
-            self.load_archive(file_name)
+        dialog.exec()
+
+        if dialog.clickedButton() == archive_button:
+            file_name, _ = QFileDialog.getOpenFileName(
+                self,
+                "Open your Yoji archive",
+                "",
+                "Yoji/ZIP Files (*.yoji *.zip);;All Files (*)"
+            )
+
+            if file_name:
+                self.path_edit.setText(file_name)
+                print("File selected")
+                self.open_path(file_name)
+
+        elif dialog.clickedButton() == directory_button:
+            directory = QFileDialog.getExistingDirectory(
+                self,
+                "Open your Yoji directory",
+                ""
+            )
+
+            if directory:
+                self.path_edit.setText(directory)
+                print("Directory selected")
+                self.open_path(directory)
+
+    def open_path(self, path):
+        self._cleanup_temp_archive()
+
+        if Path(path).is_file():
+            self.load_archive(path)
+        elif Path(path).is_dir():
+            self.load_directory(path)
+
+        self.settings["last_path"] = path
+        self._save_settings()
+        print("last path saved as", path)
 
     def load_archive(self, path):
         if not path:
@@ -277,11 +326,69 @@ class MainWindow(QWidget):
 
             self.read_manifest(archive)
 
-            self.settings["last_path"] = path
             self.settings["size_w"] = self.width()
             self.settings["size_h"] = self.height()
-            self._save_settings()
-            
+
+    def load_directory(self, path):
+        if not path:
+            log.warning("Missing Path - directory path was not valid")
+            self._show_warning_message(
+                "Missing Path",
+                "Please enter a valid directory path."
+            )
+            return
+
+        log.info(f"Opening directory {path}")
+
+        directory = Path(path)
+
+        if not directory.is_dir():
+            log.error(f"Could not open {path} as directory.")
+            self._show_warning_message(
+                "Cannot open directory",
+                f"Cannot open {path} as directory."
+            )
+            return
+
+        # Create temporary archive
+        temp_archive = tempfile.NamedTemporaryFile(
+            suffix=".zip",
+            delete=False
+        )
+
+        temp_archive.close()
+
+        log.debug(f"Creating a temporary archive {temp_archive.name}")
+
+        try:
+            with zipfile.ZipFile(
+                temp_archive.name,
+                "w",
+                zipfile.ZIP_DEFLATED
+            ) as archive:
+                for file_path in directory.rglob("*"):
+                    if file_path.is_file():
+                        archive.write(
+                            file_path,
+                            file_path.relative_to(directory)
+                        )
+
+            self.load_archive(temp_archive.name)
+
+            self.temp_archive_path = temp_archive.name
+
+        except Exception as e:
+            log.exception(f"Could not create archive from directory {path}: {e}")
+            self._show_warning_message(
+                "Cannot open directory",
+                f"Could not create temporary archive from {path}."
+            )
+
+    def about_to_quit(self):
+        self._cleanup_temp_archive()
+        self._save_settings()
+        log.info(f"Application closing\n")
+
     def read_manifest(self, archive):
         try:
             with archive.open("manifest.json") as f:
@@ -335,6 +442,7 @@ class MainWindow(QWidget):
             self._show_warning_message("Missing manifest", "Selected archive is missing a yoji manifest.")
             return
 
+
     def _load_settings(self):
         log.info(f"Loading settings...")
         self.settings_file = settings_path
@@ -358,7 +466,49 @@ class MainWindow(QWidget):
         with open(self.settings_file, "w", encoding="utf-8") as f:
             json.dump(self.settings, f, indent=4)
     
-    def check_particle_atlas(self, PARTICLE_ASSETS, archive) -> bool:
+
+    def call_button_clicked(self):
+        if self.call_in_progress: return
+
+        if self.pet_active:
+            self.recall_pet()
+            return
+        
+        self.start_call()
+
+        self.load_archive(self.archive_path)
+
+        with zipfile.ZipFile(self.archive_path, "r") as archive:
+            try:
+                with archive.open("data/particles/assets.json") as f:
+                    PARTICLE_ASSETS = json.load(f)
+                if not self._check_particle_atlas(PARTICLE_ASSETS=PARTICLE_ASSETS, archive=archive):  return
+
+                # checking audio assets
+                # AUDIO_ASSETS = load something something
+                # if not self.check_audio_assets(AUDIO_ASSETS): return
+            
+                print("--Calling pet.py")
+                log.info("--Calling pet.py")
+
+                self._check_debug_mode_checkbox()
+
+                self.pet = Pet(archive, main_hwnd=int(window.winId()))
+                self.pet.show()
+                self.pet_active = True
+
+                self._save_settings()
+
+            except Exception as e:
+                #Debug.error(f"Could not call yoji.\n{e}")
+                self._show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
+            finally:
+                print("finally")
+                archive.close()
+                print("archive is", archive)
+                QTimer.singleShot(500, self.finish_call)
+
+    def _check_particle_atlas(self, PARTICLE_ASSETS, archive) -> bool:
         atlas_generator = AtlasGenerator(PARTICLE_ASSETS, archive)
         print("Checking particle atlas")
         log.info(f"Checking particle atlas")
@@ -389,46 +539,6 @@ class MainWindow(QWidget):
         print("Atlas found: success")
         log.info("Atlas found: success")
         return True
-
-    def call_button_clicked(self):
-        if self.call_in_progress: return
-
-        if self.pet_active:
-            self.recall_pet()
-            return
-        
-        self.start_call()
-
-        self.load_archive(self.archive_path)
-
-        with zipfile.ZipFile(self.archive_path, "r") as archive:
-            try:
-                with archive.open("data/particles/assets.json") as f:
-                    PARTICLE_ASSETS = json.load(f)
-                if not self.check_particle_atlas(PARTICLE_ASSETS=PARTICLE_ASSETS, archive=archive):  return
-
-                # checking audio assets
-                # AUDIO_ASSETS = load something something
-                # if not self.check_audio_assets(AUDIO_ASSETS): return
-            
-                print("--Calling pet.py")
-                log.info("--Calling pet.py")
-
-                self._check_debug_mode_checkbox()
-
-                self.pet = Pet(archive, main_hwnd=int(window.winId()))
-                self.pet.show()
-                self.pet_active = True
-
-            except Exception as e:
-                #Debug.error(f"Could not call yoji.\n{e}")
-                self._show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
-            finally:
-                print("finally")
-                archive.close()
-                print("archive is", archive)
-                QTimer.singleShot(500, self.finish_call)
-
 
     def _check_debug_mode_checkbox(self):
         self.debug_checkbox.setDisabled(True)
@@ -466,7 +576,16 @@ class MainWindow(QWidget):
         self.call_button.setEnabled(True)
         self.call_button.setText("Call")
         self.debug_checkbox.setDisabled(False)
+        self._cleanup_temp_archive()
 
+    def _cleanup_temp_archive(self):
+        if self.temp_archive_path:
+            try:
+                Path(self.temp_archive_path).unlink(missing_ok=True)
+            except Exception:
+                log.warning(f"Could not delete temporary archive: {self.temp_archive_path}")
+            finally:
+                self.temp_archive_path = None
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -477,3 +596,5 @@ if __name__ == "__main__":
     window.raise_()
 
     sys.exit(app.exec())
+
+    QApplication.instance().aboutToQuit.connect(window.about_to_quit)

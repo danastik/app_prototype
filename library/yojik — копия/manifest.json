@@ -1,0 +1,15 @@
+{
+    "thumbnail": "yojik_thumbnail.png",
+    "name": "Yojik",
+    "version": 1,
+    "author": "mihast",
+    "description": "The magik of Yojik comes from his ancestors - for thousands of generations hedgehogs kept the title of the cutest animal.\nAnd now, all that power lays in the paws of Yojik.\n\n\"I like tea\" - attributed to Yojik.",
+    "tags": [
+        "tea",
+        "cute",
+	"thegreatcuteone"
+    ], 
+    "id": 0,
+
+    "app_version": 0.01
+}
