@@ -64,13 +64,13 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.clear_surface = True
 
         # Create dummy data with FINAL types
+        dummy_lifetime = np.zeros(len(self.PARTICLES), dtype=np.float32)
         dummy_positions = np.zeros(1000, dtype=np.float32)
         dummy_vels = np.zeros(1000, dtype=np.float32)
         dummy_id = np.zeros(1000, dtype=np.int16)
-        dummy_alive = np.zeros(1000, dtype=np.bool)
         dt = np.float32(0.016)
 
-        update_particles(dt, np.uint32(1000), dummy_positions, dummy_positions, dummy_vels, dummy_vels, dummy_vels, dummy_vels, dummy_positions, dummy_id, dummy_alive)
+        update_particles(dt, np.uint32(1000), dummy_lifetime, dummy_positions, dummy_positions, dummy_vels, dummy_vels, dummy_vels, dummy_vels, dummy_positions, dummy_id)
 
         self.window_width = self.width()
         self.window_height = self.height()
@@ -278,14 +278,13 @@ class ParticleOverlayWidget(QOpenGLWidget):
         cfg = self.PARTICLES.get(name)
 
         if not cfg:
-            #Debug.warning(f"Particle {name} not found in particles.json")
+            debug_log.error(f"Particle {name} not found in particles.json")
             raise Exception("Particle", name, "not found in particles.json")
-
-
-        # print("ACNHOCRR FROM PARTICLEGL", self.pet.anchor)
+        
 
         # making the emitter continuous
         if constant:
+            cfg = cfg.copy()
             cfg["duration"] = 1e9
             cfg["total_count"] = 1e9
         
@@ -296,7 +295,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.emitters.append(new_emitter)
 
         return new_emitter
-
 
     def emit_particle(self, *, pos_x, pos_y, vel_x, vel_y, acc_x, acc_y, name, size):
         if self.count >= self.MAX_PARTICLES:
@@ -323,10 +321,9 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         self.count += 1
 
+
     def update_logic(self, dt):
         t0 = time.perf_counter()
-
-        # if not self.emitters: return
 
         # --- EMITTERS ---
         for emitter in self.emitters:
@@ -335,25 +332,16 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.emitters = [e for e in self.emitters if not e.done_emitting] #pruning emitters
 
         # --- PARTICLES ---
-        # print("self count is ", self.count) # printing particle count
-
         if not self.count: return
-
-        # pruning particles for if they are dead
-        i = 0
-        while i < self.count:
-            if self.age[i] >= self.anim_lifetimes_by_id[self.type_id[i]]:
-                self.alive[i] = 0
-            i += 1
 
         self.count = update_particles(
             np.float32(dt),
             self.count,
+            self.anim_lifetimes_by_id,
             self.pos_x, self.pos_y,
             self.vel_x, self.vel_y,
             self.acc_x, self.acc_y,
-            self.age, self.type_id,
-            self.alive
+            self.age, self.type_id
             )
         
         # -- DEBUGGING TEXT --
@@ -551,11 +539,11 @@ class ParticleOverlayWidget(QOpenGLWidget):
 def update_particles(
     dt,
     count,
+    max_age_by_id,
     pos_x, pos_y,
     vel_x, vel_y,
     acc_x, acc_y,
-    age, type_id,
-    alive,
+    age, type_id
     ):
     i = 0
     while i < count:
@@ -566,7 +554,7 @@ def update_particles(
         pos_y[i] += vel_y[i] * dt
 
         # kill conditions
-        if not alive[i]: # or pos_y[i] > taskbar_top:  # commented out because it was weird
+        if age[i] >= max_age_by_id[type_id[i]]: # or pos_y[i] > taskbar_top:  # commented out because it was weird
             last = count - 1
             pos_x[i] = pos_x[last]
             pos_y[i] = pos_y[last]

@@ -439,9 +439,9 @@ class Pet(QWidget): # main logic
         self.prev_index = index
 
         # --- UPDATING PARTICLES ---
-        t8 = time.perf_counter()
         self.particle_logic_acc += dt
         self.particle_draw_acc += dt
+        t8 = time.perf_counter()
 
         if self.particle_logic_acc >= 1 / self.PARTICLE_LOGIC_FPS:
             self.particle_logic_acc -= 1 / self.PARTICLE_LOGIC_FPS
@@ -454,7 +454,7 @@ class Pet(QWidget): # main logic
             self.particle_engine.draw()
 
         t10 = time.perf_counter()
-        # print(f"Particle update: {t1-t0}\nParticles draw: {t2-t1}")
+        # print(f"Particles: Update: {t9-t8}    Draw: {t10-t9}")
 
         # print(f"update windows frames takes {t3-t1}")
         # self.profiler.disable()  # stop profiling
