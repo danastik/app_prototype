@@ -120,9 +120,6 @@ class StateRuntime:
         else:
             self._play_audio(audio_on_transition)
 
-        # сюда скопировать вот то что сверху только переделать под звук
-
-
     def _apply_on_exit(self): # called from state machine on exit
         for cmd in self.config.get("variables_on_exit", []):
             self._execute_command(cmd)
@@ -134,9 +131,6 @@ class StateRuntime:
         for emitter in self.constant_emitters:
             emitter.done_emitting = True
         self.constant_emitters.clear()
-
-        # сюда добавить чтоб он тоже для всех "audio_on_exit" играл аудио
-
 
     def _emit_particles(self, particle_cmd, constant = False):
         if "emit" in particle_cmd:
@@ -178,10 +172,6 @@ class StateRuntime:
                 volume=volume,
                 speed=speed
             )
-            
-        # а тут надо обработать команду, можешь посмотреть как это в партиклах и в _execute_command делается
-        # if "play" in audio_cmd:
-        #     # print("Playing audio")
 
     def _check_condition(self, cond):
         if "flag" in cond:
@@ -246,10 +236,6 @@ class StateRuntime:
             chance = p.get("chance", 1)
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
                 self._emit_particles(p)
-
-        # чето типа такого тебе надо
-        # это чтоб в любом месте можно было звук проигрывать
-        # audio_commands = self.config.get("conditional_audio", [])
 
         audio_commands = self.config.get("conditional_audio", [])
 
