@@ -204,7 +204,7 @@ class StateRuntime:
         for state in self.all_forced_transitions:
             force_trans = self.all_forced_transitions[state]
 
-            if self.current_state_name in force_trans.get("except_states"): break
+            if self.current_state_name in force_trans.get("except_states", []): continue
 
             conditions = force_trans.get("conditions")
             chance = force_trans.get("chance", 1)
