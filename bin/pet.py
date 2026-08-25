@@ -222,7 +222,7 @@ class Pet(QWidget): # main logic
 
         audio_on_enter = cfg.get("audio_on_enter", [])
         for audio in audio_on_enter:
-            sound_name = audio.get("sound")
+            sound_name = audio.get("play")
 
             if sound_name:
                 self.audio_engine.play(
