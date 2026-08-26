@@ -241,9 +241,6 @@ class Pet(QWidget): # main logic
         # if self.parent_window_hwnd:
         #     # print(f"Position: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}")
 
-        self.variables.reset("times_clicked_this_state")
-        self.variables.reset("time_spent_in_this_state")
-
         cfg = self.STATES[state]
 
         next_behaviour = cfg.get("behaviour", "STATIONARY")

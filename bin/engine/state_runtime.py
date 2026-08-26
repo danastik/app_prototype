@@ -7,7 +7,7 @@ class StateRuntime:
     def __init__(self, pet, current_state_name, config, all_configs, variables):
         self.pet = pet
         self.current_state_name = current_state_name
-        self.config = config
+        self.current_state_cfg = config
         self.all_configs = all_configs
         self.variables = variables
 
@@ -57,6 +57,7 @@ class StateRuntime:
     def clear_pulses(self):
         self.pulses.clear()
     
+
     # apps
     def update_apps(self, app_state):
         # print("apps")
@@ -76,14 +77,14 @@ class StateRuntime:
     
     
     # helpers
-    def apply_on_enter(self):  # called from state machine on enter
-        for cmd in self.config.get("variables_on_enter", []):
+    def _apply_on_enter(self):  # called from state machine on enter
+        for cmd in self.current_state_cfg.get("variables_on_enter", []):
             self._var_or_flag_command(cmd)
-        for part in self.config.get("particles_on_enter", []):
+        for part in self.current_state_cfg.get("particles_on_enter", []):
             self._emit_particles(part)
-        for c_part in self.config.get("constant_particles", []):
+        for c_part in self.current_state_cfg.get("constant_particles", []):
             self._emit_particles(c_part, True)
-        for audio in self.config.get("audio_on_enter", []):
+        for audio in self.current_state_cfg.get("audio_on_enter", []):
             self._play_audio(audio)
 
     def _apply_on_transition(self, transition_info):
@@ -109,11 +110,11 @@ class StateRuntime:
             self._play_audio(audio_on_transition)
 
     def apply_on_exit(self): # called from state machine on exit
-        for cmd in self.config.get("variables_on_exit", []):
+        for cmd in self.current_state_cfg.get("variables_on_exit", []):
             self._var_or_flag_command(cmd)
-        for part in self.config.get("particles_on_exit", []):
+        for part in self.current_state_cfg.get("particles_on_exit", []):
             self._emit_particles(part)
-        for audio in self.config.get("audio_on_exit", []):
+        for audio in self.current_state_cfg.get("audio_on_exit", []):
             self._play_audio(audio)
 
         for emitter in self.constant_emitters:
@@ -164,6 +165,16 @@ class StateRuntime:
 
 
     # transitions
+
+    def enter_state(self, next_state):
+        self.current_state_name = next_state
+        self.current_state_cfg = self.all_configs[next_state]
+        self._apply_on_enter()
+        self.variables.reset("times_clicked_this_state")
+        self.variables.reset("time_spent_in_this_state")
+        self.remove_flag(Flag.ANIMATION_FINISHED)
+        self.remove_flag(Flag.MOVEMENT_FINISHED)
+
     def _check_condition(self, cond):
         if "flag" in cond:
             return Flag.__members__.get(cond["flag"]) in self.flags
@@ -222,7 +233,7 @@ class StateRuntime:
 
     def handle_events(self) -> tuple[str, str, dict] | None:
         # print(f"state_runtime: handling events: Flags: ", self.flags, " Pulses: ", self.pulses)
-        particle_commands = self.config.get("conditional_particles", [])
+        particle_commands = self.current_state_cfg.get("conditional_particles", [])
         for p in particle_commands:
             conditions = p["when"]
             chance = p.get("chance", 1)
@@ -230,7 +241,7 @@ class StateRuntime:
                 self._emit_particles(p)
                 debug_log.debug(f"Emitting conditional_particles {p["emit"]} - satisfied all conditions {conditions} and chance {chance}")
 
-        audio_commands = self.config.get("conditional_audio", [])
+        audio_commands = self.current_state_cfg.get("conditional_audio", [])
         for au in audio_commands:
             conditions = au["when"]
             chance = au.get("chance", 1)
@@ -239,7 +250,7 @@ class StateRuntime:
                 self._play_audio(au)
 
         # --- Checking for state transitions ---
-        transitions = self.config.get("transitions", [])
+        transitions = self.current_state_cfg.get("transitions", [])
         for t in transitions:  # handling the list of "transitions:" from configs
             conditions = t["when"]
             chance = t.get("chance", 1)
@@ -253,10 +264,10 @@ class StateRuntime:
                     t.get("transition_animation_cfg", {})
                 )
             
-        exit_conditions = self.config.get("exit_when")
+        exit_conditions = self.current_state_cfg.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
-            debug_log.debug(f"Exiting from {self.current_state_name} to {self.config["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.config.get("exit_animation")}, config: {self.config.get("exit_animation_cfg")}")
-            return(self.config["exit_to"], self.config.get("exit_animation"), self.config.get("exit_animation_cfg", {}))
+            debug_log.debug(f"Exiting from {self.current_state_name} to {self.current_state_cfg["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.current_state_cfg.get("exit_animation")}, config: {self.current_state_cfg.get("exit_animation_cfg")}")
+            return(self.current_state_cfg["exit_to"], self.current_state_cfg.get("exit_animation"), self.current_state_cfg.get("exit_animation_cfg", {}))
 
         return None
 

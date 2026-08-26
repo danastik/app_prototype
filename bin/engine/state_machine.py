@@ -55,6 +55,8 @@ class StateMachine:
 
         self.state.clear_pulses()
 
+        return result
+
         
     def queue_transition(self, next_state, anim, cfg):      
         self.pet.on_state_exit(self.state.current_state_name)
@@ -70,8 +72,7 @@ class StateMachine:
             self.pet.play_animation(
                 self.pending_transition_anim,
                 cfg=self.pending_transition_cfg,
-                isTransitionAnimation=True
-            )
+                isTransitionAnimation=True)
         
 
     def apply_pending_changes(self):
@@ -80,20 +81,15 @@ class StateMachine:
         
         self.state.clear_pulses() #just in case any pulses arent cleared too fast
 
-        self.in_transition = False
-
         self.change(self.pending_state)
         # print("state_machine: pending changes applied")
 
         # Cleanup
+        self.in_transition = False
         self.pending_state = None
         self.pending_transition_anim = None
         self.pending_transition_cfg = None
   
     def change(self, next_state): #changes the state, updates state_runtime, calls on_state_enter in pet.py
-        self.remove_flag(Flag.ANIMATION_FINISHED) # later will add some way to automatically clear these
-        self.remove_flag(Flag.MOVEMENT_FINISHED)
-        self.state.current_state_name = next_state
-        self.state.config = self.configs[next_state]
+        self.state.enter_state(next_state)
         self.pet.on_state_enter(next_state)
-        self.state.apply_on_enter()
