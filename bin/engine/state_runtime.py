@@ -14,30 +14,12 @@ class StateRuntime:
         # getting all force transitions in a dictionary for ease of use
         self.all_forced_transitions = {}
         for state in self.all_configs:
-            force_transitions = self.all_configs[state].get("force_transition")
-            if not force_transitions: continue
+            force_transitions_to_state = self.all_configs[state].get("force_transition")
+            if not force_transitions_to_state:
+                continue
 
-            for t in force_transitions:
-                conditions = t.get("when")
-                exception_states = t.get("except_states")
-                to = state
-                chance = t.get("chance", 1)
-                trans_anim = t.get("transition_animation")
-                trans_anim_cfg = t.get("transition_animation_cfg")
-
-                # print(conditions)
-                # print(to)
-                # print(chance)
-
-                self.all_forced_transitions.setdefault(to, []).append({
-                    "conditions": conditions,
-                    "except_states": exception_states,
-                    "chance": chance,
-                    "transition_animation": trans_anim,
-                    "transition_animation_cfg": trans_anim_cfg
-                })
-                
-        # print(self.all_forced_transitions)
+            for t in force_transitions_to_state:
+                self.all_forced_transitions.setdefault(state, []).append(t)
 
         self.flags = set()
         self.pulses = set()
@@ -92,7 +74,8 @@ class StateRuntime:
         self.focused_app_title = focused_title
         self.focused_app = focused
     
-    # executing commands
+    
+    # helpers
     def apply_on_enter(self):  # called from state machine on enter
         for cmd in self.config.get("variables_on_enter", []):
             self._var_or_flag_command(cmd)
@@ -137,6 +120,7 @@ class StateRuntime:
             emitter.done_emitting = True
         self.constant_emitters.clear()
 
+    # executing commands
     def _emit_particles(self, particle_cmd, constant = False):
         if "emit" in particle_cmd:
             # print("emitting")
@@ -216,25 +200,23 @@ class StateRuntime:
         Returns a tuple(next state's name, transition_animation, transition_animation_config)
         """
         for state in self.all_forced_transitions:
-            force_trans = self.all_forced_transitions[state]
+            force_transitions = self.all_forced_transitions[state]
 
-            if self.current_state_name in force_trans.get("except_states", []): continue
+            for t in force_transitions:
+                if self.current_state_name in t.get("except_states", []): continue
 
-            conditions = force_trans.get("conditions")
-            chance = force_trans.get("chance", 1)
+                conditions = t.get("when", [])
+                chance = t.get("chance", 1)
 
-            print(self.all_forced_transitions)
-            print(force_trans)
-
-            if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
-                # print("Forced transition:", conditions)
-                self._apply_on_transition(self.all_configs[state].get("force_transition", {}))
-                debug_log.debug(f"Forced transition from {self.current_state_name} to {state} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {force_trans.get("transition_animation")}, config: {force_trans.get("transition_animation_cfg")}")
-                return (
-                    state,  # return the destination state
-                    force_trans.get("transition_animation", None),
-                    force_trans.get("transition_animation_cfg", {})
-                )
+                if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
+                    # print("Forced transition:", conditions)
+                    self._apply_on_transition(t)
+                    debug_log.debug(f"Forced transition from {self.current_state_name} to {state} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
+                    return (
+                        state,  # return the destination state
+                        t.get("transition_animation", None),
+                        t.get("transition_animation_cfg", {})
+                    )
             
         return None 
 

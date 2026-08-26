@@ -1,6 +1,5 @@
 
 {
-    "default": "IDLE",
     "IDLE": {
         "animation": "idle",
         "fps": 6,

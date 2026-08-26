@@ -180,7 +180,7 @@ class Pet(QWidget): # main logic
             archive=archive
         )
         
-        initial_state = self.STATES.get("default", next(iter(self.STATES))) #either get the "default" from the INITIAL STATE, or the first item in the self.STATES dictinary
+        initial_state = self.RENDER_CONFIG.get("default_state", next(iter(self.STATES))) #either get the "default" from the RENDER_CONFIG, or the first item in the self.STATES dictinary
         
         h = self.primary_screen.availableGeometry().height()
         self.update_dpi_and_scale(h=h, initial_state=initial_state)
@@ -267,7 +267,7 @@ class Pet(QWidget): # main logic
         debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
 
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
-        self._play_animation(anim_name=anim_name, cfg=cfg)
+        self.play_animation(anim_name=anim_name, cfg=cfg)
 
        
     def on_state_exit(self, state): # called in state_machine when exiting a state
@@ -332,11 +332,7 @@ class Pet(QWidget): # main logic
         # print("on state change", end="")
         self.mover.move_to(target_x, target_y, type)
 
-    def emit_particles(self, name):
-        self.particle_engine.raise_() # raises particles above pet
-        self.particle_engine.start_emitting(name, False) 
-
-    def _play_animation(self, anim_name, cfg, isTransitionAnimation = False):
+    def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
             debug_log.error(f"{__name__}: Animation {anim_name} not found in animations.json")
             raise Exception(f"Animation {anim_name} not found in animations.json")
