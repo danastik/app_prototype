@@ -1,0 +1,14 @@
+{
+    "thumbnail": "sit2.webp",
+    "name": "Yojik",
+    "version": 1,
+    "author": "mihast",
+    "description": "Look at this cute hedgehoggg",
+    "tags": [
+        "tea",
+        "cute"
+    ], 
+    "id": 0,
+
+    "app_version": 0.01
+}

@@ -18,7 +18,8 @@ from engine.vec2 import Vec2
 from engine.behaviour_resolver import BehaviourResolver
 from engine.windows_detector import WindowsOverlay
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
-from engine.variable_manager import VariableManager
+from engine.audio_engine import AudioEngine
+from engine.debug import Debug
 
 from engine.logger import app_logger as log
 from engine.logger import debug_logger as debug_log
@@ -95,7 +96,14 @@ class Pet(QWidget): # main logic
         ASSETS = self._load_json(archive, "data/particles/assets.json")
         PARTICLES = self._load_json(archive, "data/particles/particles.json")
 
-        log.info("--All .json files loaded: success")
+        ASSETS = json.load(archive.open("data/particles/assets.json"))
+        Debug.log("particles/assets.json - found")
+        PARTICLES = json.load(archive.open("data/particles/particles.json"))
+        Debug.log("particles/particles.json - found")
+        SOUNDS = json.load(archive.open("data/sounds.json"))
+        Debug.log("sounds.json - found")
+
+        Debug.log("--All .json files loaded: success")
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -169,6 +177,11 @@ class Pet(QWidget): # main logic
         self.particle_engine = ParticleOverlayWidget(pet=self, RENDER_CONFIG=self.RENDER_CONFIG ,ASSETS=ASSETS, PARTICLES=PARTICLES, archive=archive)
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0
+
+        self.audio_engine = AudioEngine(
+            sounds=SOUNDS,
+            archive=archive
+        )
         
         initial_state = self.STATES.get("default", next(iter(self.STATES))) #either get the "default" from the INITIAL STATE, or the first item in the self.STATES dictinary
         
@@ -239,6 +252,18 @@ class Pet(QWidget): # main logic
         next_behaviour = cfg.get("behaviour", "STATIONARY")
         self.resolve_behavior(next_behaviour, cfg)
 
+        audio_on_enter = cfg.get("audio_on_enter", [])
+        for audio in audio_on_enter:
+            sound_name = audio.get("play")
+
+            if sound_name:
+                self.audio_engine.play(
+                    sound_name,
+                    volume=audio.get("volume"),
+                    speed=audio.get("speed")
+                )
+
+        # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         anim_name = cfg.get("animation")
         
         debug_log.info(f"--->")
