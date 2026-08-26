@@ -303,6 +303,7 @@ class MainWindow(QWidget):
 
     def open_path(self, path):
         self._cleanup_temp_archive()
+        self.directory_path = None
 
         path_isok = False
         if Path(path).is_file():
@@ -343,14 +344,11 @@ class MainWindow(QWidget):
             log.warning("Missing Path - directory path was not valid")
             self._show_warning_message(
                 "Missing Path",
-                "Please enter a valid directory path."
-            )
+                "Please enter a valid directory path.")
             return
-
         log.info(f"Opening directory {path}")
 
         directory = Path(path)
-
         if not directory.is_dir():
             log.error(f"Could not open {path} as directory.")
             self._show_warning_message(
@@ -362,13 +360,10 @@ class MainWindow(QWidget):
         # Create temporary archive
         temp_archive = tempfile.NamedTemporaryFile(
             suffix=".zip",
-            delete=False
-        )
-
+            delete=False)
         temp_archive.close()
 
         log.debug(f"Creating a temporary archive {temp_archive.name}")
-
         try:
             with zipfile.ZipFile(
                 temp_archive.name,
@@ -385,6 +380,7 @@ class MainWindow(QWidget):
             archive_isok = self.load_archive(temp_archive.name)
 
             self.temp_archive_path = temp_archive.name
+            self.directory_path = path
 
             return archive_isok
 
@@ -392,8 +388,7 @@ class MainWindow(QWidget):
             log.exception(f"Could not create archive from directory {path}: {e}")
             self._show_warning_message(
                 "Cannot open directory",
-                f"Could not create temporary archive from {path}."
-            )
+                f"Could not create temporary archive from {path}.")
 
     def about_to_quit(self):
         self._cleanup_temp_archive()
@@ -489,7 +484,10 @@ class MainWindow(QWidget):
         
         self.start_call()
 
-        self.load_archive(self.archive_path)
+        if self.directory_path:
+            self.open_path(self.directory_path)
+        else:
+            self.load_archive(self.archive_path)
 
         with zipfile.ZipFile(self.archive_path, "r") as archive:
             try:

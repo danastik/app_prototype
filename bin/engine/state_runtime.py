@@ -13,15 +13,11 @@ class StateRuntime:
 
         # getting all force transitions in a dictionary for ease of use
         self.all_forced_transitions = {}
-
         for state in self.all_configs:
-            try:
-                force_transition = self.all_configs[state].get("force_transition")
-                if not force_transition: continue
-            except Exception:
-                continue
+            force_transitions = self.all_configs[state].get("force_transition")
+            if not force_transitions: continue
 
-            for t in force_transition:
+            for t in force_transitions:
                 conditions = t.get("when")
                 exception_states = t.get("except_states")
                 to = state
@@ -33,8 +29,14 @@ class StateRuntime:
                 # print(to)
                 # print(chance)
 
-                self.all_forced_transitions[to] = {"conditions": conditions, "except_states": exception_states, "chance": chance, "transition_animation": trans_anim, "transition_animation_cfg": trans_anim_cfg}
-
+                self.all_forced_transitions.setdefault(to, []).append({
+                    "conditions": conditions,
+                    "except_states": exception_states,
+                    "chance": chance,
+                    "transition_animation": trans_anim,
+                    "transition_animation_cfg": trans_anim_cfg
+                })
+                
         # print(self.all_forced_transitions)
 
         self.flags = set()
@@ -90,25 +92,24 @@ class StateRuntime:
         self.focused_app_title = focused_title
         self.focused_app = focused
     
-    # helpers
-    def _apply_on_enter(self):  # called from state machine on enter
+    # executing commands
+    def apply_on_enter(self):  # called from state machine on enter
         for cmd in self.config.get("variables_on_enter", []):
-            self._execute_command(cmd)
+            self._var_or_flag_command(cmd)
         for part in self.config.get("particles_on_enter", []):
             self._emit_particles(part)
-        for audio in self.config.get("audio_on_enter", []):
-            self._play_audio(audio)
         for c_part in self.config.get("constant_particles", []):
             self._emit_particles(c_part, True)
+        for audio in self.config.get("audio_on_enter", []):
+            self._play_audio(audio)
 
     def _apply_on_transition(self, transition_info):
-        
         variables_on_transition = transition_info.get("variables_on_transition", [])
         if isinstance(variables_on_transition, list):
             for variable_cmd in variables_on_transition:
-                self._execute_command(variable_cmd)
+                self._var_or_flag_command(variable_cmd)
         else:
-            self._execute_command(variables_on_transition)
+            self._var_or_flag_command(variables_on_transition)
         
         particles_on_transition = transition_info.get("particles_on_transition", [])
         if isinstance(particles_on_transition, list): 
@@ -124,9 +125,9 @@ class StateRuntime:
         else:
             self._play_audio(audio_on_transition)
 
-    def _apply_on_exit(self): # called from state machine on exit
+    def apply_on_exit(self): # called from state machine on exit
         for cmd in self.config.get("variables_on_exit", []):
-            self._execute_command(cmd)
+            self._var_or_flag_command(cmd)
         for part in self.config.get("particles_on_exit", []):
             self._emit_particles(part)
         for audio in self.config.get("audio_on_exit", []):
@@ -145,7 +146,7 @@ class StateRuntime:
             if constant:
                 self.constant_emitters.append(emitter)
 
-    def _execute_command(self, cmd):
+    def _var_or_flag_command(self, cmd):
         if "var" in cmd:
             name = cmd["var"]
             op = cmd["op"]
@@ -222,8 +223,12 @@ class StateRuntime:
             conditions = force_trans.get("conditions")
             chance = force_trans.get("chance", 1)
 
+            print(self.all_forced_transitions)
+            print(force_trans)
+
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
                 # print("Forced transition:", conditions)
+                self._apply_on_transition(self.all_configs[state].get("force_transition", {}))
                 debug_log.debug(f"Forced transition from {self.current_state_name} to {state} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {force_trans.get("transition_animation")}, config: {force_trans.get("transition_animation_cfg")}")
                 return (
                     state,  # return the destination state
@@ -236,7 +241,6 @@ class StateRuntime:
     def handle_events(self) -> tuple[str, str, dict] | None:
         # print(f"state_runtime: handling events: Flags: ", self.flags, " Pulses: ", self.pulses)
         particle_commands = self.config.get("conditional_particles", [])
-
         for p in particle_commands:
             conditions = p["when"]
             chance = p.get("chance", 1)
@@ -245,7 +249,6 @@ class StateRuntime:
                 debug_log.debug(f"Emitting conditional_particles {p["emit"]} - satisfied all conditions {conditions} and chance {chance}")
 
         audio_commands = self.config.get("conditional_audio", [])
-
         for au in audio_commands:
             conditions = au["when"]
             chance = au.get("chance", 1)
@@ -255,8 +258,7 @@ class StateRuntime:
 
         # --- Checking for state transitions ---
         transitions = self.config.get("transitions", [])
-
-        for t in transitions:  # handling all "transitions:" from configs
+        for t in transitions:  # handling the list of "transitions:" from configs
             conditions = t["when"]
             chance = t.get("chance", 1)
 

@@ -58,7 +58,7 @@ class StateMachine:
         
     def queue_transition(self, next_state, anim, cfg):      
         self.pet.on_state_exit(self.state.current_state_name)
-        self.state._apply_on_exit()
+        self.state.apply_on_exit()
 
         self.pending_state = next_state
         self.pending_transition_anim = anim
@@ -72,7 +72,6 @@ class StateMachine:
                 cfg=self.pending_transition_cfg,
                 isTransitionAnimation=True
             )
-        
         
 
     def apply_pending_changes(self):
@@ -97,4 +96,4 @@ class StateMachine:
         self.state.current_state_name = next_state
         self.state.config = self.configs[next_state]
         self.pet.on_state_enter(next_state)
-        self.state._apply_on_enter()
+        self.state.apply_on_enter()

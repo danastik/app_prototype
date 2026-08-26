@@ -17,9 +17,9 @@ from engine.enums import Flag, Pulse, MovementType, Facing, SurfaceType
 from engine.vec2 import Vec2
 from engine.behaviour_resolver import BehaviourResolver
 from engine.windows_detector import WindowsOverlay
+from engine.variable_manager import VariableManager
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.audio_engine import AudioEngine
-from engine.debug import Debug
 
 from engine.logger import app_logger as log
 from engine.logger import debug_logger as debug_log
@@ -97,13 +97,10 @@ class Pet(QWidget): # main logic
         PARTICLES = self._load_json(archive, "data/particles/particles.json")
 
         ASSETS = json.load(archive.open("data/particles/assets.json"))
-        Debug.log("particles/assets.json - found")
         PARTICLES = json.load(archive.open("data/particles/particles.json"))
-        Debug.log("particles/particles.json - found")
         SOUNDS = json.load(archive.open("data/sounds.json"))
-        Debug.log("sounds.json - found")
 
-        Debug.log("--All .json files loaded: success")
+        log.info("--All .json files loaded: success")
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)   # type: ignore
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -250,7 +247,7 @@ class Pet(QWidget): # main logic
         cfg = self.STATES[state]
 
         next_behaviour = cfg.get("behaviour", "STATIONARY")
-        self.resolve_behavior(next_behaviour, cfg)
+        self._resolve_behavior(next_behaviour, cfg)
 
         audio_on_enter = cfg.get("audio_on_enter", [])
         for audio in audio_on_enter:
@@ -270,7 +267,7 @@ class Pet(QWidget): # main logic
         debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
 
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
-        self.play_animation(anim_name=anim_name, cfg=cfg)
+        self._play_animation(anim_name=anim_name, cfg=cfg)
 
        
     def on_state_exit(self, state): # called in state_machine when exiting a state
@@ -279,7 +276,7 @@ class Pet(QWidget): # main logic
         debug_log.info(f"Exiting state {state}")
         
 
-    def resolve_behavior(self, behaviour, cfg):
+    def _resolve_behavior(self, behaviour, cfg):
         # print(self.behaviour_name)
         self.behaviour_name = behaviour
         target_x, target_y, type, mover_settings, collision_settings, parenting_settings = self.behaviour_resolver.resolve(self.behaviour_name)
@@ -339,7 +336,7 @@ class Pet(QWidget): # main logic
         self.particle_engine.raise_() # raises particles above pet
         self.particle_engine.start_emitting(name, False) 
 
-    def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
+    def _play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
             debug_log.error(f"{__name__}: Animation {anim_name} not found in animations.json")
             raise Exception(f"Animation {anim_name} not found in animations.json")
