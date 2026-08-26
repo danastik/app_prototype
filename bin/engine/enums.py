@@ -1,4 +1,3 @@
-# engine/events.py
 # Enumerator of all Flags and Pulse possible. Makes it so we can do Flag.MOVEMENT_FINISHED or Pulse.CLICK, for example
 
 from enum import Enum, auto

@@ -1,4 +1,3 @@
-
 {
     "IDLE": {
         "animation": "idle",
@@ -348,7 +347,7 @@
             {
                 "when": [ {"var":"time_spent_in_this_state", "op":">", "value":3}],
                 "to": "IDLE",
-		"transition_animation": "laying_magnifying_glass_down"
+		        "transition_animation": "laying_magnifying_glass_down"
             }
         ]
     },
@@ -360,13 +359,13 @@
             {
                 "when": ["ANIMATION_END"],
                 "to": "SIP1",
-		"chance": 0.7
+		        "chance": 0.7
             }
         ],
 
         "exit_when": ["ANIMATION_END"],
         "exit_to": "IDLE",
-	"exit_animation": "after_sip1"
+	    "exit_animation": "after_sip1"
     },
 
     "SIP2": {
@@ -376,13 +375,13 @@
             {
                 "when": ["ANIMATION_END"],
                 "to": "SIP2",
-		"chance": 0.5
+		        "chance": 0.5
             }
         ],
 
         "exit_when": ["ANIMATION_END"],
         "exit_to": "IDLE",
-	"exit_animation": "after_sip2"
+	    "exit_animation": "after_sip2"
     },
 
     "SIP3": {
@@ -392,13 +391,13 @@
             {
                 "when": ["ANIMATION_END"],
                 "to": "SIP3",
-		"chance": 0.2
+		        "chance": 0.2
             }
         ],
 
         "exit_when": ["ANIMATION_END"],
         "exit_to": "IDLE",
-	"exit_animation": "after_sip3"
+	    "exit_animation": "after_sip3"
     }
  
 }

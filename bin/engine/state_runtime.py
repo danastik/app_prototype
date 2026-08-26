@@ -1,7 +1,11 @@
 import random
 from engine.enums import Flag, Pulse
+from collections import namedtuple
 
 from engine.logger import debug_logger as debug_log
+
+TransitionData = namedtuple("TransitionData", "next_state, transition_animation, transition_animation_cfg")
+
 
 class StateRuntime:
     def __init__(self, pet, current_state_name, config, all_configs, variables):
@@ -205,7 +209,7 @@ class StateRuntime:
 
         return Flag.__members__.get(cond) in self.flags or Pulse.__members__.get(cond) in self.pulses   # THIS makes it so instead of Flag.FLAG_NAME you can just FLAG_NAME
 
-    def handle_global_events(self) -> tuple[str, str, dict] | None:
+    def handle_global_events(self) -> TransitionData | None:
         """
         Checks if forced transitions apply in any of the states.
         Returns a tuple(next state's name, transition_animation, transition_animation_config)
@@ -223,15 +227,17 @@ class StateRuntime:
                     # print("Forced transition:", conditions)
                     self._apply_on_transition(t)
                     debug_log.debug(f"Forced transition from {self.current_state_name} to {state} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
-                    return (
-                        state,  # return the destination state
-                        t.get("transition_animation", None),
-                        t.get("transition_animation_cfg", {})
-                    )
+                    
+                    result = TransitionData(
+                        next_state=state,
+                        transition_animation=t.get("transition_animation"),
+                        transition_animation_cfg=t.get("transition_animation_cfg", {}))
+                    
+                    return result
             
         return None 
 
-    def handle_events(self) -> tuple[str, str, dict] | None:
+    def handle_events(self) -> TransitionData | None:
         # print(f"state_runtime: handling events: Flags: ", self.flags, " Pulses: ", self.pulses)
         particle_commands = self.current_state_cfg.get("conditional_particles", [])
         for p in particle_commands:
@@ -258,17 +264,25 @@ class StateRuntime:
             if all(self._check_condition(c) for c in conditions) and random.random() <= chance: # if all conditions are True - we make the transition
                 self._apply_on_transition(transition_info=t)
                 debug_log.debug(f"Transition from {self.current_state_name} to {t["to"]} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
-                return (
-                    t["to"],  # next state
-                    t.get("transition_animation", None),
-                    t.get("transition_animation_cfg", {})
-                )
+        
+                result = TransitionData(
+                    next_state=t["to"], 
+                    transition_animation=t.get("transition_animation"), 
+                    transition_animation_cfg=t.get("transition_animation_cfg", {}))
+
+                return result
             
         exit_conditions = self.current_state_cfg.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
             debug_log.debug(f"Exiting from {self.current_state_name} to {self.current_state_cfg["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.current_state_cfg.get("exit_animation")}, config: {self.current_state_cfg.get("exit_animation_cfg")}")
-            return(self.current_state_cfg["exit_to"], self.current_state_cfg.get("exit_animation"), self.current_state_cfg.get("exit_animation_cfg", {}))
+            
+            result = TransitionData(
+                next_state=self.current_state_cfg["exit_to"], 
+                transition_animation=self.current_state_cfg.get("exit_animation"),
+                transition_animation_cfg=self.current_state_cfg.get("exit_animation_cfg", {}))
 
+            return result
+        
         return None
 
         
