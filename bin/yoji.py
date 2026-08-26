@@ -271,11 +271,16 @@ class MainWindow(QWidget):
 
         dialog.exec()
 
+        library_dir = root / "library"
+
+        if not library_dir.is_dir():
+            library_dir = Path()
+
         if dialog.clickedButton() == archive_button:
             file_name, _ = QFileDialog.getOpenFileName(
                 self,
                 "Open your Yoji archive",
-                "",
+                str(library_dir),
                 "Yoji/ZIP Files (*.yoji *.zip);;All Files (*)"
             )
 
@@ -288,7 +293,7 @@ class MainWindow(QWidget):
             directory = QFileDialog.getExistingDirectory(
                 self,
                 "Open your Yoji directory",
-                ""
+                str(library_dir)
             )
 
             if directory:
@@ -299,14 +304,18 @@ class MainWindow(QWidget):
     def open_path(self, path):
         self._cleanup_temp_archive()
 
+        path_isok = False
         if Path(path).is_file():
-            self.load_archive(path)
+            path_isok = self.load_archive(path)
         elif Path(path).is_dir():
-            self.load_directory(path)
+            path_isok = self.load_directory(path)
 
-        self.settings["last_path"] = path
-        self._save_settings()
-        print("last path saved as", path)
+        if path_isok:
+            self.settings["last_path"] = path
+            self._save_settings()
+            log.debug(f"Last path saved as {path}")
+            print("last path saved as", path)
+
 
     def load_archive(self, path):
         if not path:
@@ -316,18 +325,18 @@ class MainWindow(QWidget):
         
         log.info(f"Opening file {path}")
         
-        with zipfile.ZipFile(path, "r") as archive:
-            self.archive_path = path
+        try:
+            with zipfile.ZipFile(path, "r") as archive:
+                self.archive_path = path
 
-            if not archive:
-                log.error(f"Could not open {path} as archive.")
-                self._show_warning_message("Cannot open file", f"Cannot open {path} as archive.")
-                return
+                manifest_isok = self.read_manifest(archive)
 
-            self.read_manifest(archive)
+                return manifest_isok
 
-            self.settings["size_w"] = self.width()
-            self.settings["size_h"] = self.height()
+        except Exception as e:
+            log.error(f"Could not open {path} as archive.\n{e}")
+            self._show_warning_message("Cannot open file", f"Cannot open {path} as archive.\n{e}")
+
 
     def load_directory(self, path):
         if not path:
@@ -373,9 +382,11 @@ class MainWindow(QWidget):
                             file_path.relative_to(directory)
                         )
 
-            self.load_archive(temp_archive.name)
+            archive_isok = self.load_archive(temp_archive.name)
 
             self.temp_archive_path = temp_archive.name
+
+            return archive_isok
 
         except Exception as e:
             log.exception(f"Could not create archive from directory {path}: {e}")
@@ -386,6 +397,8 @@ class MainWindow(QWidget):
 
     def about_to_quit(self):
         self._cleanup_temp_archive()
+        self.settings["size_w"] = self.width()
+        self.settings["size_h"] = self.height()
         self._save_settings()
         log.info(f"Application closing\n")
 
@@ -434,13 +447,13 @@ class MainWindow(QWidget):
                 self._show_warning_message(title="Missing thumbnail", message=f"You have specified thumbnail as {thumbnail},\nbut it is not present in archive.\n{text}")
 
             self.info_widget.show()
+            return True
 
         except Exception:
             self.manifest = None
             print("Manifest not found.")
             log.warning(f"Missing manifest - Selected archive is missing a yoji manifest.")
             self._show_warning_message("Missing manifest", "Selected archive is missing a yoji manifest.")
-            return
 
 
     def _load_settings(self):
