@@ -4,7 +4,7 @@ import zipfile
 from io import BytesIO
 import os
 
-from engine.debug import Debug
+from engine.logger import app_logger as log
 
 INPUT = "assets/particles"
 
@@ -52,14 +52,14 @@ class AtlasGenerator():
         self.archive = zipfile.ZipFile(archive_path, "r")
 
         print("---Generating atlas---")
-        Debug.log("---Generating atlas---")
+        log.info("---Generating atlas---")
 
         # 1. Load assets
         rows = []
         for asset_name, asset_path in self.ASSETS.items():
             folder = f"{INPUT}/{asset_path}"
             print(f"getting assets from {folder}")
-            Debug.log(f"getting assets from {folder}")
+            log.info(f"getting assets from {folder}")
 
             frames = sorted(
                 name for name in self.archive.namelist()
@@ -129,7 +129,7 @@ class AtlasGenerator():
 
         # 4. Save outputs
         print("  Closing old archive")
-        Debug.log("--Closing old archive")
+        log.info("--Closing old archive")
         self.archive.close()
 
         buffer = BytesIO()
@@ -137,7 +137,7 @@ class AtlasGenerator():
         atlas_data = buffer.getvalue()
 
         print("  Writing new archive")
-        Debug.log("--Writing new archive")
+        log.info("--Writing new archive")
         temp_path = archive_path + ".tmp"
 
         with zipfile.ZipFile(archive_path, "r") as old_archive:
@@ -157,14 +157,14 @@ class AtlasGenerator():
                 )
 
         print("  Replacing files")
-        Debug.log("--Replacing filepath, deleting temp file")
+        log.info("--Replacing filepath, deleting temp file")
         os.replace(temp_path, archive_path)
 
         print("  Opening new archive")
-        Debug.log("--Opening new archive")
+        log.info("--Opening new archive")
         new_archive = zipfile.ZipFile(archive_path, "r")
 
         print("---Atlas generated---")
-        Debug.log("---Atlas generated: success---")
+        log.info("---Atlas generated: success---")
 
         return new_archive

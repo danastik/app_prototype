@@ -14,7 +14,10 @@ import win32con
 import time
 
 from engine.enums import SurfaceType
-from engine.debug import Debug
+
+from engine.logger import app_logger as log
+from engine.logger import debug_logger as debug_log
+
 
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
 DWMWA_CLOAKED = 14
@@ -127,7 +130,6 @@ class RECT(ctypes.Structure):
         ("right", wintypes.LONG),
         ("bottom", wintypes.LONG)
     ]
-
 
 def get_extended_frame_bounds(hwnd):
     rect = RECT()
@@ -605,11 +607,10 @@ class WindowsOverlay(QWidget):
         try:
             install_hooks()
         except Exception as e:
-            Debug.error(f"Windows hooks could not be installed.\n{e}")
+            log.warning(f"Windows hooks could not be installed.\n{e}")
 
         self.update_hitbox(pet.hitbox_width, pet.hitbox_height)
 
-        self.primary_screen = QApplication.primaryScreen()
         screen = QApplication.primaryScreen() # Screen detection
         self.screen_geom = screen.geometry()
         self.screen_avail_geom = screen.availableGeometry()
@@ -634,7 +635,6 @@ class WindowsOverlay(QWidget):
         pet_hwnd = int(self.pet.winId())
         self.excluded_hwnd = {my_hwnd, pet_hwnd} # set of excluded from search hwnd 
 
-        # cached data
         self.windows = []   # top-first
         self.active_apps = set()
         self.visible_apps = set()
@@ -717,7 +717,7 @@ class WindowsOverlay(QWidget):
                 rects[parent_hwnd] = self.pet.parent_window_rect
                 continue
             try:
-                # print("UPDATING GETTING EXTENDED FRAME BOUNDSSS", hwnd)
+                # print("UPDATING GETTING EXTENDED FRAME BOUNDS", hwnd)
                 rect = get_extended_frame_bounds(hwnd)
                 if not rect: return
                 
@@ -741,13 +741,9 @@ class WindowsOverlay(QWidget):
         self.segments = segs
 
         self.rebuild_surfaces(segs)
-
-        # if parent_hwnd:
-        #     if not is_window_real(parent_hwnd) or parent_hwnd not in self.windows:
-        #         self.pet._clear_parent_window()
                 
+        # print summary for the top few windows
         if DEBUG:
-            # print a summary for the top few windows
             topn = min(6, len(self.windows))
             print(f"[frame] rects={len(rects)}, segs={len(self.segments)} (top {topn}):")
             for i, hwnd in enumerate(self.windows[:topn]):
@@ -756,9 +752,8 @@ class WindowsOverlay(QWidget):
                 seg = self.segments.get(hwnd)
                 print(f"  {i}: hwnd={hwnd} title={repr(title)} rect={rect} segs_top={len(seg['top']) if seg else 0}")
 
-        # trigger repaint
-        # return   # 
-        self.update()
+
+        self.update() # repaint
 
 
     def rebuild_surfaces(self, segs):
@@ -783,7 +778,7 @@ class WindowsOverlay(QWidget):
             for y1, y2 in data["right"]:
                 self.surfaces["right"].append((R, y1, y2, hwnd))
 
-# --- Get rect of a window by hwnd ---
+    # --- Get rect of a window by hwnd ---
     def update_parent_window(self, hwnd):
         """
         Returns the rect of the window with provided hwnd
@@ -809,15 +804,12 @@ class WindowsOverlay(QWidget):
         L, T, R, B = rect
         return (L / scale, T / scale, R / scale, B / scale)
         
-# --- Movement collision stuff ---
-    def bounds(self, pos_x, pos_y):
-        hw = self.hitbox_w
-        hh = self.hitbox_h
-    
+    # --- Movement collision stuff ---
+    def bounds(self, pos_x, pos_y):    
         return (
-            pos_x - hw/2,
-            pos_y - hh,
-            pos_x + hw/2,
+            pos_x - self.hitbox_w/2,
+            pos_y - self.hitbox_h,
+            pos_x + self.hitbox_w/2,
             pos_y
         )
 
@@ -830,7 +822,7 @@ class WindowsOverlay(QWidget):
 
         surfaces = self.surfaces
 
-        if SurfaceType.TOP in collision_mask:  # moving down      # removed if dy > 0 here so now it should be possible to collide with insides of windows?
+        if SurfaceType.TOP in collision_mask:  # moving down   # removed if dy > 0 here so now it should be possible to collide with insides of windows?
             for y, x1, x2, hwnd in surfaces["top"]:
 
                 if pos_x < x1 or pos_x > x2:   # i replaced R and L with pos.x because we care only about the center point
@@ -862,7 +854,6 @@ class WindowsOverlay(QWidget):
         return best, collision, surface_data
 
     def collide_horizontal(self, pos_x, pos_y, dx, collision_mask):
-
         L,T,R,B = self.bounds(pos_x, pos_y)
 
         best = dx
@@ -873,7 +864,7 @@ class WindowsOverlay(QWidget):
 
         # print(f"why collision not working it should be  {SurfaceType.RIGHT in collision_mask}" )
 
-        if SurfaceType.LEFT in collision_mask:  # moving right       # removed dx > 0 (see above)
+        if SurfaceType.LEFT in collision_mask:  # moving right     # removed dx > 0 (see above)
             for x, y1, y2, hwnd in surfaces["left"]:
 
                 if B < y1 or T > y2:
@@ -901,7 +892,7 @@ class WindowsOverlay(QWidget):
 
         return best, collision, surface_data
 
-# --- Find nearest surface in a given direction ---
+    # --- Find nearest surface in a given direction ---
     def get_nearest_surface(self, direction, hitbox_w, hitbox_h, collision_mask):
 
         px, py = self.pet.anchor.x, self.pet.anchor.y
@@ -1017,12 +1008,3 @@ class WindowsOverlay(QWidget):
                 painter.drawLine(dR, sy1, dR, sy2)
 
         painter.end()
-
-
-# -----------------------
-# Main
-# -----------------------
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    overlay = WindowsOverlay(pet=None)
-    sys.exit(app.exec())

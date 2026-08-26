@@ -1,3 +1,7 @@
+QMainWindow {
+    background-color: #8e6;
+}
+
 QWidget {
     font-family: "Rubik";
     font-size: 10pt;
@@ -14,13 +18,15 @@ QLineEdit {
 }
 
 #info_widget {
-    margin-left: 1px;
+    background-color: white;
 }
 
-QLabel#info_thumbnail {
-    max-width: 230px;
-    max-height: 230px;
-}
+/* QLabel#info_thumbnail {
+    doesnt work from here - its in the main windget declaration
+    max-width: 250px;
+    max-height: 250px;
+    background-color: #3c3;
+} */
 
 #info_name {
     font-family: "Rubik";
@@ -58,16 +64,47 @@ QLabel#info_thumbnail {
     color: white;
 }
 
+QCheckBox#debug_checkbox {
+    font-size: 11px;
+    color: #555;
+}
+
+QCheckBox#debug_checkbox:hover {
+    color: #37d;
+}
+
+QCheckBox#debug_checkbox::indicator {
+    width: 13px;
+    height: 13px;
+}
+
+QPushButton#view_logs_button {
+    font-size: 11px;
+    color: #555;
+    text-decoration: underline;
+    border: none;
+    padding: 0px;
+    margin: 0px, 4px;
+}
+
+QPushButton#view_logs_button:hover {
+    color: #7bf;
+}
+
+#call_box {
+    /* background-color: #d855bc; */
+    min-height: 100px;
+}
 
 #call_button {
     font-family: "Rubik";
-    font-weight: bold;
     background-color: #0078D7;
     color: white;
     border-radius: 8px;
     border: 0px;
     width: 80px;
     max-width: 150px;
+    margin-top: 10px;
 }
 
 #call_button:hover {

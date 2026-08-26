@@ -44,7 +44,6 @@ class HotkeyManager:
 
     def handle(self):
         print("HOTKEY FIRED")
-        # self.pet.debug_dump()
 
     def cleanup(self):
         win32gui.UnregisterHotKey(None, HOTKEY_ID)

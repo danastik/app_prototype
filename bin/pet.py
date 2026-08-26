@@ -21,9 +21,10 @@ from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.audio_engine import AudioEngine
 from engine.debug import Debug
 
-# import cProfile
+from engine.logger import app_logger as log
+from engine.logger import debug_logger as debug_log
 
-from engine.variable_manager import VariableManager
+# import cProfile
 
 
 #region --- HELPERS ---
@@ -66,26 +67,34 @@ def _convert_recursive(obj: Any, dict_names: list[str]) -> Any:
 class Pet(QWidget): # main logic
     def __init__(self, archive: zipfile.ZipFile, main_hwnd):
         super().__init__()
-        Debug.log("---INITIALISATION START---")
+        log.info("---INITIALISATION START---")
+        debug_log.info("\n")
+        debug_log.info("---CALLING YOJI---")
 
-        with archive.open("data/render_config.json") as f:
-            self.RENDER_CONFIG = json.load(f)
-            self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
-            self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
-            self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
+        config_path = "data/render_config.json"
+        with archive.open(config_path) as f:
+            try:
+                self.RENDER_CONFIG = json.load(f)
+                self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
+                self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
+                self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
+            except json.JSONDecodeError as e:
+                msg = f"Invalid JSON syntax in {config_path}\n{e}"
+                log.error(msg) 
+                raise ValueError(msg)
+            except Exception as e:
+                msg = f"Could not parse {config_path}\n{e}"
+                log.error(msg)
+                raise ValueError(msg)
 
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
 
-        STATES = json.load(archive.open("data/states.json"))
-        self.STATES = _convert_string_indexes_to_int(STATES, self.dicts_with_ints_as_keys)
-        Debug.log("states.json - found")
-        ANIMATIONS = json.load(archive.open("data/animations.json"))
-        self.ANIMATIONS = _convert_string_indexes_to_int(ANIMATIONS, self.dicts_with_ints_as_keys)
-        Debug.log("animations.json - found")
-        VARIABLES = json.load(archive.open("data/variables.json"))
-        Debug.log("variables.json - found")
-        BEHAVIOURS = json.load(archive.open("data/behaviours.json"))
-        Debug.log("behaviours.json - found")
+        self.STATES = self._load_json(archive, "data/states.json", convert_int_keys=True)
+        self.ANIMATIONS = self._load_json(archive, "data/animations.json", convert_int_keys=True)
+        VARIABLES = self._load_json(archive, "data/variables.json")
+        BEHAVIOURS = self._load_json(archive, "data/behaviours.json")
+        ASSETS = self._load_json(archive, "data/particles/assets.json")
+        PARTICLES = self._load_json(archive, "data/particles/particles.json")
 
         ASSETS = json.load(archive.open("data/particles/assets.json"))
         Debug.log("particles/assets.json - found")
@@ -101,7 +110,7 @@ class Pet(QWidget): # main logic
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
         print("--- LOADING ANIMATIONS ---")
-        Debug.log("---LOADING ANIMATIONS---")
+        log.info("---LOADING ANIMATIONS---")
         self.animations = {}
         max_bounds_w = 0
         max_bounds_h = 0
@@ -130,7 +139,7 @@ class Pet(QWidget): # main logic
                 "times_to_loop": cfg.get("times_to_loop", 1)
             }
             print(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
-            Debug.log(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
+            log.info(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
     
         self.variables = VariableManager(VARIABLES)
 
@@ -198,13 +207,36 @@ class Pet(QWidget): # main logic
         self.click_detector = ClickDetector(pet=self)
 
         print("---LOADING SUCCESSFUL---\n")
-        Debug.log("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
+        log.info("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
+
+        debug_log.info("---Yoji loaded---\n")
 
         # Timer for updating logic
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
+    def _load_json(self, archive: zipfile.ZipFile, path, convert_int_keys=False):
+        with archive.open(path) as f:
+            try:
+                data = json.load(f)
+
+                if convert_int_keys:
+                    data = _convert_string_indexes_to_int(
+                        data,
+                        self.dicts_with_ints_as_keys)
+
+                log.info(f"{path} loaded: success")
+                return data
+            
+            except json.JSONDecodeError as e:
+                msg = f"Invalid JSON syntax in {path}\n{e}"
+                log.error(msg)
+                raise ValueError(msg)
+            except Exception as e:
+                msg = f"Could not parse {path}\n{e}"
+                log.error(msg)
+                raise ValueError(msg)
 
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)
@@ -212,8 +244,8 @@ class Pet(QWidget): # main logic
         # if self.parent_window_hwnd:
         #     # print(f"Position: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}")
 
-        self.variables.set("times_clicked_this_state", 0)
-        self.variables.set("time_spent_in_this_state", 0)
+        self.variables.reset("times_clicked_this_state")
+        self.variables.reset("time_spent_in_this_state")
 
         cfg = self.STATES[state]
 
@@ -233,13 +265,19 @@ class Pet(QWidget): # main logic
 
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         anim_name = cfg.get("animation")
+        
+        debug_log.info(f"--->")
+        debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
+
+        # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         self.play_animation(anim_name=anim_name, cfg=cfg)
 
        
     def on_state_exit(self, state): # called in state_machine when exiting a state
         # cfg = self.STATES[state]
         # print("exiting state", state)
-        pass
+        debug_log.info(f"Exiting state {state}")
+        
 
     def resolve_behavior(self, behaviour, cfg):
         # print(self.behaviour_name)
@@ -303,8 +341,8 @@ class Pet(QWidget): # main logic
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
         if anim_name not in self.ANIMATIONS:
-            Debug.warning(f"Animation {anim_name} not found in animations.json")
-            raise Exception(f"Animation {anim_name} not found in animations.json")  #no idea what this does will add user notification that error occured
+            debug_log.error(f"{__name__}: Animation {anim_name} not found in animations.json")
+            raise Exception(f"Animation {anim_name} not found in animations.json")
 
         anim_cfg = self.ANIMATIONS[anim_name]
 
@@ -320,6 +358,9 @@ class Pet(QWidget): # main logic
         if isTransitionAnimation:
             loop = False
             # print("transition animation playing")
+
+        transit_txt = "transition " if isTransitionAnimation else ""
+        debug_log.debug(f"Playing {transit_txt}animation: {anim_name}, Frame count: {len(frames)}, Loop: {loop}, Times to loop: {times_to_loop}, Holds: {holds}")
 
         # print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
         self.animator.set_animation(frames=frames, fps=fps, loop=loop, times_to_loop=times_to_loop, holds=holds)
@@ -423,9 +464,9 @@ class Pet(QWidget): # main logic
         self.prev_index = index
 
         # --- UPDATING PARTICLES ---
-        t8 = time.perf_counter()
         self.particle_logic_acc += dt
         self.particle_draw_acc += dt
+        t8 = time.perf_counter()
 
         if self.particle_logic_acc >= 1 / self.PARTICLE_LOGIC_FPS:
             self.particle_logic_acc -= 1 / self.PARTICLE_LOGIC_FPS
@@ -438,7 +479,7 @@ class Pet(QWidget): # main logic
             self.particle_engine.draw()
 
         t10 = time.perf_counter()
-        # print(f"Particle update: {t1-t0}\nParticles draw: {t2-t1}")
+        # print(f"Particles: Update: {t9-t8}    Draw: {t10-t9}")
 
         # print(f"update windows frames takes {t3-t1}")
         # self.profiler.disable()  # stop profiling
@@ -555,7 +596,7 @@ class Pet(QWidget): # main logic
         self.state_machine.pulse(Pulse.GAINED_PARENT)
         self.state_machine.raise_flag(Flag.PARENTED_TO_WINDOW)
         self.state_machine.remove_flag(Flag.NOT_PARENTED_TO_WINDOW)
-        print("Parent window:", hwnd)
+        # print("Parent window:", hwnd)
 
     def apply_window_position(self):
         self.move(
@@ -586,7 +627,7 @@ class Pet(QWidget): # main logic
         print("screen dpi", self.dpi_scale)
         print("new scale", self.scale)
 
-        Debug.log(f"Updating dpi and scale:\nScreen height: {h}\n First frame height: {first_frame.height()}\nPixel ratio: {self.pixel_ratio}\nScreen DPI: {self.dpi_scale}\nNew scale: {self.scale}")
+        log.info(f"Updating dpi and scale:\nScreen height: {h}\n First frame height: {first_frame.height()}\nPixel ratio: {self.pixel_ratio}\nScreen DPI: {self.dpi_scale}\nNew scale: {self.scale}")
 
     def update_hitbox_size_and_drag_offset(self, frame):
             if not frame:

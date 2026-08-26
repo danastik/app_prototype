@@ -3,15 +3,11 @@ from PySide6.QtCore import Qt, QRect
 from PySide6.QtGui import QColor, QPainter, QFont
 from PySide6.QtWidgets import QApplication
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
-
 import json
-
 import zipfile
 
 from engine.asset_loader import AssetLoader
-
 from engine.particles.particle_emitter import ParticleEmitter
-from engine.debug import Debug
 
 from OpenGL.GL import * #type: ignore
 
@@ -20,6 +16,8 @@ from collections import defaultdict
 import numpy as np
 from numba import njit
 
+from engine.logger import app_logger as log
+from engine.logger import debug_logger as debug_log
 
 def get_frame_index(anim, age):
     """
@@ -63,14 +61,16 @@ class ParticleOverlayWidget(QOpenGLWidget):
         avail_geom = self.primary_screen.geometry() # later if needed will use availableGeomtry, but that rquires rewriting rendering code so idk
         self.setGeometry(avail_geom)
 
+        self.clear_surface = True
+
         # Create dummy data with FINAL types
+        dummy_lifetime = np.zeros(len(self.PARTICLES), dtype=np.float32)
         dummy_positions = np.zeros(1000, dtype=np.float32)
         dummy_vels = np.zeros(1000, dtype=np.float32)
         dummy_id = np.zeros(1000, dtype=np.int16)
-        dummy_alive = np.zeros(1000, dtype=np.bool)
         dt = np.float32(0.016)
 
-        update_particles(dt, np.uint32(1000), dummy_positions, dummy_positions, dummy_vels, dummy_vels, dummy_vels, dummy_vels, dummy_positions, dummy_id, dummy_alive)
+        update_particles(dt, np.uint32(1000), dummy_lifetime, dummy_positions, dummy_positions, dummy_vels, dummy_vels, dummy_vels, dummy_vels, dummy_positions, dummy_id)
 
         self.window_width = self.width()
         self.window_height = self.height()
@@ -130,7 +130,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
 
         print("\n----- LOADING PARTICLES -----")
-        Debug.log("---LOADING PARTICLES---")
+        log.info("---LOADING PARTICLES---")
 
         for name in list(self.PARTICLES):
             cfg = self.PARTICLES[name]
@@ -175,9 +175,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
             print(f"[PARTICLES LOADED] {name}: {frame_count} frames, asset: {cfg["asset"]}")
 
         # generating particle texture atlas
-        # print("Generating atlas:")
-        # atlas_generator = AtlasGenerator(ASSETS=ASSETS, archive=archive)
-        # atlas_generator.generate_atlas()
 
         # loading atlas texure
         atlas_path = "generated/atlas/atlas.png"
@@ -185,30 +182,34 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         # getting texture atlas
         print("Getting atlas.png from:", atlas_path)
-        Debug.log(f"Getting atlas.png from: {atlas_path}")
+        log.info(f"Getting atlas.png from: {atlas_path}")
 
         self.atlas_texture = AssetLoader.load_openGL_texture(archive=archive, path=atlas_path)
 
         if self.atlas_texture: 
             print("--Success!")
-            Debug.log("--Success!")
-        else: raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
+            log.info("--Success!")
+        else: 
+            log.error(f"  No atlas.png found at '{atlas_path}'")
+            raise RuntimeError(f"  No atlas.png found at '{atlas_path}'")
 
         # getting json config
         print(f"Getting atlas.json from: {atlas_path}")
-        Debug.log(f"Getting atlas.json from: {atlas_path}")
+        log.info(f"Getting atlas.json from: {atlas_path}")
 
         with archive.open(config_path) as f:
             self.atlas_config = json.load(f)
 
         if self.atlas_config: 
             print("--Success!")
-            Debug.log("--Success!")
-        else: raise RuntimeError(f"No atlas.json found at '{config_path}'")
+            log.info("--Success!")
+        else:
+            log.error(f"  No atlas.json found at '{config_path}'")
+            raise RuntimeError(f"No atlas.json found at '{config_path}'")
 
         # --- loading particle information into memory for fast access ---
         print("---Loading particles into memory---")
-        Debug.log("---Loading particles into memory---")
+        log.info("---Loading particles into memory---")
 
         self.atlas_lookup = [] # id = full information from the atlas about a particle
         self.frame_lookup = [] # id = which asset lookup to look in
@@ -219,7 +220,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
             self.atlas_lookup.append(particle_data)
             self.frame_lookup.append(particle_data["frames"])
             print(f"Asset loaded: {asset_name}")
-            Debug.log(f"Asset loaded: {asset_name}")
+            log.info(f"Asset loaded: {asset_name}")
 
         self.asset_ids = {} # assigning each name is ASSETS an id ("dirt": 0, "smoke": 1)
         for i, name in enumerate(self.ASSETS.keys()):
@@ -242,15 +243,15 @@ class ParticleOverlayWidget(QOpenGLWidget):
         print("assets ids", self.asset_ids)
         print("assets lookup", self.asset_lookup)
         print("aspect_ratio_by_id", self.aspect_ratio_by_id)
-        Debug.log("Debug information:")
-        Debug.log(f"atlas lookup: {self.atlas_lookup}")
-        Debug.log(f"frame lookup: {self.frame_lookup}")
-        Debug.log(f"assets ids: {self.asset_ids}")
-        Debug.log(f"assets lookup: {self.asset_lookup}")
-        Debug.log(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
+        debug_log.info("Debug information:")
+        debug_log.info(f"atlas lookup: {self.atlas_lookup}")
+        debug_log.info(f"frame lookup: {self.frame_lookup}")
+        debug_log.info(f"assets ids: {self.asset_ids}")
+        debug_log.info(f"assets lookup: {self.asset_lookup}")
+        debug_log.info(f"aspect_ratio_by_id: {self.aspect_ratio_by_id}")
 
         print("---PARTICLES LOADED---\n")
-        Debug.log("---PARTICLES LOADED---")
+        log.info("---PARTICLES LOADED---")
 
     def update_dpi_and_scale(self, new_scale):
         self.scale = new_scale
@@ -277,14 +278,13 @@ class ParticleOverlayWidget(QOpenGLWidget):
         cfg = self.PARTICLES.get(name)
 
         if not cfg:
-            Debug.warning(f"Particle {name} not found in particles.json")
+            debug_log.error(f"Particle {name} not found in particles.json")
             raise Exception("Particle", name, "not found in particles.json")
-
-
-        # print("ACNHOCRR FROM PARTICLEGL", self.pet.anchor)
+        
 
         # making the emitter continuous
         if constant:
+            cfg = cfg.copy()
             cfg["duration"] = 1e9
             cfg["total_count"] = 1e9
         
@@ -295,7 +295,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.emitters.append(new_emitter)
 
         return new_emitter
-
 
     def emit_particle(self, *, pos_x, pos_y, vel_x, vel_y, acc_x, acc_y, name, size):
         if self.count >= self.MAX_PARTICLES:
@@ -322,10 +321,9 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         self.count += 1
 
+
     def update_logic(self, dt):
         t0 = time.perf_counter()
-
-        # if not self.emitters: return
 
         # --- EMITTERS ---
         for emitter in self.emitters:
@@ -334,25 +332,16 @@ class ParticleOverlayWidget(QOpenGLWidget):
         self.emitters = [e for e in self.emitters if not e.done_emitting] #pruning emitters
 
         # --- PARTICLES ---
-        # print("self count is ", self.count) # printing particle count
-
         if not self.count: return
-
-        # pruning particles for if they are dead
-        i = 0
-        while i < self.count:
-            if self.age[i] >= self.anim_lifetimes_by_id[self.type_id[i]]:
-                self.alive[i] = 0
-            i += 1
 
         self.count = update_particles(
             np.float32(dt),
             self.count,
+            self.anim_lifetimes_by_id,
             self.pos_x, self.pos_y,
             self.vel_x, self.vel_y,
             self.acc_x, self.acc_y,
-            self.age, self.type_id,
-            self.alive
+            self.age, self.type_id
             )
         
         # -- DEBUGGING TEXT --
@@ -371,7 +360,8 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
     # --- DRAWING ---
     def draw(self):
-        self.update()  # triggers paintGL
+        if not self.count and self.clear_surface: return
+        self.update()  # trigger paintGL
 
     def initializeGL(self):
         # print("initialiseGL")
@@ -400,13 +390,17 @@ class ParticleOverlayWidget(QOpenGLWidget):
         glClearColor(0, 0, 0, 0)
         glClear(GL_COLOR_BUFFER_BIT)
 
-        if not self.count: return
+        if not self.count: 
+            self.clear_surface = True
+            return
+        
+        self.clear_surface = False
         # print("count:", self.count)
         
         # дебаг штука
-        total_particles = self.count
-        culled_particles = 0
-        drawn_particles = 0
+        # total_particles = self.count
+        # culled_particles = 0
+        # drawn_particles = 0
 
         vertices = []
         texcoords = []
@@ -414,16 +408,13 @@ class ParticleOverlayWidget(QOpenGLWidget):
         for i in range(self.count):
             particle_id = self.type_id[i]
             anim_data = self.animations[particle_id]
-            # frame_id = get_frame_index(anim_data, self.age[i])
 
-            # instead of using get_frame_index function (trying for optimisation)
             frame_id = int(self.age[i] * anim_data["fps"])
             if anim_data["loop"]:
                 frame_id %= anim_data["frame_count"]
             else:
                 frame_id = min(frame_id, anim_data["frame_count"] - 1)
 
-            # particle_data = self.atlas_lookup[particle_id]
             frame_data = self.frame_lookup[self.asset_lookup[particle_id]][frame_id]
 
             x_px = self.pos_x[i]
@@ -442,17 +433,16 @@ class ParticleOverlayWidget(QOpenGLWidget):
             sy = size * self.aspect * frame_aspect_ratio
 
             # skipping if whole quad would be outside of screen
-            # To-do: add taskbar position as the lower boundary instead of screen border
             if (
                 x + sx < -1.0 or
                 x - sx > 1.0 or
                 y < self.taskbar_ndc_y or  # it was:   y + sy < -1.0  before (for the bottom of the screen)
                 y - sy > 1.0
             ):
-                culled_particles += 1
+                # culled_particles += 1
                 continue
 
-            drawn_particles += 1
+            # drawn_particles += 1
 
             # creating the quad
             vertices.extend([
@@ -501,6 +491,10 @@ class ParticleOverlayWidget(QOpenGLWidget):
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
+        glBindTexture(GL_TEXTURE_2D, 0)
+
+        t2 = time.perf_counter()
+
         # подсчёт партиклов для дебага
         # self.debug_counter += 1
 
@@ -512,10 +506,6 @@ class ParticleOverlayWidget(QOpenGLWidget):
         #         f"Drawn: {drawn_particles} | "
         #         f"Culled: {culled_particles}"
         #     )
-
-        glBindTexture(GL_TEXTURE_2D, 0)
-
-        t2 = time.perf_counter()
 
         # print(f"For i in particle_count: {t1-t0}, Drawing: {t2-t1}")
 
@@ -549,11 +539,11 @@ class ParticleOverlayWidget(QOpenGLWidget):
 def update_particles(
     dt,
     count,
+    max_age_by_id,
     pos_x, pos_y,
     vel_x, vel_y,
     acc_x, acc_y,
-    age, type_id,
-    alive,
+    age, type_id
     ):
     i = 0
     while i < count:
@@ -564,7 +554,7 @@ def update_particles(
         pos_y[i] += vel_y[i] * dt
 
         # kill conditions
-        if not alive[i]: # or pos_y[i] > taskbar_top:  # commented out because it was weird
+        if age[i] >= max_age_by_id[type_id[i]]: # or pos_y[i] > taskbar_top:  # commented out because it was weird
             last = count - 1
             pos_x[i] = pos_x[last]
             pos_y[i] = pos_y[last]

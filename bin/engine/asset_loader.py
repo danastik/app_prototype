@@ -42,7 +42,6 @@ class AssetLoader:
         :param folder: Path to the texture(inside archive)
         """
         from PIL import Image
-        import os
 
         with archive.open(path) as f:
             img = Image.open(f).convert("RGBA")
