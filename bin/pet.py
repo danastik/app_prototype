@@ -271,6 +271,7 @@ class Pet(QWidget): # main logic
         self.play_animation(anim_name=anim_name, cfg=cfg)
 
     def _process_commands(self, commands: list):
+        # print("Processing commands", commands)
         for cmd in commands:
             match cmd:
                 case VariableCommand(name=name, op=op, value=value):

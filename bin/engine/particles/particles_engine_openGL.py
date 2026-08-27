@@ -267,7 +267,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
     def clear_constant_emitters(self):
         for emitter in self.constant_emitters:
             emitter.done_emitting = True
-            
+
         self.constant_emitters.clear()
 
     def start_emitting(self, name, constant):
@@ -300,6 +300,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         if constant:
             self.constant_emitters.append(new_emitter)
+            print("particle engine: constant emitters", self.constant_emitters)
 
         self.emitters.append(new_emitter)
 

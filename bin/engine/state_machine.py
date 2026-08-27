@@ -51,36 +51,43 @@ class StateMachine:
         if result:
             next_state, transition_anim, anim_cfg = result
 
-            if transition_anim:
-                self.queue_transition(next_state) # queueing transition until transition anim is finished
-                self.remove_flag(Flag.ANIMATION_FINISHED)
-            else:
-                self.queue_transition(next_state)
-                self.apply_pending_transition()
+            cmds_on_exit = self.queue_transition(next_state) # queueing transition until transition anim is finished
+            commands += cmds_on_exit
+
+            if not transition_anim:
+                cmds_on_enter = self.apply_pending_transition()
+                commands += cmds_on_enter
 
         # print("state machine. result:", result)
         # print("state_machine next state is: ", next_state)
 
         self.state.clear_pulses()
+        self.remove_flag(Flag.ANIMATION_FINISHED)
 
+        for cmd in commands:
+            print(type(cmd))
         return result, commands
 
         
-    def queue_transition(self, next_state):      
-        self.state.get_commands_on_exit(self.STATE_CONFIG[self.state.current_state_name])
+    def queue_transition(self, next_state) -> list:      
+        commands = self.state.get_commands_on_exit(self.STATE_CONFIG[self.state.current_state_name])
         self.pending_state = next_state
         self.in_transition = True
         # print("state_machine: queue transition")
         self.remove_flag(Flag.ANIMATION_FINISHED)
 
-    def apply_pending_transition(self):
-        if not self.pending_state:
-            return
+        return commands
 
-        self.state.enter_state(self.pending_state)
+    def apply_pending_transition(self) -> list:
+        if not self.pending_state:
+            return []
+
+        commands = self.state.enter_state(self.pending_state)
         # print("state_machine: pending changes applied")
 
         # Cleanup
         self.in_transition = False
         self.pending_state = None
         self.state.clear_pulses()
+
+        return commands

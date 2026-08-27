@@ -94,9 +94,16 @@ class StateRuntime:
 
         particle_cmds = self._get_particle_cmds(state_cfg, "particles_on_enter")
         commands += particle_cmds
+
+        c_particle_cmds = self._get_particle_cmds(state_cfg, "constant_particles")
+        for c_part in c_particle_cmds:
+            c_part.constant=True
+        commands += c_particle_cmds
         
         audio_cmds = self._get_audio_cmds(state_cfg, "audio_on_enter")
         commands += audio_cmds
+
+        print("_get_commands_on_enter", commands)
 
         return commands
 
@@ -162,9 +169,9 @@ class StateRuntime:
         audio_cmds = self._get_audio_cmds(state_cfg, "audio_on_exit")
         commands += audio_cmds
 
-        for emitter in self.constant_emitters:
-            emitter.done_emitting = True
-        self.constant_emitters.clear()
+        # for emitter in self.constant_emitters:
+        #     emitter.done_emitting = True
+        # self.constant_emitters.clear()
 
         return commands
 
@@ -238,6 +245,7 @@ class StateRuntime:
             name = cmd["var"]
             op = cmd["op"]
             value = cmd["value"]
+            print("var", name, op, value)
             return VariableCommand(name, op, value)
 
     def _bool_cmd(self, cmd) -> BoolCommand | None:
@@ -253,6 +261,8 @@ class StateRuntime:
             # emitter = self.pet.particle_engine.start_emitting(name, constant)
             # if constant:
                 # self.constant_emitters.append(emitter)
+            
+            print("particle cmd", name, constant)
             return ParticleCommand(name, constant)
         
     def _audio_cmd(self, audio_cmd) -> AudioCommand | None:
@@ -309,14 +319,14 @@ class StateRuntime:
 
         return Flag.__members__.get(cond) in self.flags or Pulse.__members__.get(cond) in self.pulses   # THIS makes it so instead of Flag.FLAG_NAME you can just FLAG_NAME
 
-    def enter_state(self, next_state):
+    def enter_state(self, next_state) -> list:
         self.current_state_name = next_state
         self.current_state_cfg = self.all_configs[next_state]
-        self._get_commands_on_enter(self.current_state_cfg)
         self.variable_manager.reset_var("times_clicked_this_state")
         self.variable_manager.reset_var("time_spent_in_this_state")
         self.remove_flag(Flag.ANIMATION_FINISHED)
         self.remove_flag(Flag.MOVEMENT_FINISHED)
+        return self._get_commands_on_enter(self.current_state_cfg)
 
     def handle_global_events(self) -> tuple[TransitionData | None, list]:
         """
