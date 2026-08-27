@@ -1,13 +1,14 @@
 from engine.state_runtime import StateRuntime
+from engine.state_runtime import TransitionData
 from engine.enums import Flag, Pulse
 
 from engine.logger import debug_logger as debug_log
 
 class StateMachine:
-    def __init__(self, pet, configs, initial):
+    def __init__(self, pet, CONFIG, initial):
         self.pet = pet
-        self.configs = configs
-        self.state = StateRuntime(pet = pet, current_state_name=initial, config=configs[initial], all_configs=configs, variables=self.pet.variables)   # created instance of runtime and then changed
+        self.STATE_CONFIG = CONFIG
+        self.state = StateRuntime(pet = pet, current_state_name=initial, config=CONFIG[initial], all_configs=CONFIG, variables=self.pet.variables)   # created instance of runtime and then changed
         self.change(initial)
         self.in_transition = False
 
@@ -33,11 +34,14 @@ class StateMachine:
         self.state.update_apps(app_state)
 
     def update(self, dt):
-        result = self.state.handle_global_events()
+        result: TransitionData
+        commands: list
+
+        result, commands = self.state.handle_global_events()
         # print("state_machine update", result)
 
         if not result and not self.in_transition:
-            result = self.state.handle_events()  # sends event to state_runtime.py expecting (next_state, animation_name, config_dictionary[])
+            result, commands = self.state.handle_events()  # sends event to state_runtime.py expecting (next_state, animation_name, config_dictionary[])
 
 
         # TRANSITION LOGIC
@@ -55,12 +59,12 @@ class StateMachine:
 
         self.state.clear_pulses()
 
-        return result
+        return result, commands
 
         
     def queue_transition(self, next_state, anim, cfg):      
         self.pet.on_state_exit(self.state.current_state_name)
-        self.state.apply_on_exit()
+        self.state.get_commands_on_exit(self.STATE_CONFIG[self.state.current_state_name])
 
         self.pending_state = next_state
         self.pending_transition_anim = anim

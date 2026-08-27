@@ -2,6 +2,7 @@ import random
 from engine.enums import Flag, Pulse
 from collections import namedtuple
 
+from engine.state_commands import *
 from engine.logger import debug_logger as debug_log
 
 TransitionData = namedtuple("TransitionData", "next_state, transition_animation, transition_animation_cfg")
@@ -80,106 +81,203 @@ class StateRuntime:
         self.focused_app = focused
     
     
-    # helpers
-    def _apply_on_enter(self):  # called from state machine on enter
-        for cmd in self.current_state_cfg.get("variables_on_enter", []):
-            self._var_or_flag_command(cmd)
-        for part in self.current_state_cfg.get("particles_on_enter", []):
-            self._emit_particles(part)
-        for c_part in self.current_state_cfg.get("constant_particles", []):
-            self._emit_particles(c_part, True)
-        for audio in self.current_state_cfg.get("audio_on_enter", []):
-            self._play_audio(audio)
+    # big helpers
+    def _get_commands_on_enter(self, state_cfg) -> list:  # called from state machine on enter
+        commands = []
 
-    def _apply_on_transition(self, transition_info):
-        variables_on_transition = transition_info.get("variables_on_transition", [])
-        if isinstance(variables_on_transition, list):
-            for variable_cmd in variables_on_transition:
-                self._var_or_flag_command(variable_cmd)
-        else:
-            self._var_or_flag_command(variables_on_transition)
+        var_cmds = self._get_variable_cmds(state_cfg, "variables_on_enter")
+        commands += var_cmds
+
+        flag_cmds = self._get_flag_cmds(state_cfg, "flags_on_enter")
+        commands += flag_cmds
+
+        particle_cmds = self._get_particle_cmds(state_cfg, "particles_on_enter")
+        commands += particle_cmds
         
-        particles_on_transition = transition_info.get("particles_on_transition", [])
-        if isinstance(particles_on_transition, list): 
-            for particle_cmd in particles_on_transition:
-                self._emit_particles(particle_cmd)
-        else:
-            self._emit_particles(particles_on_transition)
+        audio_cmds = self._get_audio_cmds(state_cfg, "audio_on_enter")
+        commands += audio_cmds
 
-        audio_on_transition = transition_info.get("audio_on_transition", [])
-        if isinstance(audio_on_transition, list):
-            for audio_cmd in audio_on_transition:
-                self._play_audio(audio_cmd)
-        else:
-            self._play_audio(audio_on_transition)
+        return commands
 
-    def apply_on_exit(self): # called from state machine on exit
-        for cmd in self.current_state_cfg.get("variables_on_exit", []):
-            self._var_or_flag_command(cmd)
-        for part in self.current_state_cfg.get("particles_on_exit", []):
-            self._emit_particles(part)
-        for audio in self.current_state_cfg.get("audio_on_exit", []):
-            self._play_audio(audio)
+    def _get_commands_on_transition(self, transition_cfg) -> list:
+        commands = []
+
+        var_cmds = self._get_variable_cmds(transition_cfg, "variables_on_transition")
+        commands += var_cmds
+
+        flag_cmds = self._get_flag_cmds(transition_cfg, "flags_on_transition")
+        commands += flag_cmds
+
+        particle_cmds = self._get_particle_cmds(transition_cfg, "particles_on_transition")
+        commands += particle_cmds
+        
+        audio_cmds = self._get_audio_cmds(transition_cfg, "audio_on_transition")
+        commands += audio_cmds
+
+        return commands
+    
+    def _get_conditional_commands(self, config) -> list:
+        commands = []
+
+        variable_commands = config.get("conditional_variables", [])
+        for var in variable_commands:
+            if self._check_all_conditions(var):
+                cmd = self._var_cmd(var)
+                if cmd:commands.append(cmd)
+
+        flag_commands = config.get("conditional_flags", [])
+        for flag in flag_commands:
+            if self._check_all_conditions(flag):
+                cmd = self._flag_cmd(flag)
+                if cmd:commands.append(cmd)
+
+        particle_commands = config.get("conditional_particles", [])
+        for p in particle_commands:
+            if self._check_all_conditions(p):
+                cmd = self._particle_cmd(p)
+                if cmd:commands.append(cmd)
+                    # debug_log.debug(f"Emitting conditional_particles {p["emit"]} - satisfied all conditions {conditions} and chance {chance}")
+
+        audio_commands = config.get("conditional_audio", [])
+        for au in audio_commands:
+            if self._check_all_conditions(au):
+                cmd = self._audio_cmd(au)
+                if cmd:commands.append(cmd)
+
+        return commands
+
+    def get_commands_on_exit(self, state_cfg): # called from state machine on exit
+        commands = []
+
+        var_cmds = self._get_variable_cmds(state_cfg, "variables_on_exit")
+        commands += var_cmds
+
+        flag_cmds = self._get_flag_cmds(state_cfg, "flags_on_exit")
+        commands += flag_cmds
+
+        particle_cmds = self._get_particle_cmds(state_cfg, "particles_on_exit")
+        commands += particle_cmds
+        
+        audio_cmds = self._get_audio_cmds(state_cfg, "audio_on_exit")
+        commands += audio_cmds
 
         for emitter in self.constant_emitters:
             emitter.done_emitting = True
         self.constant_emitters.clear()
 
-    # executing commands
-    def _emit_particles(self, particle_cmd, constant = False):
-        if "emit" in particle_cmd:
-            # print("emitting")
-            name = particle_cmd["emit"]
-            self.pet.particle_engine.raise_()
-            emitter = self.pet.particle_engine.start_emitting(name, constant)
-            if constant:
-                self.constant_emitters.append(emitter)
+        return commands
 
-    def _var_or_flag_command(self, cmd):
+
+
+    # helpers per type
+    def _get_variable_cmds(self, cfg: dict, runtime_type: str) -> list[VariableCommand]:
+        variables = cfg.get(runtime_type)
+        if not variables: return []
+
+        cmds = []
+        if isinstance(variables, list):
+            for variable_cmd in variables:
+                cmd = self._var_cmd(variable_cmd)
+                if cmd: cmds.append(cmd)
+        else:
+            cmd = self._var_cmd(variables)
+            if cmd: cmds.append(cmd)
+
+        return(cmds)
+    
+    def _get_flag_cmds(self, cfg: dict, runtime_type: str) -> list[FlagCommand]:
+        flags = cfg.get(runtime_type)
+        if not flags: return []
+
+        cmds = []
+        if isinstance(flags, list):
+            for flag_cmd in flags:
+                cmd = self._flag_cmd(flag_cmd)
+                if cmd: cmds.append(cmd)
+        else:
+            cmd = self._flag_cmd(flags)
+            if cmd: cmds.append(cmd)
+
+        return(cmds)
+    
+    def _get_particle_cmds(self, cfg: dict, runtime_type: str) -> list[ParticleCommand]:
+        particles = cfg.get(runtime_type)
+        if not particles: return []
+
+        cmds = []
+        if isinstance(particles, list):
+            for part_cmd in particles:
+                cmd = self._particle_cmd(part_cmd)
+                if cmd: cmds.append(cmd)
+        else:
+            cmd = self._particle_cmd(particles)
+            if cmd: cmds.append(cmd)
+
+        return(cmds)
+    
+    def _get_audio_cmds(self, cfg: dict, runtime_type: str) -> list[AudioCommand]:
+        audio = cfg.get(runtime_type)
+        if not audio: return []
+
+        cmds = []
+        if isinstance(audio, list):
+            for au_cmd in audio:
+                cmd = self._audio_cmd(au_cmd)
+                if cmd: cmds.append(cmd)
+        else:
+            cmd = self._audio_cmd(audio)
+            if cmd: cmds.append(cmd)
+
+        return(cmds)
+
+
+    # lil command helpers
+    def _var_cmd(self, cmd) -> VariableCommand | None:
         if "var" in cmd:
             name = cmd["var"]
             op = cmd["op"]
             value = cmd["value"]
+            return VariableCommand(name, op, value)
 
-            if op == "+=":
-                self.variables.add(name, value)
-            elif op == "-=":
-                self.variables.add(name, -value)
-            elif op == "=":
-                self.variables.set(name, value)
-
-        elif "set_flag" in cmd:
-            self.flags.add(cmd["set_flag"])
+    def _flag_cmd(self, cmd) -> FlagCommand | None:
+        if "set_flag" in cmd:
+            return FlagCommand(cmd["set_flag"], "set_flag")
 
         elif "clear_flag" in cmd:
-            self.flags.discard(cmd["clear_flag"])
+            return FlagCommand(cmd["clear_flag"], "clear_flag")
 
-    def _play_audio(self, audio_cmd):
+    def _particle_cmd(self, particle_cmd, constant = False) -> ParticleCommand | None:
+        if "emit" in particle_cmd:
+            name = particle_cmd["emit"]
+            # self.pet.particle_engine.raise_()
+            # emitter = self.pet.particle_engine.start_emitting(name, constant)
+            # if constant:
+                # self.constant_emitters.append(emitter)
+            return ParticleCommand(name, constant)
+        
+    def _audio_cmd(self, audio_cmd) -> AudioCommand | None:
         if "play" in audio_cmd:
             name = audio_cmd["play"]
 
             volume = audio_cmd.get("volume")
             speed = audio_cmd.get("speed")
 
-            self.pet.audio_engine.play(
-                name,
-                volume=volume,
-                speed=speed
-            )
+            # self.pet.audio_engine.play(
+            #     name,
+            #     volume=volume,
+            #     speed=speed
+            # )
+            return AudioCommand(name, volume, speed)
 
 
     # transitions
+    def _check_all_conditions(self, cfg):
+        conditions = cfg["when"]
+        chance = cfg.get("chance", 1)
 
-    def enter_state(self, next_state):
-        self.current_state_name = next_state
-        self.current_state_cfg = self.all_configs[next_state]
-        self._apply_on_enter()
-        self.variables.reset("times_clicked_this_state")
-        self.variables.reset("time_spent_in_this_state")
-        self.remove_flag(Flag.ANIMATION_FINISHED)
-        self.remove_flag(Flag.MOVEMENT_FINISHED)
+        return all(self._check_condition(c) for c in conditions) and random.random() <= chance
 
-    def _check_condition(self, cond):
+    def _check_condition(self, cond) -> bool:
         if "flag" in cond:
             return Flag.__members__.get(cond["flag"]) in self.flags
 
@@ -206,14 +304,24 @@ class StateRuntime:
                 case "focused": return cond["app"] in self.focused_app
                 case "title": return cond["app"] in self.focused_app_title
 
-
         return Flag.__members__.get(cond) in self.flags or Pulse.__members__.get(cond) in self.pulses   # THIS makes it so instead of Flag.FLAG_NAME you can just FLAG_NAME
 
-    def handle_global_events(self) -> TransitionData | None:
+    def enter_state(self, next_state):
+        self.current_state_name = next_state
+        self.current_state_cfg = self.all_configs[next_state]
+        self._get_commands_on_enter(self.current_state_cfg)
+        self.variables.reset("times_clicked_this_state")
+        self.variables.reset("time_spent_in_this_state")
+        self.remove_flag(Flag.ANIMATION_FINISHED)
+        self.remove_flag(Flag.MOVEMENT_FINISHED)
+
+    def handle_global_events(self) -> tuple:
         """
         Checks if forced transitions apply in any of the states.
         Returns a tuple(next state's name, transition_animation, transition_animation_config)
         """
+        commands = []
+
         for state in self.all_forced_transitions:
             force_transitions = self.all_forced_transitions[state]
 
@@ -224,66 +332,58 @@ class StateRuntime:
                 chance = t.get("chance", 1)
 
                 if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
-                    # print("Forced transition:", conditions)
-                    self._apply_on_transition(t)
                     debug_log.debug(f"Forced transition from {self.current_state_name} to {state} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
+                    # print("Forced transition:", conditions)
+
+                    commands = self._get_commands_on_transition(t)
                     
-                    result = TransitionData(
+                    trans_data = TransitionData(
                         next_state=state,
                         transition_animation=t.get("transition_animation"),
                         transition_animation_cfg=t.get("transition_animation_cfg", {}))
                     
-                    return result
+                    return trans_data, commands
             
-        return None 
+        return None, None
 
-    def handle_events(self) -> TransitionData | None:
+    def handle_events(self) -> tuple:
         # print(f"state_runtime: handling events: Flags: ", self.flags, " Pulses: ", self.pulses)
-        particle_commands = self.current_state_cfg.get("conditional_particles", [])
-        for p in particle_commands:
-            conditions = p["when"]
-            chance = p.get("chance", 1)
-            if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
-                self._emit_particles(p)
-                debug_log.debug(f"Emitting conditional_particles {p["emit"]} - satisfied all conditions {conditions} and chance {chance}")
+        commands = []
 
-        audio_commands = self.current_state_cfg.get("conditional_audio", [])
-        for au in audio_commands:
-            conditions = au["when"]
-            chance = au.get("chance", 1)
-
-            if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
-                self._play_audio(au)
+        cond_commands = self._get_conditional_commands(self.current_state_cfg)
+        commands += cond_commands
 
         # --- Checking for state transitions ---
         transitions = self.current_state_cfg.get("transitions", [])
         for t in transitions:  # handling the list of "transitions:" from configs
-            conditions = t["when"]
-            chance = t.get("chance", 1)
-
-            if all(self._check_condition(c) for c in conditions) and random.random() <= chance: # if all conditions are True - we make the transition
-                self._apply_on_transition(transition_info=t)
-                debug_log.debug(f"Transition from {self.current_state_name} to {t["to"]} - satisfied all conditions {conditions} and chance {chance}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
-        
-                result = TransitionData(
+            if self._check_all_conditions(t):
+                debug_log.debug(f"Transition from {self.current_state_name} to {t["to"]} - satisfied all conditions {t.get("conditions")} and chance {t.get("chance")}\nTransition animation: {t.get("transition_animation")}, config: {t.get("transition_animation_cfg")}")
+                
+                trans_data = TransitionData(
                     next_state=t["to"], 
                     transition_animation=t.get("transition_animation"), 
                     transition_animation_cfg=t.get("transition_animation_cfg", {}))
+                
+                trans_commands = self._get_commands_on_transition(transition_cfg=t)
+                commands += trans_commands
 
-                return result
+                return trans_data, commands
             
         exit_conditions = self.current_state_cfg.get("exit_when")
         if exit_conditions and all(self._check_condition(c) for c in exit_conditions):
             debug_log.debug(f"Exiting from {self.current_state_name} to {self.current_state_cfg["exit_to"]} - satisfied all exit conditions {exit_conditions}\nExit animation: {self.current_state_cfg.get("exit_animation")}, config: {self.current_state_cfg.get("exit_animation_cfg")}")
             
-            result = TransitionData(
+            trans_data = TransitionData(
                 next_state=self.current_state_cfg["exit_to"], 
                 transition_animation=self.current_state_cfg.get("exit_animation"),
                 transition_animation_cfg=self.current_state_cfg.get("exit_animation_cfg", {}))
+            
+            exit_commands = self.get_commands_on_exit(self.current_state_cfg)
+            commands += exit_commands
 
-            return result
+            return trans_data, commands
         
-        return None
+        return None, None
 
         
         

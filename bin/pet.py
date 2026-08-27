@@ -200,7 +200,7 @@ class Pet(QWidget): # main logic
         frame = self.animations[anim_name]["frames"][0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
-        self.state_machine = StateMachine(pet=self, configs=self.STATES, initial=initial_state) # set initial state
+        self.state_machine = StateMachine(pet=self, CONFIG=self.STATES, initial=initial_state) # set initial state
         self.click_detector = ClickDetector(pet=self)
 
         print("---LOADING SUCCESSFUL---\n")
