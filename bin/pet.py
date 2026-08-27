@@ -142,9 +142,6 @@ class Pet(QWidget): # main logic
     
         self.variable_manager = VariableManager(VARIABLES)
 
-        self.animator = Animator(self)
-        self.prev_index = None
-
         # self.profiler = cProfile.Profile()
         self.not_first_time_update: bool = False
         # self.start_debugging = False
@@ -179,11 +176,17 @@ class Pet(QWidget): # main logic
 
         self.audio_engine = AudioEngine(
             sounds=SOUNDS,
-            archive=archive
-        )
+            archive=archive)
         
         initial_state = self.RENDER_CONFIG.get("default_state", next(iter(self.STATES))) #either get the "default" from the RENDER_CONFIG, or the first item in the self.STATES dictinary
         
+        self.state_machine = StateMachine(pet=self, CONFIG=self.STATES, initial=initial_state, variable_manager=self.variable_manager) # set initial state
+        self.click_detector = ClickDetector(pet=self, state_machine=self.state_machine)
+
+        self.animator = Animator(pet=self, state_machine=self.state_machine)
+        
+        self.on_state_enter(initial_state)
+
         h = self.primary_screen.availableGeometry().height()
         self.update_dpi_and_scale(h=h, initial_state=initial_state)
 
@@ -202,8 +205,7 @@ class Pet(QWidget): # main logic
         frame = self.animations[anim_name]["frames"][0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
-        self.state_machine = StateMachine(pet=self, CONFIG=self.STATES, initial=initial_state, variable_manager=self.variable_manager) # set initial state
-        self.click_detector = ClickDetector(pet=self)
+        self.prev_index = None
 
         print("---LOADING SUCCESSFUL---\n")
         log.info("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
@@ -286,12 +288,10 @@ class Pet(QWidget): # main logic
                 case AudioCommand(name=name, volume=volume, speed=speed):
                     self.audio_engine.play( name, volume=volume, speed=speed )
         
-    
 
-    
     def on_state_exit(self, state): # called in state_machine when exiting a state
         # cfg = self.STATES[state]
-        # print("exiting state", state)
+        print("exiting state", state)
         self.particle_engine.clear_constant_emitters()
         debug_log.info(f"Exiting state {state}")
         
@@ -370,12 +370,12 @@ class Pet(QWidget): # main logic
 
         if isTransitionAnimation:
             loop = False
-            # print("transition animation playing")
+            print("transition animation playing")
 
         transit_txt = "transition " if isTransitionAnimation else ""
         debug_log.debug(f"Playing {transit_txt}animation: {anim_name}, Frame count: {len(frames)}, Loop: {loop}, Times to loop: {times_to_loop}, Holds: {holds}")
 
-        # print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
+        print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
         self.animator.set_animation(frames=frames, fps=fps, loop=loop, times_to_loop=times_to_loop, holds=holds)
 
     def update_apps(self, app_state):
@@ -460,11 +460,9 @@ class Pet(QWidget): # main logic
             next_state, transition_anim, transition_anim_cfg = transition_data
 
             if transition_anim:
-                self.state_machine.queue_transition(next_state, transition_anim, transition_anim_cfg) # queueing transition until transition anim is finished
                 self.play_animation(transition_anim, transition_anim_cfg, isTransitionAnimation=True)
             else:
-                self.state_machine.queue_transition(next_state, None, None)
-                self.state_machine.apply_pending_changes()    # immediately executing transition
+                self.on_state_enter(next_state)
 
         self._process_commands(commands)
         
@@ -685,6 +683,7 @@ class Pet(QWidget): # main logic
 
     def mouseReleaseEvent(self, event):
         self.click_detector.release()
+        self.variable_manager.add_var("times_clicked_this_state", 1)
         if self.mover.movement_type == MovementType.DRAG:
             self.mover.end_drag()      
 

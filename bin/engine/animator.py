@@ -1,7 +1,8 @@
+from engine.state_machine import StateMachine
 from engine.enums import Flag, Pulse
 
 class Animator:  # contains different animation functions
-    def __init__(self, pet):
+    def __init__(self, pet, state_machine: StateMachine):
         self.frames = []
         self.index = 0
         self.timer = 0
@@ -10,6 +11,7 @@ class Animator:  # contains different animation functions
         self.done = False
 
         self.pet = pet
+        self.sm = state_machine
 
     def set_animation(self, frames, fps, loop, times_to_loop, holds = {}):
         """
@@ -28,6 +30,7 @@ class Animator:  # contains different animation functions
         self.holds: dict = holds
         self.ticks_left = self.hold_for(0)
         self.done = False
+        self.sm.remove_flag(Flag.ANIMATION_FINISHED)
 
         # print("animator set")
         
@@ -50,7 +53,7 @@ class Animator:  # contains different animation functions
 
                 if self.index >= len(self.frames):
                     # print("Animator: Pulse.ANIMATION_END ")
-                    self.pet.state_machine.pulse(Pulse.ANIMATION_END)  # if the index of the frame is more than we have frames, the animation is considered finished(for ease of connecting animations together), else - not
+                    self.sm.pulse(Pulse.ANIMATION_END)  # if the index of the frame is more than we have frames, the animation is considered finished(for ease of connecting animations together)
 
                     if self.loop or self.times_to_loop >= 2 :
                         self.index = 0
@@ -59,7 +62,7 @@ class Animator:  # contains different animation functions
                         self.index = len(self.frames) - 1
                         # print("Animator: Flag.ANIMATION_FINISHED ")
                         self.done = True
-                        self.pet.state_machine.raise_flag(Flag.ANIMATION_FINISHED)
+                        self.sm.raise_flag(Flag.ANIMATION_FINISHED)
 
 
                 self.ticks_left = self.hold_for(self.index)

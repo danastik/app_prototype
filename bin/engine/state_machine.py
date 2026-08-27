@@ -14,15 +14,13 @@ class StateMachine:
 
         # for pending states
         self.pending_state = None
-        self.pending_transition_anim = None
-        self.pending_transition_cfg = None
 
     def raise_flag(self, flag: Flag):
         self.state.raise_flag(flag)
 
-        if self.in_transition and flag == Flag.ANIMATION_FINISHED:  # logic for ending transition animation
-            # print("changing after animation finished")
-            self.apply_pending_changes()
+        # if self.in_transition and flag == Flag.ANIMATION_FINISHED:  # logic for ending transition animation
+        #     print("changing after animation finished")
+        #     self.apply_pending_state()
 
     def remove_flag(self, flag: Flag):
         self.state.remove_flag(flag)
@@ -37,6 +35,12 @@ class StateMachine:
         result: TransitionData | None
         commands: list
 
+        if self.in_transition and self.state.has_flag(Flag.ANIMATION_FINISHED):  # return pending state if we are in transition and ANIMATION_FINISHED
+            next_state = self.pending_state
+            self.apply_pending_transition()
+            print("SM return", next_state)
+            return TransitionData(next_state, None, None), []
+
         result, commands = self.state.handle_global_events()
         # print("state_machine update", result)
 
@@ -44,14 +48,15 @@ class StateMachine:
             result, commands = self.state.handle_events()
 
         # TRANSITION LOGIC
-        # if result:
-        #     next_state, transition_anim, anim_cfg = result
+        if result:
+            next_state, transition_anim, anim_cfg = result
 
-        #     if transition_anim:
-        #         self.queue_transition(next_state, transition_anim, anim_cfg) # queueing transition until transition anim is finished
-        #     else:
-        #         self.queue_transition(next_state, None, None)
-        #         self.apply_pending_changes()    # immediately executing transition
+            if transition_anim:
+                self.queue_transition(next_state) # queueing transition until transition anim is finished
+                self.remove_flag(Flag.ANIMATION_FINISHED)
+            else:
+                self.queue_transition(next_state)
+                self.apply_pending_transition()
 
         # print("state machine. result:", result)
         # print("state_machine next state is: ", next_state)
@@ -61,16 +66,16 @@ class StateMachine:
         return result, commands
 
         
-    def queue_transition(self, next_state, anim, cfg):      
+    def queue_transition(self, next_state):      
         self.state.get_commands_on_exit(self.STATE_CONFIG[self.state.current_state_name])
         self.pending_state = next_state
-        self.in_transition = True        
+        self.in_transition = True
+        # print("state_machine: queue transition")
+        self.remove_flag(Flag.ANIMATION_FINISHED)
 
-    def apply_pending_changes(self):
+    def apply_pending_transition(self):
         if not self.pending_state:
             return
-        
-        # self.state.clear_pulses() #just in case any pulses arent cleared too fast
 
         self.state.enter_state(self.pending_state)
         # print("state_machine: pending changes applied")
@@ -78,5 +83,4 @@ class StateMachine:
         # Cleanup
         self.in_transition = False
         self.pending_state = None
-        self.pending_transition_anim = None
-        self.pending_transition_cfg = None
+        self.state.clear_pulses()

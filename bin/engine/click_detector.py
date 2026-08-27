@@ -1,13 +1,14 @@
 import time
 from PySide6.QtCore import QPointF
 
+from engine.state_machine import StateMachine
 from engine.enums import Flag, Pulse
 
 # helper function to detect clicks or holds on pet sprite
 class ClickDetector:
-    def __init__(self, pet):
+    def __init__(self, pet, state_machine: StateMachine):
         self.pet = pet
-        self.sm = pet.state_machine
+        self.sm = state_machine
 
         self.press_time = None
         self.press_pos = None
@@ -47,6 +48,9 @@ class ClickDetector:
             self.sm.raise_flag(Flag.DRAGGING)
 
     def release(self):
+        """
+        Returns true if detected click
+        """
         self.sm.remove_flag(Flag.DRAGGING)
 
         if self.press_time is None:
@@ -68,5 +72,5 @@ class ClickDetector:
 
         if duration <= self.click_time:
             self.sm.pulse(Pulse.CLICK)
-            self.pet.variables.add("times_clicked_this_state", 1)
             # print("CLICK")
+            return True
