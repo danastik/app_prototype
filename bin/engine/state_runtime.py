@@ -1,5 +1,6 @@
 import random
 from engine.enums import Flag, Pulse
+from engine.variable_manager import VariableManager
 from collections import namedtuple
 
 from engine.state_commands import *
@@ -9,12 +10,12 @@ TransitionData = namedtuple("TransitionData", "next_state, transition_animation,
 
 
 class StateRuntime:
-    def __init__(self, pet, current_state_name, config, all_configs, variables):
+    def __init__(self, pet, current_state_name, config, all_configs, variable_manager: VariableManager):
         self.pet = pet
         self.current_state_name = current_state_name
         self.current_state_cfg = config
         self.all_configs = all_configs
-        self.variables = variables
+        self.variable_manager = variable_manager
 
         # getting all force transitions in a dictionary for ease of use
         self.all_forced_transitions = {}
@@ -26,8 +27,8 @@ class StateRuntime:
             for t in force_transitions_to_state:
                 self.all_forced_transitions.setdefault(state, []).append(t)
 
-        self.flags = set()
-        self.pulses = set()
+        self.flags = set(Flag)
+        self.pulses = set(Pulse)
 
         self.visible_apps = set()
         self.active_apps = set()
@@ -88,8 +89,8 @@ class StateRuntime:
         var_cmds = self._get_variable_cmds(state_cfg, "variables_on_enter")
         commands += var_cmds
 
-        flag_cmds = self._get_flag_cmds(state_cfg, "flags_on_enter")
-        commands += flag_cmds
+        bool_cmds = self._get_bool_cmds(state_cfg, "bools_on_enter")
+        commands += bool_cmds
 
         particle_cmds = self._get_particle_cmds(state_cfg, "particles_on_enter")
         commands += particle_cmds
@@ -105,8 +106,8 @@ class StateRuntime:
         var_cmds = self._get_variable_cmds(transition_cfg, "variables_on_transition")
         commands += var_cmds
 
-        flag_cmds = self._get_flag_cmds(transition_cfg, "flags_on_transition")
-        commands += flag_cmds
+        bool_cmds = self._get_bool_cmds(transition_cfg, "bools_on_transition")
+        commands += bool_cmds
 
         particle_cmds = self._get_particle_cmds(transition_cfg, "particles_on_transition")
         commands += particle_cmds
@@ -125,10 +126,10 @@ class StateRuntime:
                 cmd = self._var_cmd(var)
                 if cmd:commands.append(cmd)
 
-        flag_commands = config.get("conditional_flags", [])
-        for flag in flag_commands:
-            if self._check_all_conditions(flag):
-                cmd = self._flag_cmd(flag)
+        bool_commands = config.get("conditional_bools", [])
+        for bool in bool_commands:
+            if self._check_all_conditions(bool):
+                cmd = self._bool_cmd(bool)
                 if cmd:commands.append(cmd)
 
         particle_commands = config.get("conditional_particles", [])
@@ -152,8 +153,8 @@ class StateRuntime:
         var_cmds = self._get_variable_cmds(state_cfg, "variables_on_exit")
         commands += var_cmds
 
-        flag_cmds = self._get_flag_cmds(state_cfg, "flags_on_exit")
-        commands += flag_cmds
+        bool_cmds = self._get_bool_cmds(state_cfg, "bools_on_exit")
+        commands += bool_cmds
 
         particle_cmds = self._get_particle_cmds(state_cfg, "particles_on_exit")
         commands += particle_cmds
@@ -185,17 +186,17 @@ class StateRuntime:
 
         return(cmds)
     
-    def _get_flag_cmds(self, cfg: dict, runtime_type: str) -> list[FlagCommand]:
-        flags = cfg.get(runtime_type)
-        if not flags: return []
+    def _get_bool_cmds(self, cfg: dict, runtime_type: str) -> list[BoolCommand]:
+        bools = cfg.get(runtime_type)
+        if not bools: return []
 
         cmds = []
-        if isinstance(flags, list):
-            for flag_cmd in flags:
-                cmd = self._flag_cmd(flag_cmd)
+        if isinstance(bools, list):
+            for bool_cmd in bools:
+                cmd = self._bool_cmd(bool_cmd)
                 if cmd: cmds.append(cmd)
         else:
-            cmd = self._flag_cmd(flags)
+            cmd = self._bool_cmd(bools)
             if cmd: cmds.append(cmd)
 
         return(cmds)
@@ -239,12 +240,11 @@ class StateRuntime:
             value = cmd["value"]
             return VariableCommand(name, op, value)
 
-    def _flag_cmd(self, cmd) -> FlagCommand | None:
-        if "set_flag" in cmd:
-            return FlagCommand(cmd["set_flag"], "set_flag")
-
-        elif "clear_flag" in cmd:
-            return FlagCommand(cmd["clear_flag"], "clear_flag")
+    def _bool_cmd(self, cmd) -> BoolCommand | None:
+        if "set_bool" in cmd:
+            name = cmd["set_bool"]
+            value = cmd["value"]
+            return BoolCommand(name, value)
 
     def _particle_cmd(self, particle_cmd, constant = False) -> ParticleCommand | None:
         if "emit" in particle_cmd:
@@ -285,13 +285,16 @@ class StateRuntime:
             return Pulse.__members__.get(cond["pulse"]) in self.pulses
 
         if "var" in cond:
-            val = self.variables.get(cond["var"])
+            val = self.variable_manager.get_var(cond["var"])
             match cond["op"]:
                 case "<": return val < cond["value"]
                 case ">": return val > cond["value"]
                 case "==": return val == cond["value"]
                 case "<=": return val <= cond["value"]
                 case ">=": return val >= cond["value"]
+
+        if "bool" in cond:
+            return self.variable_manager.get_bool(cond["bool"])
 
         if "app" in cond:
             # print("checking condition:", cond, "its", cond["app"] in self.visible_apps)
@@ -310,12 +313,12 @@ class StateRuntime:
         self.current_state_name = next_state
         self.current_state_cfg = self.all_configs[next_state]
         self._get_commands_on_enter(self.current_state_cfg)
-        self.variables.reset("times_clicked_this_state")
-        self.variables.reset("time_spent_in_this_state")
+        self.variable_manager.reset_var("times_clicked_this_state")
+        self.variable_manager.reset_var("time_spent_in_this_state")
         self.remove_flag(Flag.ANIMATION_FINISHED)
         self.remove_flag(Flag.MOVEMENT_FINISHED)
 
-    def handle_global_events(self) -> tuple:
+    def handle_global_events(self) -> tuple[TransitionData | None, list]:
         """
         Checks if forced transitions apply in any of the states.
         Returns a tuple(next state's name, transition_animation, transition_animation_config)
@@ -344,9 +347,9 @@ class StateRuntime:
                     
                     return trans_data, commands
             
-        return None, None
+        return None, []
 
-    def handle_events(self) -> tuple:
+    def handle_events(self) -> tuple[TransitionData | None, list]:
         # print(f"state_runtime: handling events: Flags: ", self.flags, " Pulses: ", self.pulses)
         commands = []
 
@@ -383,7 +386,7 @@ class StateRuntime:
 
             return trans_data, commands
         
-        return None, None
+        return None, []
 
         
         

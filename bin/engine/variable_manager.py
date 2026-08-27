@@ -1,9 +1,14 @@
 from engine.logger import debug_logger as debug_log
 
 class VariableManager:
+    """
+    Docstring for VariableManager
+    """
     def __init__(self, variables):
-        self.values = {}
-        self.rates = {}
+        self.values: dict[str, float] = {}
+        self.rates: dict[str, float] = {}
+
+        self.bools: dict[str, bool] = {}
 
         config = variables
 
@@ -21,16 +26,26 @@ class VariableManager:
         for name, rate in self.rates.items():
             self.values[name] += rate * dt
 
-    def get(self, name):
+
+    # variables
+    def get_var(self, name) -> float:
         return self.values.get(name, 0.0)
 
-    def set(self, name, value):
+    def set_var(self, name, value: float):
         debug_log.debug(f"[Variables] Setting {name} = {value} (previous value: {self.values[name]})")
         self.values[name] = float(value)
 
-    def reset(self, name):
+    def reset_var(self, name):
         self.values[name] = 0
 
-    def add(self, name, delta):
+    def add_var(self, name, delta: float):
         debug_log.debug(f"[Variables] Adding {name} += {delta} (previous value: {self.values[name]})")
         self.values[name] += delta
+
+
+    def get_bool(self, flag) -> bool:
+        return self.bools.get(flag, False)
+
+    def set_bool(self, name, value):
+        debug_log.debug(f"[Variables] Raising flag {name} (previous value: {self.bools[name]}")
+        self.bools[name] = value

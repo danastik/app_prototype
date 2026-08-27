@@ -5,11 +5,11 @@ from engine.enums import Flag, Pulse
 from engine.logger import debug_logger as debug_log
 
 class StateMachine:
-    def __init__(self, pet, CONFIG, initial):
+    def __init__(self, pet, CONFIG, initial, variable_manager):
         self.pet = pet
         self.STATE_CONFIG = CONFIG
-        self.state = StateRuntime(pet = pet, current_state_name=initial, config=CONFIG[initial], all_configs=CONFIG, variables=self.pet.variables)   # created instance of runtime and then changed
-        self.change(initial)
+        self.state = StateRuntime(pet = pet, current_state_name=initial, config=CONFIG[initial], all_configs=CONFIG, variable_manager=variable_manager)
+        self.state.enter_state(initial)
         self.in_transition = False
 
         # for pending states
@@ -33,26 +33,25 @@ class StateMachine:
     def update_apps(self, app_state):
         self.state.update_apps(app_state)
 
-    def update(self, dt):
-        result: TransitionData
+    def update(self, dt) -> tuple[TransitionData | None, list]:
+        result: TransitionData | None
         commands: list
 
         result, commands = self.state.handle_global_events()
         # print("state_machine update", result)
 
         if not result and not self.in_transition:
-            result, commands = self.state.handle_events()  # sends event to state_runtime.py expecting (next_state, animation_name, config_dictionary[])
-
+            result, commands = self.state.handle_events()
 
         # TRANSITION LOGIC
-        if result:
-            next_state, transition_anim, anim_cfg = result
+        # if result:
+        #     next_state, transition_anim, anim_cfg = result
 
-            if transition_anim:
-                self.queue_transition(next_state, transition_anim, anim_cfg) # queueing transition until transition anim is finished
-            else:
-                self.queue_transition(next_state, None, None)
-                self.apply_pending_changes()    # immediately executing transition
+        #     if transition_anim:
+        #         self.queue_transition(next_state, transition_anim, anim_cfg) # queueing transition until transition anim is finished
+        #     else:
+        #         self.queue_transition(next_state, None, None)
+        #         self.apply_pending_changes()    # immediately executing transition
 
         # print("state machine. result:", result)
         # print("state_machine next state is: ", next_state)
@@ -63,29 +62,17 @@ class StateMachine:
 
         
     def queue_transition(self, next_state, anim, cfg):      
-        self.pet.on_state_exit(self.state.current_state_name)
         self.state.get_commands_on_exit(self.STATE_CONFIG[self.state.current_state_name])
-
         self.pending_state = next_state
-        self.pending_transition_anim = anim
-        self.pending_transition_cfg = cfg
-        self.in_transition = True
-
-        if self.pending_transition_anim:
-            # print("state_machine: animation queued")
-            self.pet.play_animation(
-                self.pending_transition_anim,
-                cfg=self.pending_transition_cfg,
-                isTransitionAnimation=True)
-        
+        self.in_transition = True        
 
     def apply_pending_changes(self):
         if not self.pending_state:
             return
         
-        self.state.clear_pulses() #just in case any pulses arent cleared too fast
+        # self.state.clear_pulses() #just in case any pulses arent cleared too fast
 
-        self.change(self.pending_state)
+        self.state.enter_state(self.pending_state)
         # print("state_machine: pending changes applied")
 
         # Cleanup
@@ -93,7 +80,3 @@ class StateMachine:
         self.pending_state = None
         self.pending_transition_anim = None
         self.pending_transition_cfg = None
-  
-    def change(self, next_state): #changes the state, updates state_runtime, calls on_state_enter in pet.py
-        self.state.enter_state(next_state)
-        self.pet.on_state_enter(next_state)

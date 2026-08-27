@@ -21,6 +21,8 @@ from engine.variable_manager import VariableManager
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.audio_engine import AudioEngine
 
+from engine.state_commands import *
+
 from engine.logger import app_logger as log
 from engine.logger import debug_logger as debug_log
 
@@ -138,7 +140,7 @@ class Pet(QWidget): # main logic
             print(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
             log.info(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
     
-        self.variables = VariableManager(VARIABLES)
+        self.variable_manager = VariableManager(VARIABLES)
 
         self.animator = Animator(self)
         self.prev_index = None
@@ -200,7 +202,7 @@ class Pet(QWidget): # main logic
         frame = self.animations[anim_name]["frames"][0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
-        self.state_machine = StateMachine(pet=self, CONFIG=self.STATES, initial=initial_state) # set initial state
+        self.state_machine = StateMachine(pet=self, CONFIG=self.STATES, initial=initial_state, variable_manager=self.variable_manager) # set initial state
         self.click_detector = ClickDetector(pet=self)
 
         print("---LOADING SUCCESSFUL---\n")
@@ -266,10 +268,31 @@ class Pet(QWidget): # main logic
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         self.play_animation(anim_name=anim_name, cfg=cfg)
 
-       
+    def _process_commands(self, commands: list):
+        for cmd in commands:
+            match cmd:
+                case VariableCommand(name=name, op=op, value=value):
+                    if op == "+=":
+                        self.variable_manager.add_var(name, value) 
+                    elif op == "-=": 
+                        self.variable_manager.add_var(name, -value)
+                    elif op == "=":
+                        self.variable_manager.set_var(name, value)
+                case BoolCommand(name=name, value=value):
+                    self.variable_manager.set_bool(name, value)
+                case ParticleCommand(name=name, constant=constant):
+                    self.particle_engine.raise_()
+                    self.particle_engine.start_emitting(name, constant)
+                case AudioCommand(name=name, volume=volume, speed=speed):
+                    self.audio_engine.play( name, volume=volume, speed=speed )
+        
+    
+
+    
     def on_state_exit(self, state): # called in state_machine when exiting a state
         # cfg = self.STATES[state]
         # print("exiting state", state)
+        self.particle_engine.clear_constant_emitters()
         debug_log.info(f"Exiting state {state}")
         
 
@@ -373,7 +396,7 @@ class Pet(QWidget): # main logic
                 self._clear_parent_window()
     
         self.click_detector.update()
-        self.variables.update(dt)
+        self.variable_manager.update(dt)
 
         t1 = time.perf_counter()
     
@@ -430,7 +453,21 @@ class Pet(QWidget): # main logic
         # print("facing is", self.facing)
         t5 = time.perf_counter()
 
-        self.state_machine.update(dt)
+        transition_data, commands = self.state_machine.update(dt)
+        if transition_data:
+            self.on_state_exit(self.current_state)
+
+            next_state, transition_anim, transition_anim_cfg = transition_data
+
+            if transition_anim:
+                self.state_machine.queue_transition(next_state, transition_anim, transition_anim_cfg) # queueing transition until transition anim is finished
+                self.play_animation(transition_anim, transition_anim_cfg, isTransitionAnimation=True)
+            else:
+                self.state_machine.queue_transition(next_state, None, None)
+                self.state_machine.apply_pending_changes()    # immediately executing transition
+
+        self._process_commands(commands)
+        
         t6 = time.perf_counter()
 
         # --- SYNC PHASE ---

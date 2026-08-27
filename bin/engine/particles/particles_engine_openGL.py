@@ -84,7 +84,8 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         self.scale = 1
 
-        self.emitters = []
+        self.emitters: list[ParticleEmitter] = []
+        self.constant_emitters: list[ParticleEmitter] = []
 
         self.emitters_by_type = defaultdict(int)
         self.particles_by_type = defaultdict(int)
@@ -263,6 +264,11 @@ class ParticleOverlayWidget(QOpenGLWidget):
     def update_taskbar_position(self, taskbar):
         self.taskbar = taskbar
 
+    def clear_constant_emitters(self):
+        for emitter in self.constant_emitters:
+            emitter.done_emitting = True
+            
+        self.constant_emitters.clear()
 
     def start_emitting(self, name, constant):
         """
@@ -291,6 +297,9 @@ class ParticleOverlayWidget(QOpenGLWidget):
         # print(f"Adding emitter:\n   Name: {name}, \n   cfg: {cfg}")
 
         new_emitter = ParticleEmitter(particleSystem=self, name=name, cfg=cfg, hitbox_width=self.pet_hitbox_w, hitbox_height=self.pet_hitbox_h)
+
+        if constant:
+            self.constant_emitters.append(new_emitter)
 
         self.emitters.append(new_emitter)
 

@@ -43,7 +43,6 @@ class EmitterType(Enum):
     BURST = auto()
     CONTINUOUS = auto()
 
-
 class EmitterShape(Enum):
     DOT = auto()
     LINE = auto()
