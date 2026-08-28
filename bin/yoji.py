@@ -67,6 +67,7 @@ class MainWindow(QWidget):
                 log.error(f"Could not open a .yoji file.\n{e}")
                 self._show_warning_message("Could not open a .yoji file", f"{e}")
 
+        self.settings: dict = {}
         self._load_settings()
 
         self.register_yoji_format()
@@ -194,6 +195,9 @@ class MainWindow(QWidget):
         self.view_logs_button.setVisible(False)
 
         self.debug_checkbox = QCheckBox("debug mode")
+        if self.settings["debug_mode"]:
+            self.debug_checkbox.setChecked(True)
+            self.view_logs_button.setVisible(True)
         self.debug_checkbox.toggled.connect(self.view_logs_button.setVisible)
         call_box_layout.addWidget(self.debug_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
 
@@ -257,18 +261,24 @@ class MainWindow(QWidget):
         dialog.setText("What would you like to open?")
 
         archive_button = dialog.addButton(
-            "Archive",
-            QMessageBox.ButtonRole.AcceptRole
-        )
-        directory_button = dialog.addButton(
-            "Directory",
-            QMessageBox.ButtonRole.AcceptRole
-        )
-        dialog.addButton(
-            "Cancel",
-            QMessageBox.ButtonRole.RejectRole
-        )
+            "File",
+            QMessageBox.ButtonRole.AcceptRole)
+        archive_button.setIcon(QIcon("icons/icon.png"))
+        archive_button.setObjectName("browse-file-btn")
 
+        directory_button = dialog.addButton(
+            "Folder",
+            QMessageBox.ButtonRole.AcceptRole)
+        directory_button.setIcon(QIcon("icons/file.png"))
+        directory_button.setObjectName("browse-directory-btn")
+
+        cancel_button = dialog.addButton(
+            "Cancel",
+            QMessageBox.ButtonRole.RejectRole)
+        cancel_button.setObjectName("browse-cancel-btn")
+
+
+        dialog.setStyleSheet(self.styleSheet())
         dialog.exec()
 
         library_dir = root / "library"
@@ -394,6 +404,7 @@ class MainWindow(QWidget):
         self._cleanup_temp_archive()
         self.settings["size_w"] = self.width()
         self.settings["size_h"] = self.height()
+        self.settings["debug_mode"] = self.debug_checkbox.isChecked()
         self._save_settings()
         log.info(f"Application closing\n")
 
@@ -452,21 +463,45 @@ class MainWindow(QWidget):
 
 
     def _load_settings(self):
-        log.info(f"Loading settings...")
+        log.info("Loading settings...")
+
         self.settings_file = settings_path
+
         default_settings = {
             "last_path": "",
             "theme": "light",
             "size_w": 500,
             "size_h": 400,
+            "debug_mode": False,
         }
 
-        if not os.path.exists(self.settings_file):
-            with open(self.settings_file, "w", encoding="utf-8") as f:
-                json.dump(default_settings, f, indent=4)
+        expected_types = {
+            "last_path": str,
+            "theme": str,
+            "size_w": int,
+            "size_h": int,
+            "debug_mode": bool,
+        }
 
-        with open(self.settings_file, "r", encoding="utf-8") as f:
-            self.settings = json.load(f)
+        try:
+            with open(self.settings_file, "r", encoding="utf-8") as f:
+                self.settings = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            log.warning("settings.json file missing or invalid. Using defaults.")
+            self.settings = default_settings.copy()
+
+        # Add any settings that are missing
+        for key, default_value in default_settings.items():
+            self.settings.setdefault(key, default_value)
+
+        # Using default settings if its not of expected type
+        for key, expected_type in expected_types.items():
+            if not isinstance(self.settings[key], expected_type):
+                self.settings[key] = default_settings[key]
+
+        # Save the repaired/default settings
+        with open(self.settings_file, "w", encoding="utf-8") as f:
+            json.dump(self.settings, f, indent=4)
 
         self.resize(self.settings.get("size_w", 500), self.settings.get("size_h", 400))
 
@@ -581,6 +616,7 @@ class MainWindow(QWidget):
         log.info("---Recalling pet---\n")
         self.pet_active = False
         if self.pet:
+            self.pet.recall()
             self.pet.close()
             self.pet.deleteLater()
         self.pet = None
@@ -606,6 +642,6 @@ if __name__ == "__main__":
     window.show()
     window.raise_()
 
-    sys.exit(app.exec())
+    app.aboutToQuit.connect(window.about_to_quit)
 
-    QApplication.instance().aboutToQuit.connect(window.about_to_quit)
+    sys.exit(app.exec())

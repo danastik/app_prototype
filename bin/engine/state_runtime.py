@@ -103,7 +103,7 @@ class StateRuntime:
         audio_cmds = self._get_audio_cmds(state_cfg, "audio_on_enter")
         commands += audio_cmds
 
-        print("_get_commands_on_enter", commands)
+        # print("_get_commands_on_enter", commands)
 
         return commands
 

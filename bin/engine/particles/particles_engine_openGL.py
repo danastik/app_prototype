@@ -287,6 +287,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
             debug_log.error(f"Particle {name} not found in particles.json")
             raise Exception("Particle", name, "not found in particles.json")
         
+        # print("ADDING AN EMITTER", name, constant)
 
         # making the emitter continuous
         if constant:
@@ -300,7 +301,7 @@ class ParticleOverlayWidget(QOpenGLWidget):
 
         if constant:
             self.constant_emitters.append(new_emitter)
-            print("particle engine: constant emitters", self.constant_emitters)
+            # print("particle engine: constant emitters", self.constant_emitters)
 
         self.emitters.append(new_emitter)
 
@@ -391,7 +392,10 @@ class ParticleOverlayWidget(QOpenGLWidget):
     def resizeGL(self, w, h):
         glViewport(0, 0, w, h)
         self.aspect = w / h
-
+    
+    def clear_screen(self):
+        self.count = 0
+        self.update()
 
     def paintGL(self):
         t0 = time.perf_counter()

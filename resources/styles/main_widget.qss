@@ -114,3 +114,19 @@ QPushButton#view_logs_button:hover {
 #call_button:pressed {
     background-color: #005A9E;
 }
+
+
+QPushButton#browse-file-btn {
+
+
+}
+
+QPushButton#browse-directory-btn {
+
+
+}
+
+QPushButton#browse-cancel-btn {
+
+
+}

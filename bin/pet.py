@@ -108,6 +108,10 @@ class Pet(QWidget): # main logic
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground)
 
+        self.current_state = None
+        self.previous_state = None
+        self.total_time_active = 0
+
         print("--- LOADING ANIMATIONS ---")
         log.info("---LOADING ANIMATIONS---")
         self.animations = {}
@@ -239,6 +243,7 @@ class Pet(QWidget): # main logic
                 log.error(msg)
                 raise ValueError(msg)
 
+
     def on_state_enter(self, state): # called in state_machine when entering a new state
         print("STATE:", state)
         self.current_state = state
@@ -250,24 +255,12 @@ class Pet(QWidget): # main logic
         next_behaviour = cfg.get("behaviour", "STATIONARY")
         self._resolve_behavior(next_behaviour, cfg)
 
-        audio_on_enter = cfg.get("audio_on_enter", [])
-        for audio in audio_on_enter:
-            sound_name = audio.get("play")
-
-            if sound_name:
-                self.audio_engine.play(
-                    sound_name,
-                    volume=audio.get("volume"),
-                    speed=audio.get("speed")
-                )
-
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         anim_name = cfg.get("animation")
         
         debug_log.info(f"--->")
         debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
 
-        # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         self.play_animation(anim_name=anim_name, cfg=cfg)
 
     def _process_commands(self, commands: list):
@@ -290,9 +283,12 @@ class Pet(QWidget): # main logic
                     self.audio_engine.play( name, volume=volume, speed=speed )
         
 
-    def on_state_exit(self, state): # called in state_machine when exiting a state
+    def on_state_exit(self, state): # triggered twice if transition animation exists
+        if state == self.previous_state:
+            return
+        self.previous_state = state
         # cfg = self.STATES[state]
-        print("exiting state", state)
+        # print("exiting state", state)
         self.particle_engine.clear_constant_emitters()
         debug_log.info(f"Exiting state {state}")
         
@@ -371,12 +367,12 @@ class Pet(QWidget): # main logic
 
         if isTransitionAnimation:
             loop = False
-            print("transition animation playing")
+            # print("transition animation playing")
 
         transit_txt = "transition " if isTransitionAnimation else ""
         debug_log.debug(f"Playing {transit_txt}animation: {anim_name}, Frame count: {len(frames)}, Loop: {loop}, Times to loop: {times_to_loop}, Holds: {holds}")
 
-        print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
+        # print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
         self.animator.set_animation(frames=frames, fps=fps, loop=loop, times_to_loop=times_to_loop, holds=holds)
 
     def update_apps(self, app_state):
@@ -385,6 +381,8 @@ class Pet(QWidget): # main logic
 
     def update_logic(self):  # UPDATE LOGIC
         dt = 1 / self.LOGIC_FPS
+
+        self.total_time_active += dt
 
         # if self.start_debugging:
         #     self.profiler.disable()
@@ -747,3 +745,8 @@ class Pet(QWidget): # main logic
         p.drawPixmap(-offset_x, -offset_y, frame)
 
         p.restore()
+
+    def recall(self):
+        self.particle_engine.clear_screen()
+        debug_log.info(f"Pet has been active for {self.total_time_active/60} minutes")
+        debug_log.info(f"Goodbye!")

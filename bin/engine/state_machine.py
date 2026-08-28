@@ -37,9 +37,9 @@ class StateMachine:
 
         if self.in_transition and self.state.has_flag(Flag.ANIMATION_FINISHED):  # return pending state if we are in transition and ANIMATION_FINISHED
             next_state = self.pending_state
-            self.apply_pending_transition()
-            print("SM return", next_state)
-            return TransitionData(next_state, None, None), []
+            cmds_on_transition = self.apply_pending_transition()
+            # print("SM return", next_state)
+            return TransitionData(next_state, None, None), cmds_on_transition
 
         result, commands = self.state.handle_global_events()
         # print("state_machine update", result)
@@ -64,8 +64,8 @@ class StateMachine:
         self.state.clear_pulses()
         self.remove_flag(Flag.ANIMATION_FINISHED)
 
-        for cmd in commands:
-            print(type(cmd))
+        # for cmd in commands:
+        #     print("cmd", type(cmd))
         return result, commands
 
         
