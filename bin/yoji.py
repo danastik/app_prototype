@@ -13,7 +13,7 @@ from engine.windows_detector import schedule_update as windows_detector_schedule
 from engine.logger import app_logger as log
 from engine.logger import debug_logger
 
-from PySide6.QtCore import Qt, QTimer, QEvent
+from PySide6.QtCore import Qt, QTimer, QEvent, QSize
 from PySide6.QtGui import QIcon, QPixmap, QFontDatabase, QFont
 
 from PySide6.QtWidgets import (
@@ -260,22 +260,31 @@ class MainWindow(QWidget):
         dialog.setWindowTitle("Open your Yoji")
         dialog.setText("What would you like to open?")
 
+        icon_size = 20
+
         archive_button = dialog.addButton(
             "File",
             QMessageBox.ButtonRole.AcceptRole)
-        archive_button.setIcon(QIcon("icons/icon.png"))
+        file_icon_path = root / "resources" / "icons" / "icon.png"
+        archive_button.setIcon(QIcon(QPixmap(str(file_icon_path))))
+        archive_button.setIconSize(QSize(icon_size, icon_size))
         archive_button.setObjectName("browse-file-btn")
+        archive_button.setProperty("class", "browse_btn")
 
         directory_button = dialog.addButton(
             "Folder",
             QMessageBox.ButtonRole.AcceptRole)
-        directory_button.setIcon(QIcon("icons/file.png"))
+        folder_icon_path = root / "resources" / "icons" / "folder.png"
+        directory_button.setIcon(QIcon(QPixmap(str(folder_icon_path))))
+        archive_button.setIconSize(QSize(icon_size, icon_size))
         directory_button.setObjectName("browse-directory-btn")
+        directory_button.setProperty("class", "browse_btn")
 
         cancel_button = dialog.addButton(
             "Cancel",
             QMessageBox.ButtonRole.RejectRole)
         cancel_button.setObjectName("browse-cancel-btn")
+        cancel_button.setProperty("class", "browse_btn")
 
 
         dialog.setStyleSheet(self.styleSheet())

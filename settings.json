@@ -3,5 +3,5 @@
     "theme": "light",
     "size_w": 777,
     "size_h": 388,
-    "debug_mode": false
+    "debug_mode": true
 }

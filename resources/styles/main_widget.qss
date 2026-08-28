@@ -116,17 +116,26 @@ QPushButton#view_logs_button:hover {
 }
 
 
-QPushButton#browse-file-btn {
-
-
+QPushButton[class=browse_btn] {
+    border-radius: 8px;
+    border-width: 0px;
+    min-height: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    background-color: #0078D7;
+    color: white;
+}
+QPushButton[class=browse_btn]:hover {
+    background-color: #2893FF;
 }
 
-QPushButton#browse-directory-btn {
-
-
+QPushButton[class=browse_btn]#browse-cancel-btn {
+    background-color: #6e89a0;
+    font-size: 11px;
 }
-
-QPushButton#browse-cancel-btn {
-
-
+QPushButton[class=browse_btn]#browse-cancel-btn:hover {
+    background-color: #95aabb;
 }
