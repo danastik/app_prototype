@@ -32,6 +32,20 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
+class App(QApplication):
+    def __init__(self, args):
+        super().__init__(args)
+        self.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.Type.ChildAdded:
+            child = event.child()
+
+            if isinstance(child, QPushButton):
+                child.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        return super().eventFilter(obj, event)
+
 root = Path(__file__).resolve().parents[1]
 
 icon_path = root / "resources" / "icons" / "icon.ico"
@@ -644,7 +658,7 @@ class MainWindow(QWidget):
                 self.temp_archive_path = None
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    app = App(sys.argv)
     app.setWindowIcon(QIcon(str(icon_path)))
 
     window = MainWindow()
