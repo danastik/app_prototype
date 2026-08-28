@@ -31,6 +31,7 @@ class StateMachine:
     def update_apps(self, app_state):
         self.state.update_apps(app_state)
 
+
     def update(self, dt) -> tuple[TransitionData | None, list]:
         result: TransitionData | None
         commands: list

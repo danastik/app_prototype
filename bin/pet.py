@@ -274,21 +274,23 @@ class Pet(QWidget): # main logic
                         self.variable_manager.add_var(name, -value)
                     elif op == "=":
                         self.variable_manager.set_var(name, value)
+
                 case BoolCommand(name=name, value=value):
                     self.variable_manager.set_bool(name, value)
+
                 case ParticleCommand(name=name, constant=constant):
                     self.particle_engine.raise_()
                     self.particle_engine.start_emitting(name, constant)
+
                 case AudioCommand(name=name, volume=volume, speed=speed):
                     self.audio_engine.play( name, volume=volume, speed=speed )
         
 
     def on_state_exit(self, state): # triggered twice if transition animation exists
         if state == self.previous_state:
+            debug_log.info(f"Transition animation ended ->")
             return
         self.previous_state = state
-        # cfg = self.STATES[state]
-        # print("exiting state", state)
         self.particle_engine.clear_constant_emitters()
         debug_log.info(f"Exiting state {state}")
         
@@ -457,7 +459,6 @@ class Pet(QWidget): # main logic
             self.on_state_exit(self.current_state)
 
             next_state, transition_anim, transition_anim_cfg = transition_data
-
             if transition_anim:
                 self.play_animation(transition_anim, transition_anim_cfg, isTransitionAnimation=True)
             else:

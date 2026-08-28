@@ -270,6 +270,7 @@ class MainWindow(QWidget):
 
 
     def browse_file(self):
+        if self.pet_active: return
         dialog = QMessageBox(self)
         dialog.setWindowTitle("Open your Yoji")
         dialog.setText("What would you like to open?")

@@ -47,11 +47,12 @@ class StateRuntime:
 
         self.flags.add(flag)
 
+    def has_flag(self, flag: Flag):
+        return flag in self.flags
+    
     def remove_flag(self, flag: Flag):
         self.flags.discard(flag)
 
-    def has_flag(self, flag: Flag):
-        return flag in self.flags
 
     # pulses
     def pulse(self, pulse: Pulse):
@@ -176,7 +177,6 @@ class StateRuntime:
         return commands
 
 
-
     # helpers per type
     def _get_variable_cmds(self, cfg: dict, runtime_type: str) -> list[VariableCommand]:
         variables = cfg.get(runtime_type)
@@ -256,12 +256,7 @@ class StateRuntime:
 
     def _particle_cmd(self, particle_cmd, constant = False) -> ParticleCommand | None:
         if "emit" in particle_cmd:
-            name = particle_cmd["emit"]
-            # self.pet.particle_engine.raise_()
-            # emitter = self.pet.particle_engine.start_emitting(name, constant)
-            # if constant:
-                # self.constant_emitters.append(emitter)
-            
+            name = particle_cmd["emit"]            
             print("particle cmd", name, constant)
             return ParticleCommand(name, constant)
         
