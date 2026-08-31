@@ -8,14 +8,12 @@ import sounddevice as sd
 import soundfile as sf
 
 
-# Максимальный размер файла, который постоянно хранится в RAM.
-# Например:
+# Max size of the file before its too big too store in RAM
 # 5 * 1024 * 1024 = 5 MB
 MAX_SIZE = 5 * 1024 * 1024
 
 
 class AudioEngine:
-
     def __init__(self, sounds, archive):
         self.active_sounds = []
         self.active_loops = {}
@@ -27,8 +25,6 @@ class AudioEngine:
 
         self.lock = threading.Lock()
 
-        # Звуки, которые в данный момент загружаются
-        # из архива в отдельном потоке.
         self.loading_sounds = set()
 
         # Audio device
@@ -48,10 +44,7 @@ class AudioEngine:
 
         self.stream.start()
 
-        # --------------------------------------------------
         # Loop worker
-        # --------------------------------------------------
-
         self.loop_thread = threading.Thread(
             target=self.loop_worker,
             daemon=True
@@ -120,11 +113,8 @@ class AudioEngine:
         resample_time = 0.0
 
         if sr != self.sample_rate:
-
             start = time.perf_counter()
-
             ratio = (self.sample_rate / sr)
-
             old = np.arange(len(samples), dtype=np.float32)
 
             new = np.arange(
@@ -155,7 +145,6 @@ class AudioEngine:
         return samples
 
     def load_all_sounds(self):
-
         for sound_name, cfg in (self.sounds_config.items()):
 
             # Проверяем вероятности вариантов
@@ -165,36 +154,23 @@ class AudioEngine:
                 in cfg["variants"]
             )
 
-            if not np.isclose(
-                probability_sum,
-                1.0,
-                atol=1e-6
-            ):
-
+            if not np.isclose(probability_sum, 1.0, atol=1e-6):
                 raise ValueError(f"{sound_name} probabilities must sum to 1.0")
 
             loaded_variants = []
 
-            # Загружаем варианты
+            # loading variants
             for filename, probability in (cfg["variants"]):
-
                 path = (f"assets/sounds/{filename}")
 
-                file_info = (
-                    self.archive.getinfo(path)
-                )
+                file_info = (self.archive.getinfo(path))
 
                 file_size = file_info.file_size
 
-                # --------------------------------------------------
-                # Маленький файл
-                # --------------------------------------------------
-
+                # small file
                 if file_size <= MAX_SIZE:
 
-                    samples = self._load_audio(
-                        path
-                    )
+                    samples = self._load_audio(path)
 
                     loaded_variants.append({
                         "type": "memory",
@@ -208,12 +184,8 @@ class AudioEngine:
                         f"({file_size / 1024:.1f} KB)"
                     )
 
-                # --------------------------------------------------
-                # Большой файл
-                # --------------------------------------------------
-
-                else:
-
+                # if a file is big
+                else: 
                     loaded_variants.append({
                         "type": "archive",
                         "path": path,
@@ -227,38 +199,21 @@ class AudioEngine:
                         f"({file_size / 1024 / 1024:.2f} MB)"
                     )
 
-            self.sounds[sound_name] = (
-                cfg |
-                {
-                    "variants": loaded_variants
-                }
-            )
-
-    # ======================================================
-    # Variant selection
-    # ======================================================
+            self.sounds[sound_name] = (cfg | {"variants": loaded_variants})
 
     def choose_variant(self, sound_name):
-
-        variants = (
-            self.sounds[sound_name]["variants"]
-        )
+        variants = (self.sounds[sound_name]["variants"])
 
         r = random.random()
         acc = 0.0
 
         for variant in variants:
-
             acc += variant["probability"]
 
             if r <= acc:
                 return variant
 
         return variants[-1]
-
-    # ======================================================
-    # Parameters
-    # ======================================================
 
     def _calculate_parameters(self, cfg, volume, speed):
         # Volume
@@ -304,13 +259,7 @@ class AudioEngine:
             samples
         ).astype(np.float32)
 
-    def _add_active_sound(
-        self,
-        sound_name,
-        samples,
-        volume
-    ):
-
+    def _add_active_sound(self, sound_name, samples, volume):
         with self.lock:
 
             self.active_sounds.append({
@@ -320,33 +269,12 @@ class AudioEngine:
                 "volume": volume
             })
 
-    def _play_instance(
-        self,
-        sound_name,
-        volume=None,
-        speed=None
-    ):
+    def _play_instance(self, sound_name, volume=None, speed=None):
+        cfg = self.sounds[sound_name]
+        variant = self.choose_variant(sound_name)
+        final_volume, final_speed = (self._calculate_parameters(cfg, volume, speed))
 
-        cfg = self.sounds[
-            sound_name
-        ]
-
-        variant = self.choose_variant(
-            sound_name
-        )
-
-        final_volume, final_speed = (
-            self._calculate_parameters(
-                cfg,
-                volume,
-                speed
-            )
-        )
-
-        # --------------------------------------------------
-        # Маленький звук
-        # --------------------------------------------------
-
+        # if small file
         if variant["type"] == "memory":
 
             samples = variant["samples"]
@@ -356,10 +284,7 @@ class AudioEngine:
             # изменённую версию.
             if final_speed != 1.0:
 
-                samples = self._change_speed(
-                    samples,
-                    final_speed
-                )
+                samples = self._change_speed(samples, final_speed)
 
             self._add_active_sound(
                 sound_name,
@@ -369,10 +294,7 @@ class AudioEngine:
 
             return
 
-        # --------------------------------------------------
-        # Большой звук
-        # --------------------------------------------------
-
+        # if big file
         with self.lock:
 
             # Если этот звук уже загружается,
@@ -380,9 +302,7 @@ class AudioEngine:
             if sound_name in self.loading_sounds:
                 return
 
-            self.loading_sounds.add(
-                sound_name
-            )
+            self.loading_sounds.add(sound_name)
 
         thread = threading.Thread(
             target=self._load_large_sound_async,
@@ -397,72 +317,31 @@ class AudioEngine:
 
         thread.start()
 
-    def _load_large_sound_async(
-        self,
-        sound_name,
-        variant,
-        volume,
-        speed
-    ):
+    def _load_large_sound_async(self, sound_name, variant, volume, speed):
         start_time = time.perf_counter()
 
         try:
-
             print(
                 f"[Audio] Loading large sound: "
                 f"name={sound_name}, "
                 f"file={variant['path']}"
             )
 
-            # --------------------------------------------
-            # Загрузка и декодирование WAV
-            # --------------------------------------------
-
             load_start = time.perf_counter()
-
-            samples = self._load_audio(
-                variant["path"]
-            )
-
-            load_time = (
-                time.perf_counter() -
-                load_start
-            )
-
-            # --------------------------------------------
-            # Изменение скорости
-            # --------------------------------------------
+            samples = self._load_audio(variant["path"])
+            load_time = (time.perf_counter() - load_start)
 
             speed_time = 0.0
 
             if speed != 1.0:
-
                 speed_start = time.perf_counter()
+                samples = self._change_speed(samples, speed)
+                speed_time = (time.perf_counter() - speed_start)
 
-                samples = self._change_speed(
-                    samples,
-                    speed
-                )
 
-                speed_time = (
-                    time.perf_counter() -
-                    speed_start
-                )
+            self._add_active_sound(sound_name, samples, volume)
 
-            # --------------------------------------------
-            # Добавляем готовый звук
-            # --------------------------------------------
-
-            self._add_active_sound(
-                sound_name,
-                samples,
-                volume
-            )
-
-            total_time = (
-                time.perf_counter() -
-                start_time
-            )
+            total_time = (time.perf_counter() - start_time)
 
             print(
                 f"[Audio] Ready: "
@@ -489,16 +368,11 @@ class AudioEngine:
             )
 
         finally:
-
             with self.lock:
-
-                self.loading_sounds.discard(
-                    sound_name
-                )
+                self.loading_sounds.discard(sound_name)
 
     # public methods
     def play(self, sound_name, volume=None, speed=None):
-
         cfg = self.sounds[sound_name]
 
         if cfg.get("loop", False):
@@ -516,11 +390,7 @@ class AudioEngine:
             return
 
         # Normal sound
-        self._play_instance(
-            sound_name,
-            volume,
-            speed
-        )
+        self._play_instance(sound_name, volume, speed)
 
     def stop(self, sound_name):
         with self.lock:
@@ -539,15 +409,12 @@ class AudioEngine:
     def loop_worker(self):
         while True:
             now = time.perf_counter()
-
             to_play = []
 
             with self.lock:
-
                 for (sound_name, loop_data) in list(self.active_loops.items()):
 
                     if now >= loop_data["next_play"]:
-
                         cfg = self.sounds[sound_name]
 
                         base_delay = cfg.get("loop_delay", 0.0)
@@ -576,11 +443,9 @@ class AudioEngine:
 
     # Audio callback
     def callback(self, outdata, frames, time_info, status):
-
         mix = np.zeros(frames, dtype=np.float32)
 
         with self.lock:
-
             alive = []
 
             for sound in self.active_sounds:
