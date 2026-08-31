@@ -34,7 +34,7 @@ class VariableManager:
         return self.values.get(name, 0.0)
 
     def set_var(self, name, value: float):
-        debug_log.debug(f"[Variables] Setting {name} = {value} (previous value: {self.values[name]})")
+        debug_log.debug(f"[Variables] Setting {name} = {value} (previous value: {self.values.get(name)})")
         self.values[name] = float(value)
 
     def reset_var(self, name):
@@ -55,5 +55,5 @@ class VariableManager:
         return self.bools.get(flag, False)
 
     def set_bool(self, name, value):
-        debug_log.debug(f"[Variables] Raising flag {name} (previous value: {self.bools[name]}")
+        debug_log.debug(f"[Variables] Raising flag {name} (previous value: {self.bools.get(name)}")
         self.bools[name] = value
