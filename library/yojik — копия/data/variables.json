@@ -1,7 +1,7 @@
 {
     "sleepiness": {
         "value": 0.0,
-        "rate": 30
+        "rate": 1
     },
     "sitting_still_timer": {
         "value": 0.0,
@@ -9,6 +9,10 @@
     },
     "worrying_meter": {
         "value": 0,
-        "rate": 2
+        "rate": 1
+    },
+    "want_tea": {
+        "value": 0,
+        "rate": 1
     }
 }

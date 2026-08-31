@@ -241,38 +241,55 @@ class StateRuntime:
 
     # lil command helpers
     def _var_cmd(self, cmd) -> VariableCommand | None:
-        if "var" in cmd:
-            name = cmd["var"]
-            op = cmd["op"]
-            value = cmd["value"]
-            print("var", name, op, value)
-            return VariableCommand(name, op, value)
+        if "var" not in cmd: return
+
+        name = cmd["var"]
+        op = cmd["op"]
+        value = cmd["value"]
+
+        if isinstance(value, dict):
+            if "randrange" in value:
+                args = value["randrange"]
+                value = random.randrange(args[0], args[1])
+
+            elif "randint" in value:
+                args = value["randint"]
+                value = random.randint(args[0], args[1])
+
+            elif "uniform" in value:
+                args = value["uniform"]
+                value = random.uniform(args[0], args[1])
+
+            else: 
+                debug_log.error(f"Unsupported fuction {value} for variable {name} in {self.current_state_name} config.")
+                raise ValueError(f"Unsupported fuction {value} for variable {name} in {self.current_state_name} config.")
+
+        print("var", name, op, float(value))
+        return VariableCommand(name, op, value)
 
     def _bool_cmd(self, cmd) -> BoolCommand | None:
-        if "set_bool" in cmd:
-            name = cmd["set_bool"]
-            value = cmd["value"]
-            return BoolCommand(name, value)
+        if "set_bool" not in cmd: return
+
+        name = cmd["set_bool"]
+        value = cmd["value"]
+        return BoolCommand(name, value)
 
     def _particle_cmd(self, particle_cmd, constant = False) -> ParticleCommand | None:
-        if "emit" in particle_cmd:
-            name = particle_cmd["emit"]            
-            print("particle cmd", name, constant)
-            return ParticleCommand(name, constant)
+        if "emit" not in particle_cmd: return
+
+        name = particle_cmd["emit"]            
+        print("particle cmd", name, constant)
+        return ParticleCommand(name, constant)
         
     def _audio_cmd(self, audio_cmd) -> AudioCommand | None:
-        if "play" in audio_cmd:
-            name = audio_cmd["play"]
+        if "play" not in audio_cmd: return
 
-            volume = audio_cmd.get("volume")
-            speed = audio_cmd.get("speed")
+        name = audio_cmd["play"]
 
-            # self.pet.audio_engine.play(
-            #     name,
-            #     volume=volume,
-            #     speed=speed
-            # )
-            return AudioCommand(name, volume, speed)
+        volume = audio_cmd.get("volume")
+        speed = audio_cmd.get("speed")
+
+        return AudioCommand(name, volume, speed)
 
 
     # transitions

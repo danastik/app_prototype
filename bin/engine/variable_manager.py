@@ -1,3 +1,5 @@
+import random
+
 from engine.logger import debug_logger as debug_log
 
 class VariableManager:
@@ -38,9 +40,15 @@ class VariableManager:
     def reset_var(self, name):
         self.values[name] = 0
 
-    def add_var(self, name, delta: float):
-        debug_log.debug(f"[Variables] Adding {name} += {delta} (previous value: {self.values[name]})")
-        self.values[name] += delta
+    def add_var(self, name, delta: float, substract = True):
+        value = delta
+
+        if substract: value = -value
+
+        operation_symbol = "-=" if substract else "+="
+
+        debug_log.debug(f"[Variables] {name} {operation_symbol} {value} (previous value: {self.values[name]})")
+        self.values[name] += value
 
 
     def get_bool(self, flag) -> bool:

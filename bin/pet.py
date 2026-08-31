@@ -271,7 +271,7 @@ class Pet(QWidget): # main logic
                     if op == "+=":
                         self.variable_manager.add_var(name, value) 
                     elif op == "-=": 
-                        self.variable_manager.add_var(name, -value)
+                        self.variable_manager.add_var(name, value, substract=True)
                     elif op == "=":
                         self.variable_manager.set_var(name, value)
 
