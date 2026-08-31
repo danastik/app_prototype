@@ -272,6 +272,14 @@ class StateRuntime:
 
         name = cmd["set_bool"]
         value = cmd["value"]
+
+        if isinstance(value, dict):
+            if "random" in value:
+                value = random.choice([True, False])
+            else: 
+                debug_log.error(f"Unsupported fuction {value} for boolean variable {name} in {self.current_state_name} config.")
+                raise ValueError(f"Unsupported fuction {value} for boolean variable {name} in {self.current_state_name} config.")
+
         return BoolCommand(name, value)
 
     def _particle_cmd(self, particle_cmd, constant = False) -> ParticleCommand | None:
@@ -317,6 +325,9 @@ class StateRuntime:
 
         if "bool" in cond:
             return self.variable_manager.get_bool(cond["bool"])
+        
+        if "not_bool" in cond:
+            return not self.variable_manager.get_bool(cond["bool"])
 
         if "app" in cond:
             # print("checking condition:", cond, "its", cond["app"] in self.visible_apps)
