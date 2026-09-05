@@ -282,8 +282,19 @@ class Pet(QWidget): # main logic
                     self.particle_engine.raise_()
                     self.particle_engine.start_emitting(name, constant)
 
-                case AudioCommand(name=name, volume=volume, speed=speed):
-                    self.audio_engine.play(name, volume=volume, speed=speed )
+                case AudioCommand(action=action, name=name, volume=volume, speed=speed):
+                    if action == "play":
+                        self.audio_engine.play(
+                            name,
+                            volume=volume,
+                            speed=speed
+                        )
+
+                    elif action == "kill":
+                        self.audio_engine.kill(name)
+
+                    elif action == "break_loop":
+                        self.audio_engine.break_loop(name)
         
 
     def on_state_exit(self, state): # triggered twice if transition animation exists

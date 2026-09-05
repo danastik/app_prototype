@@ -18,6 +18,7 @@ class ParticleCommand:
 
 @dataclass(slots=True)
 class AudioCommand:
+    action: str
     name: str
-    volume: float
-    speed: float
+    volume: float | None = None
+    speed: float | None = None

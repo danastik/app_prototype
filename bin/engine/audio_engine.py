@@ -392,7 +392,7 @@ class AudioEngine:
         # Normal sound
         self._play_instance(sound_name, volume, speed)
 
-    def stop(self, sound_name):
+    def break_loop(self, sound_name):
         with self.lock:
             self.active_loops.pop(sound_name, None)
 

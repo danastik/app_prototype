@@ -8,6 +8,8 @@ from engine.logger import debug_logger as debug_log
 
 TransitionData = namedtuple("TransitionData", "next_state, transition_animation, transition_animation_cfg")
 
+print("LOADED STATE_RUNTIME:", __file__)
+
 
 class StateRuntime:
     def __init__(self, pet, current_state_name, config, all_configs, variable_manager: VariableManager):
@@ -225,18 +227,22 @@ class StateRuntime:
     
     def _get_audio_cmds(self, cfg: dict, runtime_type: str) -> list[AudioCommand]:
         audio = cfg.get(runtime_type)
-        if not audio: return []
+        if not audio:
+            return []
 
         cmds = []
+
         if isinstance(audio, list):
             for au_cmd in audio:
                 cmd = self._audio_cmd(au_cmd)
-                if cmd: cmds.append(cmd)
+                if cmd:
+                    cmds.append(cmd)
         else:
             cmd = self._audio_cmd(audio)
-            if cmd: cmds.append(cmd)
+            if cmd:
+                cmds.append(cmd)
 
-        return(cmds)
+        return cmds
 
 
     # lil command helpers
@@ -290,15 +296,27 @@ class StateRuntime:
         return ParticleCommand(name, constant)
         
     def _audio_cmd(self, audio_cmd) -> AudioCommand | None:
-        if "play" not in audio_cmd: return
+        if "play" in audio_cmd:
+            return AudioCommand(
+                action="play",
+                name=audio_cmd["play"],
+                volume=audio_cmd.get("volume"),
+                speed=audio_cmd.get("speed")
+            )
 
-        name = audio_cmd["play"]
+        if "kill" in audio_cmd:
+            return AudioCommand(
+                action="kill",
+                name=audio_cmd["kill"]
+            )
+        
+        if "break_loop" in audio_cmd:
+            return AudioCommand(
+                action="break_loop",
+                name=audio_cmd["break_loop"]
+            )
 
-        volume = audio_cmd.get("volume")
-        speed = audio_cmd.get("speed")
-
-        return AudioCommand(name, volume, speed)
-
+        return None
 
     # transitions
     def _check_all_conditions(self, cfg):
