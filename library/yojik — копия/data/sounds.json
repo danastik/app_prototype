@@ -1,2 +1,40 @@
 {
+    "trap": {
+        "volume": 1.0,
+        "speed": 1.0,
+
+        "volume_variance": 0.0,
+        "speed_variance": 0.0,
+
+        "variants": [
+            ["trap.wav", 1.0]
+        ]
+    },
+
+    "snore": {
+        "volume": 0.5,
+        "speed": 1.0,
+
+        "volume_variance": 0.0,
+        "speed_variance": 0.0,
+
+        "loop": true,
+        "loop_delay": 5,
+
+        "variants": [
+            ["snore.wav", 1.0]
+        ]
+    },
+
+    "vine": {
+        "volume": 1.0,
+        "speed": 1.0,
+
+        "volume_variance": 3.0,
+        "speed_variance": 0.5,
+
+        "variants": [
+            ["vine.wav", 1.0]
+        ]
+    }
 }

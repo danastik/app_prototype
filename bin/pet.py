@@ -21,6 +21,8 @@ from engine.variable_manager import VariableManager
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.audio_engine import AudioEngine
 
+from engine.data_classes import AnimationData, AnimationVariant
+
 from engine.state_commands import *
 
 from engine.logger import app_logger as log
@@ -92,7 +94,7 @@ class Pet(QWidget): # main logic
         self.dicts_with_ints_as_keys = ["holds",] # dictionaries with this name will be converted from {"2": 2} to {2: 2}
 
         self.STATES = self._load_json(archive, "data/states.json", convert_int_keys=True)
-        self.ANIMATIONS = self._load_json(archive, "data/animations.json", convert_int_keys=True)
+        ANIMATIONS = self._load_json(archive, "data/animations.json", convert_int_keys=True)
         VARIABLES = self._load_json(archive, "data/variables.json")
         BEHAVIOURS = self._load_json(archive, "data/behaviours.json")
         ASSETS = self._load_json(archive, "data/particles/assets.json")
@@ -112,7 +114,7 @@ class Pet(QWidget): # main logic
         self.previous_state = None
         self.total_time_active = 0
 
-        self._load_animations(archive=archive)
+        self._load_animations(animations_json=ANIMATIONS, archive=archive)
     
         self.variable_manager = VariableManager(VARIABLES)
 
@@ -176,7 +178,7 @@ class Pet(QWidget): # main logic
         if anim_name not in self.animations:
             cfg = self.STATES[initial_state]      # gets the config for the state from states.py
             anim_name = cfg.get("animation")
-        frame = self.animations[anim_name]["frames"][0]
+        frame = self.animations[anim_name].frames[0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
         self.prev_index = None
@@ -192,19 +194,22 @@ class Pet(QWidget): # main logic
         self.timer.start(1000 // self.LOGIC_FPS)
 
 
-    def _load_animations(self, archive):
+    def _load_animations(self, animations_json, archive):
         log.info("---LOADING ANIMATIONS---")
         print("--- LOADING ANIMATIONS ---")
-        self.animations = {}
+        self.animations: dict[str, AnimationData] = {}
         max_bounds_w = 0
         max_bounds_h = 0
+        default_loop_option = self.RENDER_CONFIG.get("default_loop_option", False)
 
-        for animation_name in list(self.ANIMATIONS):
-            cfg = self.ANIMATIONS[animation_name]
-            folder = f"assets/animations/{cfg['folder']}"
+        for animation_name in list(animations_json):
+            cfg = animations_json[animation_name]
 
+            folder = f"assets/animations/{cfg.get("folder")}"
+            if not folder:
+                raise RuntimeError(f"No folder provided for animation {animation_name}")
+            
             frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=folder)
-
             if not frames:
                 raise RuntimeError(f"No frames found for animation '{animation_name}'")
             
@@ -212,14 +217,25 @@ class Pet(QWidget): # main logic
             self.max_bounds_w = max(max_bounds_w, bounds_w)
             self.max_bounds_h = max(max_bounds_h, bounds_h)
 
-            self.animations[animation_name] = {
-                "frames": frames,
-                "fps": cfg.get("fps", 12),
-                "loop": cfg.get("loop", False),
-                "holds": cfg.get("holds", {}),
-                "bounds": (bounds_w, bounds_h),
-                "times_to_loop": cfg.get("times_to_loop", 1),
-            }
+
+            variants: list[AnimationVariant] = []
+            # var_cfg = cfg.get("variants")
+            # if var_cfg:
+            #     for variant in cfg.get("variants"):
+            #         variants.append(variant)
+
+            anim_data = AnimationData(
+                frames=frames,
+                fps=cfg.get("fps", 12),
+                holds=cfg.get("holds", {}),
+                times_to_loop=cfg.get("times_to_loop", 1),
+                bounds=(bounds_w, bounds_h),
+                loop=cfg.get("loop", default_loop_option),
+                variants=variants,
+            )
+
+            self.animations[animation_name] = anim_data
+
             print(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")
             log.info(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")
 
@@ -355,18 +371,17 @@ class Pet(QWidget): # main logic
         self.mover.move_to(target_x, target_y, type)
 
     def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
-        if anim_name not in self.ANIMATIONS:
+        if anim_name not in self.animations:
             debug_log.error(f"{__name__}: Animation {anim_name} not found in animations.json")
             raise Exception(f"Animation {anim_name} not found in animations.json")
 
-        anim_cfg = self.ANIMATIONS[anim_name]
+        animations_cfg = self.animations[anim_name]
 
-        frames = self.animations[anim_name]["frames"]
-        fps = cfg.get("fps", anim_cfg.get("fps", 6)) # safestate, will default to the latter
-        loop_option = self.RENDER_CONFIG.get("default_loop_option", False)
-        loop = cfg.get("loop", anim_cfg.get("loop", loop_option)) # safestate, will default to the latter
-        times_to_loop = cfg.get("times_to_loop", anim_cfg.get("times_to_loop", 1))
-        holds = cfg.get("holds", anim_cfg.get("holds", {}))  # safestate, will default to empty directory
+        frames = self.animations[anim_name].frames
+        fps = cfg.get("fps", animations_cfg.fps)
+        loop = cfg.get("loop", animations_cfg.loop)
+        times_to_loop = cfg.get("times_to_loop", animations_cfg.times_to_loop)
+        holds = cfg.get("holds", animations_cfg.holds)
 
         # bounds_w, bounds_h = self.animations[anim_name]["bounds"]  # not used yet but its there if needed
 
@@ -641,7 +656,7 @@ class Pet(QWidget): # main logic
         percentage = self.RENDER_CONFIG["pet_size_on_screen"] / 100
         
         self.dpi_scale = self.devicePixelRatioF()
-        first_frame = self.animations[self.STATES[initial_state]["animation"]]["frames"][0]
+        first_frame = self.animations[self.STATES[initial_state]["animation"]].frames[0]
         self.pixel_ratio = (h * percentage) / first_frame.height() / self.dpi_scale
         print("screen height", h)
         print("first frame h:", first_frame.height())

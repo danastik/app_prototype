@@ -55,7 +55,6 @@ class AudioEngine:
 
     def _load_audio(self, path):
         total_start = time.perf_counter()
-
         start = time.perf_counter()
 
         with self.archive.open(path) as file:
@@ -66,14 +65,12 @@ class AudioEngine:
             data = file.read()
 
             read_time = (time.perf_counter() - start)
-
         print(
             f"[Audio] file.read(): "
             f"{path} | "
             f"{read_time * 1000:.2f} ms "
             f"({len(data) / 1024 / 1024:.2f} MB)"
         )
-
 
         start = time.perf_counter()
 
@@ -89,7 +86,6 @@ class AudioEngine:
             f"{path} | "
             f"{decode_time * 1000:.2f} ms"
         )
-
         # Stereo → Mono
         start = time.perf_counter()
 
@@ -100,7 +96,6 @@ class AudioEngine:
             samples,
             dtype=np.float32
         )
-
         mono_time = (time.perf_counter() - start)
 
         print(
@@ -131,7 +126,6 @@ class AudioEngine:
             ).astype(np.float32)
 
             resample_time = (time.perf_counter() - start)
-
             print(f"[Audio] Sample-rate conversion: "f"{resample_time * 1000:.2f} ms")
 
         total_time = (time.perf_counter() -total_start)
@@ -141,13 +135,10 @@ class AudioEngine:
             f"{path} | "
             f"{total_time * 1000:.2f} ms"
         )
-
         return samples
 
     def load_all_sounds(self):
         for sound_name, cfg in (self.sounds_config.items()):
-
-            # Проверяем вероятности вариантов
             probability_sum = sum(
                 probability
                 for _, probability
@@ -162,14 +153,11 @@ class AudioEngine:
             # loading variants
             for filename, probability in (cfg["variants"]):
                 path = (f"assets/sounds/{filename}")
-
                 file_info = (self.archive.getinfo(path))
-
                 file_size = file_info.file_size
 
                 # small file
                 if file_size <= MAX_SIZE:
-
                     samples = self._load_audio(path)
 
                     loaded_variants.append({
@@ -203,16 +191,13 @@ class AudioEngine:
 
     def choose_variant(self, sound_name):
         variants = (self.sounds[sound_name]["variants"])
-
         r = random.random()
         acc = 0.0
 
         for variant in variants:
             acc += variant["probability"]
-
             if r <= acc:
                 return variant
-
         return variants[-1]
 
     def _calculate_parameters(self, cfg, volume, speed):
