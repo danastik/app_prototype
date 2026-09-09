@@ -1,5 +1,5 @@
 # Main script with pet behavior: physics, drawing sprites, retrieving data
-import time
+import time, math, random
 from typing import Any
 from PySide6.QtWidgets import QApplication, QWidget
 from PySide6.QtGui import QPainter
@@ -78,7 +78,7 @@ class Pet(QWidget): # main logic
         config_path = "data/render_config.json"
         with archive.open(config_path) as f:
             try:
-                self.RENDER_CONFIG = json.load(f)
+                self.RENDER_CONFIG: dict = json.load(f)
                 self.LOGIC_FPS = self.RENDER_CONFIG.get("pet_logic_FPS", 30)
                 self.PARTICLE_LOGIC_FPS = self.RENDER_CONFIG.get("particles_logic_FPS", 30)
                 self.PARTICLE_DRAW_FPS = self.RENDER_CONFIG.get("particles_draw_FPS", 30)
@@ -154,7 +154,7 @@ class Pet(QWidget): # main logic
             sounds=SOUNDS,
             archive=archive)
         
-        initial_state = self.RENDER_CONFIG.get("default_state", next(iter(self.STATES))) #either get the "default" from the RENDER_CONFIG, or the first item in the self.STATES dictinary
+        initial_state = self.RENDER_CONFIG.get("default_state", next(iter(self.STATES))) #either get the "default_state" from the RENDER_CONFIG, or the first item in the self.STATES dictinary
         
         self.state_machine = StateMachine(pet=self, CONFIG=self.STATES, initial=initial_state, variable_manager=self.variable_manager) # set initial state
         self.click_detector = ClickDetector(pet=self, state_machine=self.state_machine)
@@ -177,7 +177,7 @@ class Pet(QWidget): # main logic
         anim_name = self.RENDER_CONFIG.get("hitbox_from_animation")
         if anim_name not in self.animations:
             cfg = self.STATES[initial_state]      # gets the config for the state from states.py
-            anim_name = cfg.get("animation")
+            anim_name = self._resolve_animation(cfg.get("animation", []))
         frame = self.animations[anim_name].frames[0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
@@ -188,11 +188,13 @@ class Pet(QWidget): # main logic
 
         debug_log.info("---Yoji loaded---\n")
 
-        # Timer for updating logic
+        self._start_qtimer()
+        
+
+    def _start_qtimer(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
-
 
     def _load_animations(self, animations_json, archive):
         log.info("---LOADING ANIMATIONS---")
@@ -206,12 +208,10 @@ class Pet(QWidget): # main logic
             cfg = animations_json[animation_name]
 
             folder = f"assets/animations/{cfg.get("folder")}"
-            if not folder:
-                raise RuntimeError(f"No folder provided for animation {animation_name}")
+            if not folder: raise RuntimeError(f"No folder provided for animation {animation_name}")
             
             frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=folder)
-            if not frames:
-                raise RuntimeError(f"No frames found for animation '{animation_name}'")
+            if not frames: raise RuntimeError(f"No frames found for animation '{animation_name}' in folder {folder}")
             
             bounds_w, bounds_h = scan_animation_bounds(frames)
             self.max_bounds_w = max(max_bounds_w, bounds_w)
@@ -221,8 +221,27 @@ class Pet(QWidget): # main logic
             variants: list[AnimationVariant] = []
             # var_cfg = cfg.get("variants")
             # if var_cfg:
-            #     for variant in cfg.get("variants"):
+            #     probability_sum = sum(
+            #         probability
+            #         for _, probability
+            #         in cfg["variants"]
+            #     )
+            #     if not math.isclose(probability_sum, 1, abs_tol=0.001):
+            #         raise ValueError(f"[ANIMATION]{animation_name} variants probabilities must sum to 1.0")
+                
+            #     for folder, probability in (cfg["variants"]):
+            #         path = (f"assets/animations/{folder}")
+            #         var_frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=path)
+
+            #         variant = AnimationVariant(
+            #             frames=var_frames,
+            #             weight=probability
+            #         )
+                
             #         variants.append(variant)
+
+            #         print(f"[ANIMATION] {animation_name} variants: {folder, probability}: {len(var_frames)} frames")
+            #         log.debug(f"[ANIMATION] {animation_name} variants: {folder, probability}: {len(var_frames)} frames")
 
             anim_data = AnimationData(
                 frames=frames,
@@ -237,7 +256,7 @@ class Pet(QWidget): # main logic
             self.animations[animation_name] = anim_data
 
             print(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")
-            log.info(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")
+            log.info(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")                
 
     def _load_json(self, archive: zipfile.ZipFile, path, convert_int_keys=False):
         with archive.open(path) as f:
@@ -268,18 +287,20 @@ class Pet(QWidget): # main logic
         # if self.parent_window_hwnd:
         #     # print(f"Position: {self.anchor.x}, {self.anchor.y}\nState: {self.current_state}\nParent window: {self.parent_window_hwnd}\nParent window position: {self.parent_window_rect_last}")
 
-        cfg = self.STATES[state]
+        cfg: dict = self.STATES[state]
 
         next_behaviour = cfg.get("behaviour", "STATIONARY")
         self._resolve_behavior(next_behaviour, cfg)
 
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
-        anim_name = cfg.get("animation")
+        next_anim = self._resolve_animation(cfg.get("animation", []))
+
+        print("next anim", next_anim)
         
         debug_log.info(f"--->")
-        debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {anim_name}")
+        debug_log.info(f"Entering state {state}, behaviour: {next_behaviour}, animation: {next_anim}")
 
-        self.play_animation(anim_name=anim_name, cfg=cfg)
+        self.play_animation(anim_name=next_anim, cfg=cfg)
 
     def _process_commands(self, commands: list):
         # print("Processing commands", commands)
@@ -303,7 +324,6 @@ class Pet(QWidget): # main logic
                 case AudioCommand(name=name, volume=volume, speed=speed):
                     self.audio_engine.play(name, volume=volume, speed=speed )
         
-
     def on_state_exit(self, state): # triggered twice if transition animation exists
         if state == self.previous_state:
             debug_log.info(f"Transition animation ended ->")
@@ -370,7 +390,28 @@ class Pet(QWidget): # main logic
         # print("on state change", end="")
         self.mover.move_to(target_x, target_y, type)
 
-    def play_animation(self, anim_name, cfg, isTransitionAnimation = False):
+    def _resolve_animation(self, animation_cfg: str | list[list]) -> str:
+        if isinstance(animation_cfg, str):
+            return animation_cfg
+
+        probability_sum = sum(
+                probability
+                for _, probability
+                in animation_cfg
+            )
+        if not math.isclose(probability_sum, 1, abs_tol=0.001):
+            raise ValueError(f"[ANIMATION]{self.current_state} animation variants probabilities must sum to 1.0")
+        
+        r = random.random()
+        acc = 0.0
+        for animation, probability in animation_cfg:
+            acc += probability
+            if r <= acc:
+                return animation
+            
+        return animation_cfg[-1][0]
+
+    def play_animation(self, anim_name: str, cfg: dict, isTransitionAnimation = False):
         if anim_name not in self.animations:
             debug_log.error(f"{__name__}: Animation {anim_name} not found in animations.json")
             raise Exception(f"Animation {anim_name} not found in animations.json")
@@ -394,6 +435,7 @@ class Pet(QWidget): # main logic
 
         # print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
         self.animator.set_animation(frames=frames, fps=fps, loop=loop, times_to_loop=times_to_loop, holds=holds)
+
 
     def update_apps(self, app_state):
         self.state_machine.update_apps(app_state)
@@ -656,7 +698,9 @@ class Pet(QWidget): # main logic
         percentage = self.RENDER_CONFIG["pet_size_on_screen"] / 100
         
         self.dpi_scale = self.devicePixelRatioF()
-        first_frame = self.animations[self.STATES[initial_state]["animation"]].frames[0]
+        first_animation_cfg = self.STATES[initial_state]["animation"]
+        first_animation = self._resolve_animation(first_animation_cfg)
+        first_frame = self.animations[first_animation].frames[0]
         self.pixel_ratio = (h * percentage) / first_frame.height() / self.dpi_scale
         print("screen height", h)
         print("first frame h:", first_frame.height())

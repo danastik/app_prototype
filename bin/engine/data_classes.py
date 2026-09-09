@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
+from PySide6.QtGui import QPixmap
 
 @dataclass(slots=True)
 class AnimationVariant:
-    frames: list
+    frames: list[QPixmap]
     weight: float
 
 @dataclass(slots=True)
 class AnimationData:
-    frames: list
+    frames: list[QPixmap]
     fps: int = 12
     holds: dict = field(default_factory=dict)
     times_to_loop: int = 1

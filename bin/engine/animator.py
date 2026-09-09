@@ -13,7 +13,7 @@ class Animator:  # contains different animation functions
         self.pet = pet
         self.sm = state_machine
 
-    def set_animation(self, frames, fps, loop, times_to_loop, holds = {}):
+    def set_animation(self, frames: list, fps: int, loop: bool, times_to_loop: int, holds: dict = {}):
         """
         Sets the animation up
         

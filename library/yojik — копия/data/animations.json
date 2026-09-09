@@ -2,12 +2,7 @@
     "idle": {
         "folder": "idle",
         "fps": 6,
-        "loop": true,
-
-        "variants": [
-            ["idle", 0.2],
-            ["roll", 0.8]
-        ]
+        "loop": true
     },
 
     "blink": {
