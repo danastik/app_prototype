@@ -7,13 +7,13 @@ from OpenGL.GL import * #type: ignore
 class AssetLoader:
 
     @staticmethod
-    def load_QPixmap_frames(archive: zipfile.ZipFile, folder):  # function for loading frames, recieves a string path to a folder, returns a list of png files( converted to PixMap ) in name order
+    def load_QPixmap_frames(archive: zipfile.ZipFile, folder) -> list[QPixmap]:  # function for loading frames, recieves a string path to a folder, returns a list of png files( converted to PixMap ) in name order
         """
         Returns a list of QPixmap files taken from .png files from the provided folder.
         
         :param folder: Path to the folder. (not from base)
         """
-        frames = []
+        frames: list[QPixmap] = []
 
         files = sorted(
             name for name in archive.namelist()

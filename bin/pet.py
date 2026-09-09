@@ -112,37 +112,7 @@ class Pet(QWidget): # main logic
         self.previous_state = None
         self.total_time_active = 0
 
-        print("--- LOADING ANIMATIONS ---")
-        log.info("---LOADING ANIMATIONS---")
-        self.animations = {}
-        max_bounds_w = 0
-        max_bounds_h = 0
-
-        for name in list(self.ANIMATIONS):
-            cfg = self.ANIMATIONS[name]
-            folder = f"assets/animations/{cfg['folder']}"
-
-            frames = []
-
-            frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=folder)
-
-            if not frames:
-                raise RuntimeError(f"No frames found for animation '{name}'")
-            
-            bounds_w, bounds_h = scan_animation_bounds(frames)
-            max_bounds_w = max(max_bounds_w, bounds_w)
-            max_bounds_h = max(max_bounds_h, bounds_h)
-
-            self.animations[name] = {
-                "frames": frames,
-                "fps": cfg.get("fps", 12),
-                "loop": cfg.get("loop", False),
-                "holds": cfg.get("holds", {}),
-                "bounds": (bounds_w, bounds_h),
-                "times_to_loop": cfg.get("times_to_loop", 1)
-            }
-            print(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
-            log.info(f"[ANIMATION LOADED] {name}: {len(frames)} frames")
+        self._load_animations(archive=archive)
     
         self.variable_manager = VariableManager(VARIABLES)
 
@@ -194,7 +164,7 @@ class Pet(QWidget): # main logic
         h = self.primary_screen.availableGeometry().height()
         self.update_dpi_and_scale(h=h, initial_state=initial_state)
 
-        max_measurement = max(max_bounds_w, max_bounds_h)
+        max_measurement = max(self.max_bounds_w, self.max_bounds_h)
         self.resize_keep_anchor(int(max_measurement * self.scale * 2), int(max_measurement * self.scale * 2))
 
         self.last_mouse_pos = Vec2()
@@ -220,6 +190,38 @@ class Pet(QWidget): # main logic
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
+
+
+    def _load_animations(self, archive):
+        log.info("---LOADING ANIMATIONS---")
+        print("--- LOADING ANIMATIONS ---")
+        self.animations = {}
+        max_bounds_w = 0
+        max_bounds_h = 0
+
+        for animation_name in list(self.ANIMATIONS):
+            cfg = self.ANIMATIONS[animation_name]
+            folder = f"assets/animations/{cfg['folder']}"
+
+            frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=folder)
+
+            if not frames:
+                raise RuntimeError(f"No frames found for animation '{animation_name}'")
+            
+            bounds_w, bounds_h = scan_animation_bounds(frames)
+            self.max_bounds_w = max(max_bounds_w, bounds_w)
+            self.max_bounds_h = max(max_bounds_h, bounds_h)
+
+            self.animations[animation_name] = {
+                "frames": frames,
+                "fps": cfg.get("fps", 12),
+                "loop": cfg.get("loop", False),
+                "holds": cfg.get("holds", {}),
+                "bounds": (bounds_w, bounds_h),
+                "times_to_loop": cfg.get("times_to_loop", 1),
+            }
+            print(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")
+            log.info(f"[ANIMATION LOADED] {animation_name}: {len(frames)} frames")
 
     def _load_json(self, archive: zipfile.ZipFile, path, convert_int_keys=False):
         with archive.open(path) as f:
