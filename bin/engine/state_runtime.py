@@ -302,7 +302,7 @@ class StateRuntime:
 
     # transitions
     def _check_all_conditions(self, cfg):
-        conditions = cfg["when"]
+        conditions = cfg["if"]
         chance = cfg.get("chance", 1)
 
         return all(self._check_condition(c) for c in conditions) and random.random() <= chance
@@ -364,7 +364,7 @@ class StateRuntime:
             for t in force_transitions:
                 if self.current_state_name in t.get("except_states", []): continue
 
-                conditions = t.get("when", [])
+                conditions = t.get("if", [])
                 chance = t.get("chance", 1)
 
                 if all(self._check_condition(c) for c in conditions) and random.random() <= chance:
