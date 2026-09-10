@@ -28,3 +28,11 @@ class AllSurfacesData:
     right: list
     bottom: list
     left: list
+
+@dataclass(slots=True)
+class SegmentData:
+    rect: tuple
+    top: list
+    bottom: list
+    left: list
+    right: list
