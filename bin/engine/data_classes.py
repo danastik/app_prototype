@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from PySide6.QtGui import QPixmap
+from typing import NamedTuple
 
 # @dataclass(slots=True)
 # class AnimationVariant:
@@ -19,8 +20,7 @@ class AnimationData:
     bounds: tuple[int, int] = (0, 0)
     # variants: list[AnimationVariant] = field(default_factory=list)
 
-@dataclass(slots=True)
-class AllSurfacesData:
+class AllSurfacesData(NamedTuple):
     """
     Contains lists for all types of surfaces.
     """
@@ -29,8 +29,8 @@ class AllSurfacesData:
     bottom: list
     left: list
 
-@dataclass(slots=True)
-class SegmentData:
+
+class SegmentData(NamedTuple):
     rect: tuple
     top: list
     bottom: list
