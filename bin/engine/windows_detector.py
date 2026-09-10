@@ -14,6 +14,7 @@ import win32con
 import time
 
 from engine.enums import SurfaceType
+from engine.data_classes import AllSurfacesData
 
 from engine.logger import app_logger as log
 from engine.logger import debug_logger as debug_log
@@ -644,12 +645,13 @@ class WindowsOverlay(QWidget):
         self.focused_app = set()
 
         self.segments = {}  # hwnd -> clipped segments computed in physical pixels
-        self.surfaces = {
-            "top": [],     # floors
-            "bottom": [],  # ceilings
-            "left": [],    # right walls
-            "right": []    # left walls
-        }
+
+        self.surfaces = AllSurfacesData(
+            left=[],
+            top=[],
+            right=[],
+            bottom=[],
+        )
 
         # Hook all top-level window events
         user32 = ctypes.windll.user32
@@ -758,8 +760,10 @@ class WindowsOverlay(QWidget):
 
     def rebuild_surfaces(self, segs):
         # clearing surfaces before appending
-        for k in self.surfaces:
-            self.surfaces[k].clear()
+        self.surfaces.top.clear()
+        self.surfaces.right.clear()
+        self.surfaces.bottom.clear()
+        self.surfaces.left.clear()
 
         # appending found surfaces
         for hwnd, data in segs.items():
@@ -767,16 +771,16 @@ class WindowsOverlay(QWidget):
             L, T, R, B = data["rect"]
 
             for x1, x2 in data["top"]:
-                self.surfaces["top"].append((T, x1, x2, hwnd))
+                self.surfaces.top.append((T, x1, x2, hwnd))
 
             for x1, x2 in data["bottom"]:
-                self.surfaces["bottom"].append((B, x1, x2, hwnd))
+                self.surfaces.bottom.append((B, x1, x2, hwnd))
 
             for y1, y2 in data["left"]:
-                self.surfaces["left"].append((L, y1, y2, hwnd))
+                self.surfaces.left.append((L, y1, y2, hwnd))
 
             for y1, y2 in data["right"]:
-                self.surfaces["right"].append((R, y1, y2, hwnd))
+                self.surfaces.right.append((R, y1, y2, hwnd))
 
     # --- Get rect of a window by hwnd ---
     def update_parent_window(self, hwnd):
@@ -822,8 +826,8 @@ class WindowsOverlay(QWidget):
 
         surfaces = self.surfaces
 
-        if SurfaceType.TOP in collision_mask:  # moving down   # removed if dy > 0 here so now it should be possible to collide with insides of windows?
-            for y, x1, x2, hwnd in surfaces["top"]:
+        if SurfaceType.TOP in collision_mask:  # moving down
+            for y, x1, x2, hwnd in surfaces.top:
 
                 if pos_x < x1 or pos_x > x2:   # i replaced R and L with pos.x because we care only about the center point
                     continue
@@ -837,7 +841,7 @@ class WindowsOverlay(QWidget):
                     # print(y, x1, x2)
 
         if SurfaceType.BOTTOM in collision_mask:  # moving up
-            for y, x1, x2, hwnd in surfaces["bottom"]:
+            for y, x1, x2, hwnd in surfaces.bottom:
 
                 if pos_x < x1 or pos_x > x2:
                     continue
@@ -862,10 +866,8 @@ class WindowsOverlay(QWidget):
 
         surfaces = self.surfaces
 
-        # print(f"why collision not working it should be  {SurfaceType.RIGHT in collision_mask}" )
-
-        if SurfaceType.LEFT in collision_mask:  # moving right     # removed dx > 0 (see above)
-            for x, y1, y2, hwnd in surfaces["left"]:
+        if SurfaceType.LEFT in collision_mask:  # moving right
+            for x, y1, y2, hwnd in surfaces.left:
 
                 if B < y1 or T > y2:
                     continue
@@ -878,7 +880,7 @@ class WindowsOverlay(QWidget):
                     surface_data = (hwnd, x, y1, y2)
 
         if SurfaceType.RIGHT in collision_mask:  # moving left
-            for x, y1, y2, hwnd in surfaces["right"]:
+            for x, y1, y2, hwnd in surfaces.right:
 
                 if B < y1 or T > y2:
                     continue

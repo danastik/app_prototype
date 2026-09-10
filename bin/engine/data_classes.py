@@ -18,3 +18,13 @@ class AnimationData:
     times_to_loop: int = 1
     bounds: tuple[int, int] = (0, 0)
     # variants: list[AnimationVariant] = field(default_factory=list)
+
+@dataclass(slots=True)
+class AllSurfacesData:
+    """
+    Contains lists for all types of surfaces.
+    """
+    top: list
+    right: list
+    bottom: list
+    left: list
