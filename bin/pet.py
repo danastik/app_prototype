@@ -21,7 +21,7 @@ from engine.variable_manager import VariableManager
 from engine.particles.particles_engine_openGL import ParticleOverlayWidget
 from engine.audio_engine import AudioEngine
 
-from engine.data_classes import AnimationData, AnimationVariant
+from engine.data_classes import AnimationData #, AnimationVariant
 
 from engine.state_commands import *
 
@@ -140,7 +140,7 @@ class Pet(QWidget): # main logic
         self.anchor = Vec2(init_pos.x, self.taskbar_top + init_pos.y + 1)
 
         cfg_facing = self.RENDER_CONFIG.get("default_facing")
-        self.facing = Facing.__members__.get(cfg_facing, Facing.RIGHT) # type: ignore  # defining facing direction
+        self.facing: Facing = Facing.__members__.get(cfg_facing, Facing.RIGHT) # type: ignore  # defining facing direction
 
         self.behaviour_resolver = BehaviourResolver(self, BEHAVIOURS)
 
@@ -150,9 +150,7 @@ class Pet(QWidget): # main logic
         self.particle_logic_acc = 0
         self.particle_draw_acc = 0
 
-        self.audio_engine = AudioEngine(
-            sounds=SOUNDS,
-            archive=archive)
+        self.audio_engine = AudioEngine(sounds=SOUNDS, archive=archive)
         
         initial_state = self.RENDER_CONFIG.get("default_state", next(iter(self.STATES))) #either get the "default_state" from the RENDER_CONFIG, or the first item in the self.STATES dictinary
         
@@ -181,11 +179,10 @@ class Pet(QWidget): # main logic
         frame = self.animations[anim_name].frames[0]
         self.update_hitbox_size_and_drag_offset(frame=frame) # initial hitbox update
 
-        self.prev_index = None
+        self.prev_frame_index: int = -1
 
         print("---LOADING SUCCESSFUL---\n")
         log.info("---LOADING SUCCESSFUL---\nEnjoy your yoji <3\n")
-
         debug_log.info("---Yoji loaded---\n")
 
         self._start_qtimer()
@@ -202,7 +199,7 @@ class Pet(QWidget): # main logic
         self.animations: dict[str, AnimationData] = {}
         max_bounds_w = 0
         max_bounds_h = 0
-        default_loop_option = self.RENDER_CONFIG.get("default_loop_option", False)
+        default_loop_option: bool = self.RENDER_CONFIG.get("default_loop_option", False)
 
         for animation_name in list(animations_json):
             cfg = animations_json[animation_name]
@@ -218,7 +215,7 @@ class Pet(QWidget): # main logic
             self.max_bounds_h = max(max_bounds_h, bounds_h)
 
 
-            variants: list[AnimationVariant] = []
+            # variants: list[AnimationVariant] = []
             # var_cfg = cfg.get("variants")
             # if var_cfg:
             #     probability_sum = sum(
@@ -247,10 +244,9 @@ class Pet(QWidget): # main logic
                 frames=frames,
                 fps=cfg.get("fps", 12),
                 holds=cfg.get("holds", {}),
+                loop=cfg.get("loop", default_loop_option),
                 times_to_loop=cfg.get("times_to_loop", 1),
                 bounds=(bounds_w, bounds_h),
-                loop=cfg.get("loop", default_loop_option),
-                variants=variants,
             )
 
             self.animations[animation_name] = anim_data
@@ -291,6 +287,9 @@ class Pet(QWidget): # main logic
 
         next_behaviour = cfg.get("behaviour", "STATIONARY")
         self._resolve_behavior(next_behaviour, cfg)
+
+        if self.mover.movement_type == MovementType.DRAG and self.parent_window_hwnd:
+            self._clear_parent_window()
 
         # isAbletoRotate = True if self.mover.movement_type == MovementType.DRAG else False   # not used anymore but maybe later
         next_anim = self._resolve_animation(cfg.get("animation", []))
@@ -419,10 +418,10 @@ class Pet(QWidget): # main logic
         animations_cfg = self.animations[anim_name]
 
         frames = self.animations[anim_name].frames
-        fps = cfg.get("fps", animations_cfg.fps)
-        loop = cfg.get("loop", animations_cfg.loop)
-        times_to_loop = cfg.get("times_to_loop", animations_cfg.times_to_loop)
-        holds = cfg.get("holds", animations_cfg.holds)
+        fps: float = cfg.get("fps", animations_cfg.fps)
+        loop: bool = cfg.get("loop", animations_cfg.loop)
+        times_to_loop: int = cfg.get("times_to_loop", animations_cfg.times_to_loop)
+        holds: dict = cfg.get("holds", animations_cfg.holds)
 
         # bounds_w, bounds_h = self.animations[anim_name]["bounds"]  # not used yet but its there if needed
 
@@ -434,7 +433,7 @@ class Pet(QWidget): # main logic
         debug_log.debug(f"Playing {transit_txt}animation: {anim_name}, Frame count: {len(frames)}, Loop: {loop}, Times to loop: {times_to_loop}, Holds: {holds}")
 
         # print("Starting animation:", anim_name, " Frame count:", len(frames), " Loop:", loop, " Times to loop:", times_to_loop, " Holds:", holds)
-        self.animator.set_animation(frames=frames, fps=fps, loop=loop, times_to_loop=times_to_loop, holds=holds)
+        self.animator.set_animation(frames=frames, fps=fps, holds=holds, loop=loop, times_to_loop=times_to_loop)
 
 
     def update_apps(self, app_state):
@@ -450,28 +449,23 @@ class Pet(QWidget): # main logic
         #     self.profiler.disable()
         #     self.profiler.enable()  # start profiling
         
-        # --- INPUT PHASE ---
         if self.mover.movement_type == MovementType.DRAG:
             self.mover.update_drag_target(self.last_mouse_pos, dt)
-            if self.parent_window_hwnd:
-                self._clear_parent_window()
     
         self.click_detector.update()
         self.variable_manager.update(dt)
 
         t1 = time.perf_counter()
-    
-        # --- STATE / SIMULATION PHASE ---
+
         self.parent_window_rect = None
         if self.parent_window_hwnd:
             self.parent_window_rect = self.windowsOverlay.update_parent_window(self.parent_window_hwnd)
     
-        # --- STATE / SIMULATION PHASE ---
         followed_parent = self._follow_parent_window(self.parent_window_rect)
         t3 = time.perf_counter()
 
-        # --- updating Mover and movement collisions ---
-        arrived = self.mover.update(dt) # getting theoretical movement from mover.py
+        # --- updating Mover and collisions ---
+        arrived = self.mover.update(dt)
         
         dx = self.mover.pos.x - self.anchor.x
         dy = self.mover.pos.y - self.anchor.y
@@ -492,7 +486,7 @@ class Pet(QWidget): # main logic
         
         self.anchor.y += dy
         
-        # --- if mover reached destination or collision occured - movement finished ---
+        # --- if mover reached destination or collision occured - movement finished
         if arrived or col_x or col_y:
             # print("col_x: ", col_x, "self.surfaces: ", self.surfaces_to_parent_to)
             # print("making mover set position cuz", arrived, col_x, col_y)
@@ -541,12 +535,12 @@ class Pet(QWidget): # main logic
 
         index = self.animator.index
 
-        if not self.prev_index: self.prev_index = index + 1 # kinda useless but lets keep it for now
+        if not self.prev_frame_index: self.prev_frame_index = index -  1 # kinda useless but lets keep it for now
 
-        if index != self.prev_index or self.mover.movement_type == MovementType.DRAG: 
+        if index != self.prev_frame_index or self.mover.movement_type == MovementType.DRAG: 
             # print("triggering update because", index, self.prev_index)
             self.update()  # repaint
-        self.prev_index = index
+        self.prev_frame_index = index
 
         # --- UPDATING PARTICLES ---
         self.particle_logic_acc += dt
@@ -575,7 +569,7 @@ class Pet(QWidget): # main logic
         clamped_x = min(self.primary_screen.availableGeometry().width() - self.hitbox_width / 2, max(self.anchor.x, self.hitbox_width / 2))
         clamped_y = min(self.primary_screen.geometry().bottom(), max(self.anchor.y, self.hitbox_height))
 
-        if self.anchor.y < self.hitbox_height:  # if going above the screen - clear parent window
+        if self.anchor.y < self.hitbox_height:
             self._clear_parent_window()
 
         dx = clamped_x - self.anchor.x
@@ -598,11 +592,11 @@ class Pet(QWidget): # main logic
         px1, py1, px2, py2 = self.parent_window_rect_last
         dx, dy = 0, 0
 
-        # --- following general movement ---
+        # following general movement
         global_move_x = (x1 - px1) == (x2 - px2)
         global_move_y = (y1 - py1) == (y2 - py2)
 
-        match self.parent_surface_type:   # previously had {if dx == 0 and } but removed to better snap to windows
+        match self.parent_surface_type:
             case SurfaceType.LEFT:
                 if global_move_y: dy = y1 - py1 
                 dx = x1 - px1
@@ -620,7 +614,7 @@ class Pet(QWidget): # main logic
                 dy = y2 - py2
                 if self.anchor.y != y2: dy = y2 - self.anchor.y
 
-        # --- staying on windows or falling off ---
+        # staying on windows or falling off
         resize = False
 
         if self.stay_on_window_when_resize:
@@ -652,7 +646,7 @@ class Pet(QWidget): # main logic
                 if self.anchor.y <= y1 - 2 or self.anchor.y >= y2 + 2:
                     self._clear_parent_window()
 
-        # Applying global movement
+        # applying global movement
         if dx != 0 or dy != 0:
             self.mover.move_global(dx, dy)
 
@@ -776,8 +770,8 @@ class Pet(QWidget): # main logic
         anchor_x = self.width() / 2
         anchor_y = self.height()
 
-        offset_x = frame.width() / 2
-        offset_y = frame.height()
+        offset_x: int = int(frame.width() / 2)
+        offset_y: int = frame.height()
 
         p.save()
 
@@ -811,5 +805,5 @@ class Pet(QWidget): # main logic
 
     def recall(self):
         self.particle_engine.clear_screen()
-        debug_log.info(f"Pet has been active for {self.total_time_active/60} minutes")
+        debug_log.info(f"Pet is being recalled. Has been active for {self.total_time_active/60:.2f} minutes")
         debug_log.info(f"Goodbye!")

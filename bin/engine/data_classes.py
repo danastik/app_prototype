@@ -1,17 +1,20 @@
 from dataclasses import dataclass, field
 from PySide6.QtGui import QPixmap
 
-@dataclass(slots=True)
-class AnimationVariant:
-    frames: list[QPixmap]
-    weight: float
+# @dataclass(slots=True)
+# class AnimationVariant:
+#     frames: list[QPixmap]
+#     weight: float
 
 @dataclass(slots=True)
 class AnimationData:
+    """
+    Contains all data needed to play animation: list of frames, fps, holds, loop, times_to_loop, bounds
+    """
     frames: list[QPixmap]
-    fps: int = 12
+    fps: float = 12
     holds: dict = field(default_factory=dict)
+    loop: bool = False
     times_to_loop: int = 1
     bounds: tuple[int, int] = (0, 0)
-    loop: bool = False
-    variants: list[AnimationVariant] = field(default_factory=list)
+    # variants: list[AnimationVariant] = field(default_factory=list)

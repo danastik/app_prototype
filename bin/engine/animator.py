@@ -1,6 +1,8 @@
 from engine.state_machine import StateMachine
 from engine.enums import Flag, Pulse
 
+from PySide6.QtGui import QPixmap
+
 class Animator:  # contains different animation functions
     def __init__(self, pet, state_machine: StateMachine):
         self.frames = []
@@ -13,7 +15,7 @@ class Animator:  # contains different animation functions
         self.pet = pet
         self.sm = state_machine
 
-    def set_animation(self, frames: list, fps: int, loop: bool, times_to_loop: int, holds: dict = {}):
+    def set_animation(self, frames: list, fps: float, loop: bool, times_to_loop: int, holds: dict = {}):
         """
         Sets the animation up
         
@@ -22,7 +24,7 @@ class Animator:  # contains different animation functions
         :param times_to_loop: How many times to loop animation before Flag.ANIMATIONG_FINISHED is raised
         """
         self.frames = frames
-        self.fps = fps if fps > 0 else 0.001
+        self.fps: float = fps if fps > 0 else 0.001
         self.loop = loop
         self.times_to_loop = times_to_loop
         self.index = 0
@@ -72,8 +74,8 @@ class Animator:  # contains different animation functions
         # print("index", index, "hold is ", self.holds.get(index + 1, 1))
         return self.holds.get(index + 1, 1)
 
-    def get_frame(self):
+    def get_frame(self) -> QPixmap:
         """
-        Returns a single frame which should be displayed at the moment
+        Returns a single QPixmap frame which should be displayed at the moment
         """
         return self.frames[self.index]
