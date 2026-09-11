@@ -19,7 +19,6 @@ from engine.data_classes import AllSurfacesData, SegmentData
 from engine.logger import app_logger as log
 from engine.logger import debug_logger as debug_log
 
-
 DWMWA_EXTENDED_FRAME_BOUNDS = 9
 DWMWA_CLOAKED = 14
 dwmapi = ctypes.windll.dwmapi
@@ -28,7 +27,6 @@ _has_getdpiforwindow: bool
 
 # Debug toggle: set True to print windows / segments info
 DEBUG = False
-
 
 #region HOOKS IF WINDOW APPEAR/DISAPPEAR
 user32 = ctypes.windll.user32
@@ -257,7 +255,7 @@ def get_windows_in_zorder(excluded_hwnd):
 
     windows = []
 
-    windows.append("taskbar") # appending taskbar as a top window
+    windows.append(TASKBAR_HWND) # appending taskbar as a top window
 
     hwnd = start
 
@@ -313,7 +311,6 @@ def get_windows_in_zorder(excluded_hwnd):
     # print("visible_apps:", visible_apps)
 
     return windows, visible_apps, maximised_apps, fullscreen_apps
-
 
 def is_real_app(hwnd):
     try:
@@ -394,21 +391,22 @@ def is_real_app(hwnd):
         return False
 
 
-def compute_visible_segments(windows, rects):
+def compute_visible_segments(windows: list[int], rects: dict[int, tuple]):
     """
-    windows: list of HWND top-first (topmost first)
+    :param windows: list of HWND top-first (topmost first)
+    :param rects: dictionary of rect tuple(L, T, R, B)
 
     Returns:
-        dict hwnd -> {
-            "rect": (L,T,R,B),
-            "top": [(x1,x2)],
-            "bottom": [(x1,x2)],
-            "left": [(y1,y2)],
-            "right": [(y1,y2)],
+        SegmentData hwnd -> {
+            rect: (L,T,R,B),
+            top: [(x1,x2)],
+            bottom: [(x1,x2)],
+            left: [(y1,y2)],
+            right: [(y1,y2)],
         }
     """
 
-    segs: dict[int|str, SegmentData] = {}
+    segs: dict[int, SegmentData] = {}
 
     # bottom-first for occlusion logic
     windows_bottom_first = list(reversed(windows))
@@ -461,13 +459,6 @@ def compute_visible_segments(windows, rects):
         vis_left = subtract_many(left_seg, cuts_left)
         vis_right = subtract_many(right_seg, cuts_right)
 
-        # segs[hwnd] = {
-        #     "rect": rect,
-        #     "top": vis_top,
-        #     "bottom": vis_bottom,
-        #     "left": vis_left,
-        #     "right": vis_right,
-        # }
         segs[hwnd] = SegmentData(
             rect=rect,
             top=vis_top,
@@ -509,7 +500,7 @@ def subtract_segment(seg, cut):
 def subtract_many(seg, cuts):
     if not cuts:
         return [seg]
-
+    
     s1, s2 = seg
 
     # Keep only cuts that actually overlap the segment
@@ -539,16 +530,6 @@ def subtract_many(seg, cuts):
         result.append((current, s2))
 
     return result
-
-# # old version
-# def subtract_many(seg, cuts):
-#     visible = [seg]
-#     for cut in cuts:
-#         new_list = []
-#         for v in visible:
-#             new_list.extend(subtract_segment(v, cut))
-#         visible = new_list
-#     return visible
 
 def ranges_overlap(a1, a2, b1, b2):
     return a1 <= b2 and b1 <= a2
@@ -602,9 +583,6 @@ def get_window_dpi_scale(hwnd):
 
 
 
-# -----------------------
-# Overlay Widget
-# -----------------------
 class WindowsOverlay(QWidget):
     def __init__(self, pet):
         super().__init__()
@@ -619,11 +597,9 @@ class WindowsOverlay(QWidget):
 
         self.update_hitbox(pet.hitbox_width, pet.hitbox_height)
 
-        screen = QApplication.primaryScreen() # Screen detection
+        screen = QApplication.primaryScreen()
         self.screen_geom = screen.geometry()
         self.screen_avail_geom = screen.availableGeometry()
-
-        # self.taskbar_top = self.screen_avail_geom.bottom() + 1
 
         global windows_detector
         windows_detector = self
@@ -643,7 +619,18 @@ class WindowsOverlay(QWidget):
         pet_hwnd = int(self.pet.winId())
         self.excluded_hwnd = {my_hwnd, pet_hwnd} # set of excluded from search hwnd 
 
-        self.windows_hwnd: list[int|str]  = []   # top-first
+        global TASKBAR_HWND
+        TASKBAR_HWND = -1
+        self.TASKBAR_HWND = TASKBAR_HWND
+
+        self.taskbar_rect = (
+            self.screen_geom.left(),
+            self.screen_avail_geom.bottom() + 1,
+            self.screen_geom.right(),
+            self.screen_geom.bottom()
+        )
+
+        self.windows_hwnd: list[int]  = []   # top-first
         self.active_apps = set()
         self.visible_apps = set()
         self.fullscreen_apps = set()
@@ -706,22 +693,17 @@ class WindowsOverlay(QWidget):
 
     def update_frame(self):
         # update rects for current cached windows
-        rects: dict[int|str, tuple] = {} # hwnd -> rect physical
+        rects: dict[int, tuple] = {} # hwnd -> rect physical
 
         t1 = time.perf_counter()
 
         parent_hwnd = self.pet.parent_window_hwnd
 
         # appending taskbar as a rect for collisions
-        rects["taskbar"] = (
-            self.screen_geom.left(),
-            self.screen_avail_geom.bottom() + 1,
-            self.screen_geom.right(),
-            self.screen_geom.bottom()
-        )
+        rects[TASKBAR_HWND] = self.taskbar_rect
 
         for hwnd in self.windows_hwnd:
-            if hwnd == "taskbar": continue
+            if hwnd == TASKBAR_HWND: continue
             if hwnd == parent_hwnd: 
                 rects[parent_hwnd] = self.pet.parent_window_rect
                 continue
@@ -764,7 +746,10 @@ class WindowsOverlay(QWidget):
         self.update() # repaint
 
 
-    def rebuild_surfaces(self, segs: dict[str|int, SegmentData]):
+    def rebuild_surfaces(self, segs: dict[int, SegmentData]):
+        """
+        Populates self.surfaces with SegmentData
+        """
         # clearing surfaces before appending
         self.surfaces.top.clear()
         self.surfaces.right.clear()
@@ -788,24 +773,23 @@ class WindowsOverlay(QWidget):
                 self.surfaces.right.append((R, y1, y2, hwnd))
 
     # --- Get rect of a window by hwnd ---
-    def update_parent_window(self, hwnd):
+    def update_parent_window(self, hwnd) -> tuple|None:
         """
-        Returns the rect of the window with provided hwnd
+        Returns the rect of the window with provided hwnd or None if it does not exist
         """
+        if not hwnd in self.windows_hwnd or not is_window_real(hwnd): return
+
         rect = None
+
         try:
-            if is_window_real(hwnd) and hwnd in self.windows_hwnd:
-                rect = get_extended_frame_bounds(hwnd)
+            rect = get_extended_frame_bounds(hwnd)
             # print("rect:", rect)
-            if not rect: 
-                self.pet._clear_parent_window()
         except Exception:
-            self.pet._clear_parent_window()
-        
+            return
         
         if not rect: return
 
-        scale = get_window_dpi_scale(hwnd=hwnd) # this is probably to remove or move up, its getting dpi per window
+        scale = get_window_dpi_scale(hwnd=hwnd)
         if scale <= 0:
             scale = 1.0
 
@@ -813,6 +797,23 @@ class WindowsOverlay(QWidget):
         L, T, R, B = rect
         return (L / scale, T / scale, R / scale, B / scale)
         
+    def check_parent_window_segment(self, pos_x: float, pos_y: float, hwnd, surface_type) -> bool:
+        """
+        Returns True if pet is on any of the parent_windows' segments
+        """
+        data = self.segments.get(hwnd)
+        if not data: return False
+
+        L, T, R, B = data.rect
+
+        buffer = 2
+
+        # x must be inside one of the visible top segments
+        if any(x1-buffer <= pos_x <= x2+buffer for x1, x2 in data.top):
+            return True
+
+        return False
+
     # --- Movement collision stuff ---
     def bounds(self, pos_x, pos_y):    
         return (

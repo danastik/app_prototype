@@ -125,7 +125,7 @@ class Pet(QWidget): # main logic
         self.hitbox_width = 0
         self.hitbox_height = 0
 
-        self.parent_window_hwnd = None
+        self.parent_window_hwnd: int|None = None
         self.parent_window_rect_last = None
 
         self.stay_on_window_when_resize = self.RENDER_CONFIG.get("stay_on_window_when_resize", False) 
@@ -436,10 +436,6 @@ class Pet(QWidget): # main logic
         self.animator.set_animation(frames=frames, fps=fps, holds=holds, loop=loop, times_to_loop=times_to_loop)
 
 
-    def update_apps(self, app_state):
-        self.state_machine.update_apps(app_state)
-
-
     def update_logic(self):  # UPDATE LOGIC
         dt = 1 / self.LOGIC_FPS
 
@@ -457,11 +453,29 @@ class Pet(QWidget): # main logic
 
         t1 = time.perf_counter()
 
+        # --- getting the parent window rect
         self.parent_window_rect = None
+        followed_parent = False
+
         if self.parent_window_hwnd:
-            self.parent_window_rect = self.windowsOverlay.update_parent_window(self.parent_window_hwnd)
-    
-        followed_parent = self._follow_parent_window(self.parent_window_rect)
+            rect = self.windowsOverlay.update_parent_window(self.parent_window_hwnd)
+
+            if rect:  self.parent_window_rect = rect
+            else:     self._clear_parent_window()
+
+            # print(self.parent_window_hwnd)
+
+            followed_parent = self._follow_parent_window(self.parent_window_rect)
+            # print("followed_parent:", followed_parent)
+
+            if not followed_parent:
+                # print("checking visible seg")
+                on_visible_segment = self.windowsOverlay.check_parent_window_segment(self.anchor.x, self.anchor.y, self.parent_window_hwnd, self.parent_surface_type)
+                # print(on_visible_segment)
+                if not on_visible_segment:
+                    print(f"cleared window because was not on visible segment\n{self.anchor.x, self.anchor.y}\nfollowed={followed_parent}, {self.parent_window_rect}")
+                    self._clear_parent_window()
+
         t3 = time.perf_counter()
 
         # --- updating Mover and collisions ---
@@ -565,6 +579,9 @@ class Pet(QWidget): # main logic
         # self.profiler.dump_stats("test.prof")
 
 
+    def update_apps(self, app_state):
+        self.state_machine.update_apps(app_state)
+
     def _clamp_position_to_screen(self):
         clamped_x = min(self.primary_screen.availableGeometry().width() - self.hitbox_width / 2, max(self.anchor.x, self.hitbox_width / 2))
         clamped_y = min(self.primary_screen.geometry().bottom(), max(self.anchor.y, self.hitbox_height))
@@ -580,13 +597,15 @@ class Pet(QWidget): # main logic
         self.anchor.x = clamped_x
         self.anchor.y = clamped_y
 
-    def _follow_parent_window(self, rect) -> bool:
+    def _follow_parent_window(self, rect: tuple|None) -> bool:
         if not self.parent_window_hwnd:
             return False
 
         if not rect or not self.parent_window_rect_last:
             self.parent_window_rect_last = rect
             return False
+        
+        followed = False
 
         x1, y1, x2, y2 = rect
         px1, py1, px2, py2 = self.parent_window_rect_last
@@ -634,25 +653,25 @@ class Pet(QWidget): # main logic
                     resize = True
             
             if resize: 
-                # print("if resize", end="")
                 self.mover.set_position(self.anchor.x, self.anchor.y)  # moving to the edge when resizing
 
         # if self.RENDER_CONFIG "stay_on_window_when_resize" == False pet should just fall off
         else:
-            if not global_move_x and self.parent_surface_type in (SurfaceType.TOP, SurfaceType.BOTTOM): # its so much more nice to read, i hope its not too bad for performance
+            if not global_move_x and self.parent_surface_type in (SurfaceType.TOP, SurfaceType.BOTTOM): # its much nicer to read, i hope its not too bad for performance
                 if self.anchor.x <= x1 - 2 or self.anchor.x >= x2 + 2:
                     self._clear_parent_window()
             if not global_move_y and self.parent_surface_type in (SurfaceType.LEFT, SurfaceType.RIGHT):
                 if self.anchor.y <= y1 - 2 or self.anchor.y >= y2 + 2:
                     self._clear_parent_window()
 
+        self.parent_window_rect_last = rect
+
         # applying global movement
         if dx != 0 or dy != 0:
             self.mover.move_global(dx, dy)
+            followed = True
 
-        self.parent_window_rect_last = rect
-
-        return resize
+        return followed
 
     def _clear_parent_window(self):
         self.state_machine.pulse(Pulse.LOST_PARENT)
@@ -665,12 +684,15 @@ class Pet(QWidget): # main logic
     def _set_parent_window(self, col_x, col_y, surface_data):
         hwnd = surface_data[0]
 
+        if hwnd == self.windowsOverlay.TASKBAR_HWND: return
+
         if col_x:  
             self.parent_surface_type = col_x
         else: self.parent_surface_type = col_y
         # print("surface type:", self.parent_surface_type)
 
-        if hwnd == "taskbar": return
+        self.parent_window_rect_last = self.windowsOverlay.update_parent_window(hwnd)
+
         self.parent_window_hwnd = hwnd
         self.state_machine.pulse(Pulse.GAINED_PARENT)
         self.state_machine.raise_flag(Flag.PARENTED_TO_WINDOW)

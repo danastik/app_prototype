@@ -31,8 +31,11 @@ class AllSurfacesData(NamedTuple):
 
 
 class SegmentData(NamedTuple):
+    """
+    Contains the rect and lists for all types of segments for a window.
+    """
     rect: tuple
-    top: list
-    bottom: list
-    left: list
-    right: list
+    top: list[tuple]
+    bottom: list[tuple]
+    left: list[tuple]
+    right: list[tuple]
