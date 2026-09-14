@@ -9,9 +9,9 @@ class AssetLoader:
     @staticmethod
     def load_QPixmap_frames(archive: zipfile.ZipFile, folder) -> list[QPixmap]:  # function for loading frames, recieves a string path to a folder, returns a list of png files( converted to PixMap ) in name order
         """
-        Returns a list of QPixmap files taken from .png files from the provided folder.
+        Returns a list of QPixmap files taken from .png or .webp files from the provided folder.
         
-        :param folder: Path to the folder. (not from base)
+        :param folder: Path to the folder (inside archive)
         """
         frames: list[QPixmap] = []
 

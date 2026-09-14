@@ -20,6 +20,23 @@ class AnimationData:
     bounds: tuple[int, int] = (0, 0)
     # variants: list[AnimationVariant] = field(default_factory=list)
 
+
+@dataclass(slots=True)
+class Hitbox:
+    left: float
+    top: float
+    right: float
+    bottom: float
+
+    @property
+    def center_x(self):
+        return (self.left + self.right) / 2
+
+    @property
+    def center_y(self):
+        return (self.top + self.bottom) / 2
+    
+
 class AllSurfacesData(NamedTuple):
     """
     Contains lists for all types of surfaces.

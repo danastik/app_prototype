@@ -32,7 +32,7 @@ from engine.logger import debug_logger as debug_log
 
 
 #region --- HELPERS ---
-def scan_animation_bounds(frames):
+def scan_animation_bounds(frames: list) -> tuple[int,int]:
     max_w = 0
     max_h = 0
 
@@ -193,7 +193,7 @@ class Pet(QWidget): # main logic
         self.timer.timeout.connect(self.update_logic) 
         self.timer.start(1000 // self.LOGIC_FPS)
 
-    def _load_animations(self, animations_json, archive):
+    def _load_animations(self, animations_json, archive: zipfile.ZipFile):
         log.info("---LOADING ANIMATIONS---")
         print("--- LOADING ANIMATIONS ---")
         self.animations: dict[str, AnimationData] = {}
@@ -202,10 +202,13 @@ class Pet(QWidget): # main logic
         default_loop_option: bool = self.RENDER_CONFIG.get("default_loop_option", False)
 
         for animation_name in list(animations_json):
-            cfg = animations_json[animation_name]
+            cfg: dict = animations_json[animation_name]
+            folder = cfg.get("folder")
 
-            folder = f"assets/animations/{cfg.get("folder")}"
-            if not folder: raise RuntimeError(f"No folder provided for animation {animation_name}")
+            folder = f"assets/animations/{folder}"
+
+            folder_exists = zipfile.Path(archive, folder+"/").exists()
+            if not folder_exists: raise RuntimeError(f"No folder provided for animation \"{animation_name}\".\nMake sure folder assets/animations/{folder} exists.")
             
             frames = AssetLoader.load_QPixmap_frames(archive=archive, folder=folder)
             if not frames: raise RuntimeError(f"No frames found for animation '{animation_name}' in folder {folder}")
