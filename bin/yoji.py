@@ -572,6 +572,9 @@ class MainWindow(QWidget):
             except Exception as e:
                 #Debug.error(f"Could not call yoji.\n{e}")
                 self._show_warning_message(title="Error", message=f"Could not call yoji.\n{e}")
+                try:
+                    self.recall_pet()
+                except Exception: pass
             finally:
                 print("finally")
                 archive.close()

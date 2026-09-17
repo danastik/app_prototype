@@ -6,14 +6,14 @@
         "behaviour": "STATIONARY",
 
         "conditional_particles": [
-            {"when": ["CLICK"],
+            {"if": ["CLICK"],
              "emit": "dirt"
             }
         ],
 
         "transitions": [
             {
-                "when": ["ANIMATION_END", {"app":"explorer.exe", "is":"focused"}],
+                "if": ["ANIMATION_END", {"app":"explorer.exe", "is":"focused"}],
                 "to": "MAGNIFYING_GLASS",
                 "chance": 0.3,
                 "transition_animation": "looking_for_something",
@@ -22,22 +22,22 @@
                 }
             },
             {
-                "when": [ "ANIMATION_END", {"var":"sleepiness", "op":">", "value":30}],
+                "if": [ "ANIMATION_END", {"var":"sleepiness", "op":">", "value":30}],
                 "to": "BLINK",
                 "chance": 0.3
             },
             {
-                "when": ["ANIMATION_END"],
+                "if": ["ANIMATION_END"],
                 "to": "BLINK",
                 "chance": 0.1
             },
             {
-                "when": [ {"pulse":"ANIMATION_END"}],
+                "if": [ {"pulse":"ANIMATION_END"}],
                 "to": "LOOKING_AROUND",
                 "chance": 0.03
             },
             {
-                "when": [ 
+                "if": [ 
                     {"pulse":"ANIMATION_END"}, 
                     {"var":"sitting_still_timer", "op":">", "value":100}
                 ],
@@ -45,7 +45,7 @@
                 "chance": 0.05
             },
             {
-                "when": [ 
+                "if": [ 
                     {"pulse":"ANIMATION_END"},
                     {"var":"sitting_still_timer", "op":">", "value":100}
                 ],
@@ -53,14 +53,14 @@
                 "chance": 0.005
             },
             {
-                "when": [ 
+                "if": [ 
                     {"pulse":"CLICK"}, 
                     {"var":"worrying_meter", "op":">", "value":50}    
                     ],
                 "to": "VERY_WORRIED"
             },
             {
-                "when": [ 
+                "if": [ 
                     {"pulse":"ANIMATION_END"},
                     {"var":"want_tea", "op":">", "value":60}
                 ],
@@ -72,7 +72,7 @@
                 }
             },
             {
-                "when": [ 
+                "if": [ 
                     {"pulse":"ANIMATION_END"},
                     {"var":"want_tea", "op":">", "value":200}
                 ],
@@ -84,7 +84,7 @@
                 }
             },
             {
-                "when": [ 
+                "if": [ 
                     {"pulse":"ANIMATION_END"},
                     {"var":"want_tea", "op":">", "value":400}
                 ],
@@ -103,16 +103,16 @@
 
         "transitions": [
             {
-                "when": ["DRAGGING_STARTED"],  
+                "if": ["DRAGGING_STARTED"],  
                 "to": "DRAGGING"
             },
             {
-                "when": [{"pulse":"ANIMATION_END"}, {"var":"sleepiness", "op":">", "value":60}],
+                "if": [{"pulse":"ANIMATION_END"}, {"var":"sleepiness", "op":">", "value":60}],
                 "to": "DOZING_OFF",
                 "chance": 0.6
             },
             {
-                "when": [{"pulse":"ANIMATION_END"}],
+                "if": [{"pulse":"ANIMATION_END"}],
                 "to": "IDLE"
             }
         ]
@@ -124,7 +124,7 @@
 
         "transitions": [
             {
-                "when": ["ANIMATION_END", {"var":"sleepiness", "op":">", "value":100}],
+                "if": ["ANIMATION_END", {"var":"sleepiness", "op":">", "value":100}],
                 "to": "SLEEPING",
                 "transition_animation": "falling_asleep",
                 "transition_animation_cfg": {
@@ -133,12 +133,12 @@
                 "chance": 0.5
             },
             {
-                "when": [{"pulse":"ANIMATION_END"}, {"var":"sleepiness", "op":">", "value":60}],
+                "if": [{"pulse":"ANIMATION_END"}, {"var":"sleepiness", "op":">", "value":60}],
                 "to": "DOZED_OFF",
                 "chance": 1
             },
             {
-                "when": [{"pulse":"ANIMATION_END"}],
+                "if": [{"pulse":"ANIMATION_END"}],
                 "to": "IDLE",
                 "transition_animation": "waking_up",
                 "transition_animation_cfg": {
@@ -157,13 +157,13 @@
         ],
 
         "conditional_particles": [
-            {"when": ["CLICK"],
+            {"if": ["CLICK"],
             "emit": "single_z"}
         ],
 
         "transitions": [
             {
-                "when": [{"pulse":"CLICK"}],
+                "if": [{"pulse":"CLICK"}],
                 "to": "IDLE",
                 "chance": 0.7,
                 "transition_animation": "waking_up",
@@ -175,7 +175,7 @@
                 ]
             },
             {
-                "when": ["ANIMATION_END", {"var":"sleepiness", "op":">", "value":80}],
+                "if": ["ANIMATION_END", {"var":"sleepiness", "op":">", "value":80}],
                 "to": "SLEEPING",
                 "transition_animation": "falling_asleep",
                 "transition_animation_cfg": {
@@ -184,7 +184,7 @@
                 "chance": 0.8
             },
             {
-                "when": [{"pulse":"ANIMATION_END"}, {"var":"time_spent_in_this_state", "op":">", "value":30} ],
+                "if": [{"pulse":"ANIMATION_END"}, {"var":"time_spent_in_this_state", "op":">", "value":30} ],
                 "to": "IDLE",
                 "chance": 0.2,
                 "transition_animation": "waking_up",
@@ -208,7 +208,7 @@
 
         "transitions": [
             {
-                "when": [ {"pulse":"ANIMATION_END"}, {"var":"time_spent_in_this_state", "op":">", "value":10}],
+                "if": [ {"pulse":"ANIMATION_END"}, {"var":"time_spent_in_this_state", "op":">", "value":10}],
                 "to": "IDLE",
                 "chance": 1,
                 "transition_animation": "waking_up_after_sleep",
@@ -225,11 +225,11 @@
         "loop": false,
         "transitions": [
             {
-                "when": [ {"pulse":"CLICK"}],
+                "if": [ {"pulse":"CLICK"}],
                 "to": "ROLL"
             },
             {
-                "when": ["DRAGGING_STARTED"],  
+                "if": ["DRAGGING_STARTED"],  
                 "to": "DRAGGING"
             }
         ],
@@ -247,7 +247,7 @@
         
         "transitions": [
             {
-                "when": [{"flag":"MOVEMENT_FINISHED"}],
+                "if": [{"flag":"MOVEMENT_FINISHED"}],
                 "to": "BLINK",
                 "chance": 0.1
             }
@@ -266,7 +266,7 @@
         
         "transitions": [
             {
-                "when": [{"flag":"MOVEMENT_FINISHED"}],
+                "if": [{"flag":"MOVEMENT_FINISHED"}],
                 "to": "BLINK",
                 "chance": 0.1
             }
@@ -285,7 +285,7 @@
 
         "force_transition": [
             {
-                "when": ["DRAGGING_STARTED"],
+                "if": ["DRAGGING_STARTED"],
                 "except_states": ["DRAGGING"]
             }
         ],
@@ -300,14 +300,14 @@
 
         "force_transition": [
             {
-                "when": ["LOST_PARENT"],
+                "if": ["LOST_PARENT"],
                 "except_states": ["DRAGGING"]
             }
         ],
         
         "transitions": [
             {
-                "when": ["MOVEMENT_FINISHED"],
+                "if": ["MOVEMENT_FINISHED"],
                 "to": "IDLE",
                 "transition_animation": "standing_up",
                 "transition_animation_cfg": {
@@ -328,7 +328,7 @@
         ],
         "transitions":[
             {
-                "when": ["ANIMATION_FINISHED"],
+                "if": ["ANIMATION_FINISHED"],
                 "to": "IDLE"
             }
         ]
@@ -340,7 +340,7 @@
 
         "transitions":[
             {
-                "when": [ 
+                "if": [ 
                     "CLICK", 
                     {"var": "times_clicked_this_state", "op": ">=", "value": 1}
                     ],
@@ -359,11 +359,11 @@
 
         "transitions":[
             {
-                "when": ["CLICK"],
+                "if": ["CLICK"],
                 "to": "IDLE"
             },
             {
-                "when": [ {"var":"time_spent_in_this_state", "op":">", "value":3}],
+                "if": [ {"var":"time_spent_in_this_state", "op":">", "value":3}],
                 "to": "IDLE",
 		        "transition_animation": "laying_magnifying_glass_down"
             }
@@ -375,7 +375,7 @@
 
         "transitions":[
             {
-                "when": ["ANIMATION_END"],
+                "if": ["ANIMATION_END"],
                 "to": "SIP1",
 		        "chance": 0.7
             }
@@ -395,7 +395,7 @@
 
         "transitions":[
             {
-                "when": ["ANIMATION_END"],
+                "if": ["ANIMATION_END"],
                 "to": "SIP2",
 		        "chance": 0.5
             }
@@ -415,7 +415,7 @@
 
         "transitions":[
             {
-                "when": ["ANIMATION_END"],
+                "if": ["ANIMATION_END"],
                 "to": "SIP3",
 		        "chance": 0.2
             }

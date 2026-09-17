@@ -55,25 +55,22 @@ class AudioEngine:
 
     def _load_audio(self, path):
         total_start = time.perf_counter()
-
         start = time.perf_counter()
 
         with self.archive.open(path) as file:
             open_time = (time.perf_counter() - start)
-            print(f"[Audio] archive.open(): "f"{open_time * 1000:.2f} ms")
+            print(f"[AUDIO] archive.open(): "f"{open_time * 1000:.2f} ms")
 
             start = time.perf_counter()
             data = file.read()
 
             read_time = (time.perf_counter() - start)
-
         print(
-            f"[Audio] file.read(): "
+            f"[AUDIO] file.read(): "
             f"{path} | "
             f"{read_time * 1000:.2f} ms "
             f"({len(data) / 1024 / 1024:.2f} MB)"
         )
-
 
         start = time.perf_counter()
 
@@ -85,11 +82,10 @@ class AudioEngine:
         decode_time = (time.perf_counter() - start)
 
         print(
-            f"[Audio] sf.read(): "
+            f"[AUDIO] sf.read(): "
             f"{path} | "
             f"{decode_time * 1000:.2f} ms"
         )
-
         # Stereo → Mono
         start = time.perf_counter()
 
@@ -100,11 +96,10 @@ class AudioEngine:
             samples,
             dtype=np.float32
         )
-
         mono_time = (time.perf_counter() - start)
 
         print(
-            f"[Audio] Mono conversion: "
+            f"[AUDIO] Mono conversion: "
             f"{path} | "
             f"{mono_time * 1000:.2f} ms"
         )
@@ -131,45 +126,37 @@ class AudioEngine:
             ).astype(np.float32)
 
             resample_time = (time.perf_counter() - start)
-
-            print(f"[Audio] Sample-rate conversion: "f"{resample_time * 1000:.2f} ms")
+            print(f"[AUDIO] Sample-rate conversion: "f"{resample_time * 1000:.2f} ms")
 
         total_time = (time.perf_counter() -total_start)
 
         print(
-            f"[Audio] _load_audio() total: "
+            f"[AUDIO] _load_audio() total: "
             f"{path} | "
             f"{total_time * 1000:.2f} ms"
         )
-
         return samples
 
     def load_all_sounds(self):
         for sound_name, cfg in (self.sounds_config.items()):
-
-            # Проверяем вероятности вариантов
             probability_sum = sum(
                 probability
                 for _, probability
                 in cfg["variants"]
             )
-
             if not np.isclose(probability_sum, 1.0, atol=1e-6):
-                raise ValueError(f"{sound_name} probabilities must sum to 1.0")
+                raise ValueError(f"[SOUNDS]{sound_name} variants probabilities must sum to 1.0")
 
             loaded_variants = []
 
             # loading variants
             for filename, probability in (cfg["variants"]):
                 path = (f"assets/sounds/{filename}")
-
                 file_info = (self.archive.getinfo(path))
-
                 file_size = file_info.file_size
 
                 # small file
                 if file_size <= MAX_SIZE:
-
                     samples = self._load_audio(path)
 
                     loaded_variants.append({
@@ -179,7 +166,7 @@ class AudioEngine:
                     })
 
                     print(
-                        f"[Audio] Loaded into RAM: "
+                        f"[AUDIO] Loaded into RAM: "
                         f"{filename} "
                         f"({file_size / 1024:.1f} KB)"
                     )
@@ -194,7 +181,7 @@ class AudioEngine:
                     })
 
                     print(
-                        f"[Audio] Stored in archive: "
+                        f"[AUDIO] Stored in archive: "
                         f"{filename} "
                         f"({file_size / 1024 / 1024:.2f} MB)"
                     )
@@ -203,16 +190,13 @@ class AudioEngine:
 
     def choose_variant(self, sound_name):
         variants = (self.sounds[sound_name]["variants"])
-
         r = random.random()
         acc = 0.0
 
         for variant in variants:
             acc += variant["probability"]
-
             if r <= acc:
                 return variant
-
         return variants[-1]
 
     def _calculate_parameters(self, cfg, volume, speed):
@@ -298,9 +282,6 @@ class AudioEngine:
 
         # if big file
         with self.lock:
-
-            # Если этот звук уже загружается,
-            # второй поток не создаём.
             if sound_name in self.loading_sounds:
                 return
 
@@ -324,7 +305,7 @@ class AudioEngine:
 
         try:
             print(
-                f"[Audio] Loading large sound: "
+                f"[AUDIO] Loading large sound: "
                 f"name={sound_name}, "
                 f"file={variant['path']}"
             )
@@ -346,26 +327,26 @@ class AudioEngine:
             total_time = (time.perf_counter() - start_time)
 
             print(
-                f"[Audio] Ready: "
+                f"[AUDIO] Ready: "
                 f"{variant['filename']} "
                 f"in {total_time * 1000:.2f} ms"
             )
 
             print(
-                f"[Audio]   Load:  "
+                f"[AUDIO]   Load:  "
                 f"{load_time * 1000:.2f} ms"
             )
 
             if speed != 1.0:
                 print(
-                    f"[Audio]   Speed: "
+                    f"[AUDIO]   Speed: "
                     f"{speed_time * 1000:.2f} ms"
                 )
 
         except Exception as e:
 
             print(
-                f"[Audio] Failed to load "
+                f"[AUDIO] Failed to load "
                 f"{variant['filename']}: {e}"
             )
 
