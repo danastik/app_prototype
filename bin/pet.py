@@ -282,7 +282,7 @@ class Pet(QWidget): # main logic
                     self.particle_engine.raise_()
                     self.particle_engine.start_emitting(name, constant)
 
-                case AudioCommand(action=action, name=name, volume=volume, speed=speed):
+                case AudioCommand(action=action,name=name,volume=volume,speed=speed,duration=duration):
                     if action == "play":
                         self.audio_engine.play(
                             name,
@@ -290,8 +290,11 @@ class Pet(QWidget): # main logic
                             speed=speed
                         )
 
-                    elif action == "kill":
-                        self.audio_engine.kill(name)
+                    elif action == "stop":
+                        self.audio_engine.stop(
+                            name,
+                            duration=duration
+                        )
 
                     elif action == "break_loop":
                         self.audio_engine.break_loop(name)

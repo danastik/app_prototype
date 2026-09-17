@@ -304,12 +304,13 @@ class StateRuntime:
                 speed=audio_cmd.get("speed")
             )
 
-        if "kill" in audio_cmd:
+        if "stop" in audio_cmd:
             return AudioCommand(
-                action="kill",
-                name=audio_cmd["kill"]
+                action="stop",
+                name=audio_cmd["stop"],
+                duration=audio_cmd.get("duration")
             )
-        
+
         if "break_loop" in audio_cmd:
             return AudioCommand(
                 action="break_loop",

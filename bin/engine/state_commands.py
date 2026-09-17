@@ -22,3 +22,4 @@ class AudioCommand:
     name: str
     volume: float | None = None
     speed: float | None = None
+    duration: float | None = None

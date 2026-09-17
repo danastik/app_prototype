@@ -266,7 +266,9 @@ class AudioEngine:
                 "name": sound_name,
                 "samples": samples,
                 "position": 0,
-                "volume": volume
+                "volume": volume,
+                "fade_start": None,
+                "fade_duration": None
             })
 
     def _play_instance(self, sound_name, volume=None, speed=None):
@@ -396,13 +398,25 @@ class AudioEngine:
         with self.lock:
             self.active_loops.pop(sound_name, None)
 
-    def kill(self, sound_name):
+    def stop(self, sound_name, duration=None):
         with self.lock:
-            self.active_sounds = [
-                sound
-                for sound in self.active_sounds
-                if sound["name"] != sound_name
-            ]
+            if duration is None or duration <= 0:
+                self.active_sounds = [
+                    sound
+                    for sound in self.active_sounds
+                    if sound["name"] != sound_name
+                ]
+
+                self.active_loops.pop(sound_name, None)
+
+                return
+
+            fade_start = time.perf_counter()
+
+            for sound in self.active_sounds:
+                if sound["name"] == sound_name:
+                    sound["fade_start"] = fade_start
+                    sound["fade_duration"] = duration
 
             self.active_loops.pop(sound_name, None)
 
@@ -445,6 +459,8 @@ class AudioEngine:
     def callback(self, outdata, frames, time_info, status):
         mix = np.zeros(frames, dtype=np.float32)
 
+        now = time.perf_counter()
+
         with self.lock:
             alive = []
 
@@ -453,18 +469,7 @@ class AudioEngine:
                 samples = sound["samples"]
                 position = sound["position"]
 
-                # Берём только нужный кусок готового массива.
-                #
-                # Здесь НЕТ:
-                # - np.interp
-                # - ресемплинга
-                # - чтения файлов
-                # - изменения speed
-
-                end = min(
-                    position + frames,
-                    len(samples)
-                )
+                end = min(position + frames,len(samples))
 
                 if position >= end:
                     continue
@@ -472,7 +477,40 @@ class AudioEngine:
                 chunk = samples[position:end]
 
                 # Volume control
-                mix[:len(chunk)] += (chunk * sound["volume"])
+                volume = sound["volume"]
+
+                # Fade
+                if sound["fade_start"] is not None:
+
+                    fade_start = sound["fade_start"]
+                    fade_duration = sound["fade_duration"]
+
+                    elapsed = now - fade_start
+
+                    # Fade уже закончился
+                    if elapsed >= fade_duration:
+                        sound["position"] = end
+                        continue
+
+                    # Громкость в начале текущего callback
+                    start_volume = max(
+                        1.0 - (elapsed / fade_duration),
+                        0.0
+                    )
+
+                    # Время в конце текущего callback
+                    end_elapsed = elapsed + (len(chunk) / self.sample_rate)
+
+                    end_volume = max(
+                        1.0 - (end_elapsed / fade_duration),
+                        0.0
+                    )
+
+                    fade_curve = np.linspace(start_volume,end_volume,len(chunk),dtype=np.float32)
+
+                    chunk = chunk * fade_curve
+
+                mix[:len(chunk)] += (chunk * volume)
 
                 sound["position"] = end
 
